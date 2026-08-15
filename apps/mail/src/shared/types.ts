@@ -93,6 +93,14 @@ export interface TodoItem {
   priority?: 'high' | 'normal' | 'low'
 }
 
+export interface SyncStatus {
+  isSyncing: boolean
+  lastSyncTimeIso: string | null
+  syncedCount: number
+  pendingOpsCount: number
+  error: string | null
+}
+
 export interface VuaMailApi {
   getAccounts: () => Promise<EmailAccount[]>
   getFolders: (accountId: string) => Promise<MailFolder[]>
@@ -110,6 +118,8 @@ export interface VuaMailApi {
     bodyHtml: string
     attachments?: EmailAttachment[]
   }) => Promise<{ success: boolean; emailId?: string }>
+  syncNow: () => Promise<SyncStatus>
+  getSyncStatus: () => Promise<SyncStatus>
 }
 
 declare global {

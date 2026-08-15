@@ -1,8 +1,9 @@
 import { ipcMain } from 'electron'
 import { VUA_MAIL_IPC } from '../../shared/ipc-events'
 import { SQLiteMailStorage } from '../db/sqlite-storage'
+import { MailSyncOrchestrator } from '../network/mail-sync-orchestrator'
 
-export function registerMailIpc(storage: SQLiteMailStorage): void {
+export function registerMailIpc(storage: SQLiteMailStorage, syncOrchestrator: MailSyncOrchestrator): void {
   ipcMain.handle(VUA_MAIL_IPC.GET_ACCOUNTS, () => {
     return storage.getAccounts()
   })
@@ -38,4 +39,13 @@ export function registerMailIpc(storage: SQLiteMailStorage): void {
   ipcMain.handle(VUA_MAIL_IPC.SEND_EMAIL, (_evt, draft) => {
     return storage.sendEmail(draft)
   })
+
+  ipcMain.handle(VUA_MAIL_IPC.SYNC_NOW, async () => {
+    return syncOrchestrator.syncAllAccounts()
+  })
+
+  ipcMain.handle(VUA_MAIL_IPC.GET_SYNC_STATUS, () => {
+    return syncOrchestrator.getStatus()
+  })
 }
+

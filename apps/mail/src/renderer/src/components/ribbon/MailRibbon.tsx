@@ -9,6 +9,8 @@ interface MailRibbonProps {
   onReplyAll: () => void
   onForward: () => void
   onAiAssist: () => void
+  onSyncNow?: () => void
+  isSyncing?: boolean
   hasSelectedEmail: boolean
 }
 
@@ -20,6 +22,8 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
   onReplyAll,
   onForward,
   onAiAssist,
+  onSyncNow,
+  isSyncing,
   hasSelectedEmail,
 }) => {
   return (
@@ -33,6 +37,17 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
           </svg>
         }
         onClick={onNewEmail}
+      />
+      <div className="ribbon-divider" />
+      <RibbonButton
+        label={isSyncing ? "Syncing..." : "Send / Receive"}
+        disabled={isSyncing}
+        icon={
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+        }
+        onClick={onSyncNow}
       />
       <div className="ribbon-divider" />
       <RibbonButton

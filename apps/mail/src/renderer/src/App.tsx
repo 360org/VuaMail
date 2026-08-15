@@ -25,6 +25,7 @@ export const App: React.FC = () => {
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
+  const [isSyncing, setIsSyncing] = useState(false)
 
   // Load initial accounts & folders
   useEffect(() => {
@@ -152,6 +153,21 @@ export const App: React.FC = () => {
     alert(`Đang mở xem trước tệp tài liệu: ${att.filename}\n(Tích hợp Office Engine Viewer)`)
   }
 
+  const handleSyncNow = async () => {
+    if (!window.vuaMail || isSyncing) return
+    setIsSyncing(true)
+    try {
+      const status = await window.vuaMail.syncNow()
+      if (status.syncedCount > 0) {
+        // reload emails
+        const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
+        setEmails(list)
+      }
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   const handleSendDraft = async (draft: { to: string[]; subject: string; bodyHtml: string }) => {
     if (!window.vuaMail || !activeAccount) return
     await window.vuaMail.sendEmail({
@@ -208,6 +224,8 @@ export const App: React.FC = () => {
         onReplyAll={handleReplySelected}
         onForward={handleReplySelected}
         onAiAssist={handleTriggerAiSummary}
+        onSyncNow={handleSyncNow}
+        isSyncing={isSyncing}
         hasSelectedEmail={Boolean(selectedEmail)}
       />
 

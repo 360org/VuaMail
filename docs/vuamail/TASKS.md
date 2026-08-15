@@ -19,7 +19,7 @@
 | **AI Assistant** | AI Thread Summary, Compose Draft & Smart Reply | ✅ Hoàn thành | P1 | AI |
 | **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | ✅ Hoàn thành | P1 | AI |
 | **Calendar & Contacts** | Tích hợp People Page & Calendar Page | ✅ Hoàn thành | P1 | AI |
-| **Network Protocols** | IMAP / SMTP client kết nối thực tế | ⏳ Chờ xử lý | P2 | AI |
+| **Network Protocols** | IMAP / SMTP client kết nối & OpQueue sync worker | ✅ Hoàn thành | P1 | AI |
 
 ---
 
@@ -30,7 +30,8 @@
 - [x] Triển khai DAO `apps/mail/src/main/db/sqlite-storage.ts` với seed dữ liệu mẫu demo.
 - [x] Cấu hình chế độ WAL mode và lazy-loading cho email body.
 - [x] Nạp và truy vấn cấu trúc tệp đính kèm `attachments_json` từ database.
-- [ ] Xây dựng background worker xử lý hàng đợi `op_queue` khi mạng online trở lại.
+- [x] Xây dựng background worker xử lý hàng đợi `op_queue` khi mạng online trở lại (`MailSyncOrchestrator`).
+- [x] Triển khai Native IMAP / SMTP socket client kết nối TLS (`mail-protocol-client.ts`).
 
 ### 2. Giao diện Người dùng (Outlook Clone UI)
 - [x] `AppRail.tsx`: Thanh chuyển đổi icon Mail, Calendar, People, To-Do bên trái.

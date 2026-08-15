@@ -342,6 +342,89 @@ export class SQLiteMailStorage {
       VALUES (?, ?, ?)
     `).run(id, draft.bodyHtml, snippet)
 
+    // Enqueue into op_queue for SMTP background sync
+    this.enqueueOp('send_draft', id, JSON.stringify(draft))
+
     return { success: true, emailId: id }
+  }
+
+  insertEmailDirectly(email: {
+    id: string
+    accountId: string
+    folderId: string
+    senderName: string
+    senderEmail: string
+    recipientEmails: string[]
+    subject: string
+    snippet: string
+    dateIso: string
+    isRead: boolean
+    isStarred: boolean
+    category: 'focused' | 'other'
+    bodyHtml: string
+    plainText: string
+  }): void {
+    if (!this.db) return
+    this.db.prepare(`
+      INSERT OR REPLACE INTO emails (
+        id, account_id, folder_id, sender_name, sender_email, recipient_emails,
+        subject, snippet, date_iso, is_read, is_starred, category, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      email.id,
+      email.accountId,
+      email.folderId,
+      email.senderName,
+      email.senderEmail,
+      email.recipientEmails.join(','),
+      email.subject,
+      email.snippet,
+      email.dateIso,
+      email.isRead ? 1 : 0,
+      email.isStarred ? 1 : 0,
+      email.category,
+      Date.now()
+    )
+
+    this.db.prepare(`
+      INSERT OR REPLACE INTO email_bodies (email_id, html, plain_text)
+      VALUES (?, ?, ?)
+    `).run(email.id, email.bodyHtml, email.plainText)
+  }
+
+  enqueueOp(opType: string, emailId: string, payloadJson: string): void {
+    if (!this.db) return
+    const opId = `op_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+    this.db.prepare(`
+      INSERT INTO op_queue (id, op_type, email_id, payload_json, status, created_at)
+      VALUES (?, ?, ?, ?, 'pending', ?)
+    `).run(opId, opType, emailId, payloadJson, Date.now())
+  }
+
+  getPendingOps(): Array<{ id: string; opType: string; emailId: string; payloadJson: string }> {
+    if (!this.db) return []
+    const rows = this.db.prepare("SELECT * FROM op_queue WHERE status = 'pending' ORDER BY created_at ASC").all() as Array<{
+      id: string
+      op_type: string
+      email_id: string
+      payload_json: string
+    }>
+    return rows.map((r) => ({
+      id: r.id,
+      opType: r.op_type,
+      emailId: r.email_id,
+      payloadJson: r.payload_json,
+    }))
+  }
+
+  getPendingOpsCount(): number {
+    if (!this.db) return 0
+    const row = this.db.prepare("SELECT COUNT(*) as c FROM op_queue WHERE status = 'pending'").get() as { c: number }
+    return row.c
+  }
+
+  markOpCompleted(opId: string): void {
+    if (!this.db) return
+    this.db.prepare("UPDATE op_queue SET status = 'completed' WHERE id = ?").run(opId)
   }
 }

@@ -8,4 +8,7 @@ export const VUA_MAIL_IPC = {
   DELETE_EMAIL: 'vua-mail:delete-email',
   ARCHIVE_EMAIL: 'vua-mail:archive-email',
   SEND_EMAIL: 'vua-mail:send-email',
+  SYNC_NOW: 'vua-mail:sync-now',
+  GET_SYNC_STATUS: 'vua-mail:get-sync-status',
 } as const
+

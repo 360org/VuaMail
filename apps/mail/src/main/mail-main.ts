@@ -2,16 +2,21 @@ import { WebContentsView, app } from 'electron'
 import { join } from 'node:path'
 import { SQLiteMailStorage } from './db/sqlite-storage'
 import { registerMailIpc } from './ipc/mail-ipc'
+import { MailSyncOrchestrator } from './network/mail-sync-orchestrator'
 
 let mailStorage: SQLiteMailStorage | null = null
+let syncOrchestrator: MailSyncOrchestrator | null = null
 
 export function initMailBackend(): SQLiteMailStorage {
   if (!mailStorage) {
     mailStorage = new SQLiteMailStorage()
-    registerMailIpc(mailStorage)
+    syncOrchestrator = new MailSyncOrchestrator(mailStorage)
+    syncOrchestrator.startSyncLoop(60000)
+    registerMailIpc(mailStorage, syncOrchestrator)
   }
   return mailStorage
 }
+
 
 export function createMailView(): WebContentsView {
   initMailBackend()

@@ -14,6 +14,8 @@ const api: VuaMailApi = {
   archiveEmail: (emailId: string): Promise<void> => ipcRenderer.invoke(VUA_MAIL_IPC.ARCHIVE_EMAIL, emailId),
   sendEmail: (draft): Promise<{ success: boolean; emailId?: string }> =>
     ipcRenderer.invoke(VUA_MAIL_IPC.SEND_EMAIL, draft),
+  syncNow: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.SYNC_NOW),
+  getSyncStatus: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_SYNC_STATUS),
 }
 
 if (process.contextIsolated) {
