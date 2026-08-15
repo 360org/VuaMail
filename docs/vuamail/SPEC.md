@@ -98,7 +98,7 @@ export type AiProviderId = 'genspark' | 'anthropic' | 'gemini' | 'deepseek' | 'o
 
 ### 4.2 Cấu hình AI Provider Metadata
 Trong `packages/ai-provider/src/providers.ts`:
-Bổ sung `hermes` với endpoint mặc định `https://hermes.vuahethong.com/v1`.
+Bổ sung `hermes` với endpoint mặc định `https://hermes.vuahethong.com/v1`, đồng thời tích hợp `omirouter` và `ninerouter`.
 
 ## 5. Đặc tả Tính năng Kiểm tra Cập nhật Thủ công (Manual Check for Updates)
 
@@ -113,13 +113,13 @@ Bổ sung `hermes` với endpoint mặc định `https://hermes.vuahethong.com/v
 
 ## 6. Đặc tả Module VuaMail (`apps/mail`)
 
-### 5.1 Kiến trúc Cơ sở dữ liệu SQLite
+### 6.1 Kiến trúc Cơ sở dữ liệu SQLite
 - **`accounts`**: Quản lý tài khoản kết nối.
 - **`emails`**: Danh sách thư gồm metadata chính (`id`, `subject`, `from`, `to`, `snippet`, `is_read`, `date_ms`, `folder_id`).
 - **`email_bodies`**: Nội dung `html` và `plain_text` được nạp theo cơ chế lazy-load khi chọn thư.
 - **`op_queue`**: Ghi nhận các thao tác `mark_read`, `delete`, `move_folder`, `send_draft` khi mất kết nối mạng.
 
-### 5.2 Giao diện Người dùng Outlook Clone (React 19)
+### 6.2 Giao diện Người dùng Outlook Clone (React 19)
 - **AppRail**: Thanh bên trái điều hướng chuyển đổi tab `Mail`, `Calendar`, `Contacts`, `To-Do`.
 - **Top Ribbon Toolbar**: Nút *New Email* (kèm split menu), *Delete*, *Archive*, *Reply*, *Reply All*, *Forward*, *AI Tools*.
 - **Folders Pane**: Phân nhóm *Favorites* (Inbox, Sent, Drafts, Deleted Items, Archive).

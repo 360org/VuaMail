@@ -56,7 +56,6 @@
   - Tích hợp menu `Check for Updates…` trên macOS Application Menu và Windows/Linux Help menu.
   - Tích hợp nút kiểm tra trong Account dropdown menu tại màn hình chính `Home.tsx`.
   - Phản hồi trực quan bằng Native Dialog khi đã ở bản mới nhất hoặc có lỗi kết nối; giữ im lặng đối với kiểm tra ngầm định kỳ.
-
 ## 3. Yêu cầu phi chức năng (Non-Functional Requirements)
 
 ### 3.1 Hiệu năng
