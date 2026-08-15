@@ -94,12 +94,31 @@ export class SQLiteMailStorage {
         isRead: 0,
         isStarred: 0,
         category: 'focused',
+        hasAttachments: 1,
+        attachmentsJson: JSON.stringify([
+          {
+            id: 'att_1',
+            filename: 'Bao_cao_tong_ket_VuaOffice_T8.docx',
+            sizeBytes: 245760,
+            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          },
+          {
+            id: 'att_2',
+            filename: 'Ke_hoach_trien_khai_VuaMail_v0.7.pdf',
+            sizeBytes: 524288,
+            mimeType: 'application/pdf',
+          }
+        ]),
         bodyHtml: `
           <div style="font-family: sans-serif; line-height: 1.6;">
             <h3>Báo cáo tuần & Tính năng mới</h3>
-            <p>Chào Sếp,</p>
-            <p>Tiến độ tích hợp VuaMail vào VuaOffice Shell đang diễn ra đúng kế hoạch.</p>
-            <p>Các tài liệu kiến trúc (ARCH.md, SPEC.md, REQUIREMENTS.md) đã được cập nhật đồng bộ.</p>
+            <p>Chào Sếp Châu,</p>
+            <p>AI Agent xin gửi Sếp báo cáo tổng kết tuần và các tài liệu đính kèm bên dưới:</p>
+            <ul>
+              <li><strong>Báo cáo tuần</strong>: File DOCX chi tiết tiến độ các module.</li>
+              <li><strong>Kế hoạch triển khai VuaMail</strong>: File PDF lộ trình phát triển.</li>
+            </ul>
+            <p>Sếp vui lòng xem trước tài liệu và phản hồi lại giúp em nhé.</p>
           </div>
         `,
         plainText: 'Báo cáo tổng kết tuần & Lịch họp rà soát tính năng mới...'
@@ -123,8 +142,8 @@ export class SQLiteMailStorage {
     const emailStmt = this.db.prepare(`
       INSERT INTO emails (
         id, account_id, folder_id, sender_name, sender_email, recipient_emails,
-        subject, snippet, date_iso, is_read, is_starred, category, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        subject, snippet, date_iso, is_read, is_starred, category, has_attachments, attachments_json, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     const bodyStmt = this.db.prepare(`
@@ -146,6 +165,8 @@ export class SQLiteMailStorage {
         m.isRead,
         m.isStarred,
         m.category,
+        (m as any).hasAttachments || 0,
+        (m as any).attachmentsJson || null,
         now
       )
       bodyStmt.run(m.id, m.bodyHtml, m.plainText)
@@ -220,24 +241,36 @@ export class SQLiteMailStorage {
       is_read: number
       is_starred: number
       has_attachments: number
+      attachments_json?: string
       category: string
     }>
 
-    return rows.map((r) => ({
-      id: r.id,
-      accountId: r.account_id,
-      folderId: r.folder_id,
-      senderName: r.sender_name,
-      senderEmail: r.sender_email,
-      recipientEmails: [r.recipient_emails],
-      subject: r.subject,
-      snippet: r.snippet,
-      dateIso: r.date_iso,
-      isRead: Boolean(r.is_read),
-      isStarred: Boolean(r.is_starred),
-      hasAttachments: Boolean(r.has_attachments),
-      category: r.category as 'focused' | 'other',
-    }))
+    return rows.map((r) => {
+      let attachments
+      if (r.attachments_json) {
+        try {
+          attachments = JSON.parse(r.attachments_json)
+        } catch {
+          attachments = undefined
+        }
+      }
+      return {
+        id: r.id,
+        accountId: r.account_id,
+        folderId: r.folder_id,
+        senderName: r.sender_name,
+        senderEmail: r.sender_email,
+        recipientEmails: [r.recipient_emails],
+        subject: r.subject,
+        snippet: r.snippet,
+        dateIso: r.date_iso,
+        isRead: Boolean(r.is_read),
+        isStarred: Boolean(r.is_starred),
+        hasAttachments: Boolean(r.has_attachments),
+        attachments,
+        category: r.category as 'focused' | 'other',
+      }
+    })
   }
 
   getEmailBody(emailId: string): EmailBody | null {

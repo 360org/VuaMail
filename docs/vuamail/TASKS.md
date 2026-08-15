@@ -15,8 +15,9 @@
 | **AI Assistant** | AI Thread Summary & Compose Draft Box | ✅ Hoàn thành | P1 | AI |
 | **Documentation** | IDEA, ARCH, SPEC, REQUIREMENTS, ROADMAP, CODEMAPS | ✅ Hoàn thành | P0 | AI |
 | **Zero-Conflict Sync** | Thiết lập remote `vuaoffice` và merge không xung đột | ✅ Hoàn thành | P0 | AI |
-| **Attachment & Preview** | Preview file Docx/PDF đính kèm trong thư | 🔄 Đang thực hiện | P1 | AI |
-| **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | ⏳ Chờ xử lý | P1 | AI |
+| **Attachment & Preview** | Preview file Docx/PDF đính kèm trong thư | ✅ Hoàn thành | P1 | AI |
+| **AI Assistant** | AI Thread Summary, Compose Draft & Smart Reply | ✅ Hoàn thành | P1 | AI |
+| **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | 🔄 Đang thực hiện | P1 | AI |
 | **Network Protocols** | IMAP / SMTP client kết nối thực tế | ⏳ Chờ xử lý | P2 | AI |
 | **Calendar & Contacts** | Tích hợp People Page & Calendar Page | ⏳ Chờ xử lý | P2 | AI |
 
@@ -28,6 +29,7 @@
 - [x] Tạo file schema SQLite `apps/mail/src/main/db/schema.ts` gồm 5 bảng cốt lõi.
 - [x] Triển khai DAO `apps/mail/src/main/db/sqlite-storage.ts` với seed dữ liệu mẫu demo.
 - [x] Cấu hình chế độ WAL mode và lazy-loading cho email body.
+- [x] Nạp và truy vấn cấu trúc tệp đính kèm `attachments_json` từ database.
 - [ ] Xây dựng background worker xử lý hàng đợi `op_queue` khi mạng online trở lại.
 
 ### 2. Giao diện Người dùng (Outlook Clone UI)
@@ -36,7 +38,8 @@
 - [x] `MailList.tsx`: Danh sách thư phân tab Focused / Other, tìm kiếm và unread indicators.
 - [x] `ReadingPane.tsx`: Khung đọc email chi tiết, thông tin người gửi, ngày giờ, nội dung rich text.
 - [x] `ComposeModal.tsx`: Modal soạn email với trường To, Subject, Body, nút gửi và nút AI Assist.
-- [ ] Thêm nút xem trước (Preview) cho các tệp đính kèm văn phòng ngay trên Reading Pane.
+- [x] Thêm vùng hiển thị danh sách file đính kèm kèm nút xem trước (Preview) trong `ReadingPane.tsx`.
+- [x] Tích hợp thanh phản hồi nhanh 1-click **AI Smart Reply** trong `ReadingPane.tsx`.
 
 ### 3. Tích hợp AI (VuaOffice AI)
 - [x] Tích hợp hộp tóm tắt email thông minh (AI Summary) trong `ReadingPane.tsx`.

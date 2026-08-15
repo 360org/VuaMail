@@ -1,17 +1,35 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 interface ComposeModalProps {
   isOpen: boolean
+  initialTo?: string
+  initialSubject?: string
+  initialBody?: string
   onClose: () => void
   onSend: (draft: { to: string[]; subject: string; bodyHtml: string }) => void
 }
 
-export const ComposeModal: React.FC<ComposeModalProps> = ({ isOpen, onClose, onSend }) => {
-  const [to, setTo] = useState('')
-  const [subject, setSubject] = useState('')
-  const [body, setBody] = useState('')
+export const ComposeModal: React.FC<ComposeModalProps> = ({
+  isOpen,
+  initialTo = '',
+  initialSubject = '',
+  initialBody = '',
+  onClose,
+  onSend,
+}) => {
+  const [to, setTo] = useState(initialTo)
+  const [subject, setSubject] = useState(initialSubject)
+  const [body, setBody] = useState(initialBody)
   const [aiPrompt, setAiPrompt] = useState('')
   const [isGeneratingAi, setIsGeneratingAi] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTo(initialTo)
+      setSubject(initialSubject)
+      setBody(initialBody)
+    }
+  }, [isOpen, initialTo, initialSubject, initialBody])
 
   if (!isOpen) return null
 

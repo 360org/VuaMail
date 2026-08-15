@@ -105,6 +105,37 @@ export const App: React.FC = () => {
     )
   }
 
+  const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
+
+  const handleSmartReply = (replyText: string) => {
+    if (!selectedEmail) return
+    setComposeInitial({
+      to: selectedEmail.senderEmail,
+      subject: selectedEmail.subject.startsWith('Re:') ? selectedEmail.subject : `Re: ${selectedEmail.subject}`,
+      body: `${replyText}\n\n---\nOn ${new Date(selectedEmail.dateIso).toLocaleString()}, ${selectedEmail.senderName} wrote:\n> ${selectedEmail.snippet}`,
+    })
+    setIsComposeOpen(true)
+  }
+
+  const handleOpenComposeNew = () => {
+    setComposeInitial({})
+    setIsComposeOpen(true)
+  }
+
+  const handleReplySelected = () => {
+    if (!selectedEmail) return
+    setComposeInitial({
+      to: selectedEmail.senderEmail,
+      subject: selectedEmail.subject.startsWith('Re:') ? selectedEmail.subject : `Re: ${selectedEmail.subject}`,
+      body: `\n\n---\nOn ${new Date(selectedEmail.dateIso).toLocaleString()}, ${selectedEmail.senderName} wrote:\n> ${selectedEmail.snippet}`,
+    })
+    setIsComposeOpen(true)
+  }
+
+  const handlePreviewAttachment = (att: { filename: string }) => {
+    alert(`Đang mở xem trước tệp tài liệu: ${att.filename}\n(Tích hợp Office Engine Viewer)`)
+  }
+
   const handleSendDraft = async (draft: { to: string[]; subject: string; bodyHtml: string }) => {
     if (!window.vuaMail || !activeAccount) return
     await window.vuaMail.sendEmail({
@@ -145,12 +176,12 @@ export const App: React.FC = () => {
 
       {/* Top Ribbon Toolbar */}
       <MailRibbon
-        onNewEmail={() => setIsComposeOpen(true)}
+        onNewEmail={handleOpenComposeNew}
         onDelete={handleDelete}
         onArchive={handleArchive}
-        onReply={() => setIsComposeOpen(true)}
-        onReplyAll={() => setIsComposeOpen(true)}
-        onForward={() => setIsComposeOpen(true)}
+        onReply={handleReplySelected}
+        onReplyAll={handleReplySelected}
+        onForward={handleReplySelected}
         onAiAssist={handleTriggerAiSummary}
         hasSelectedEmail={Boolean(selectedEmail)}
       />
@@ -180,12 +211,17 @@ export const App: React.FC = () => {
           aiSummary={aiSummary}
           isLoadingBody={isLoadingBody}
           onTriggerAiSummary={handleTriggerAiSummary}
+          onSmartReply={handleSmartReply}
+          onPreviewAttachment={handlePreviewAttachment}
         />
       </div>
 
       {/* Compose Email Modal */}
       <ComposeModal
         isOpen={isComposeOpen}
+        initialTo={composeInitial.to}
+        initialSubject={composeInitial.subject}
+        initialBody={composeInitial.body}
         onClose={() => setIsComposeOpen(false)}
         onSend={handleSendDraft}
       />

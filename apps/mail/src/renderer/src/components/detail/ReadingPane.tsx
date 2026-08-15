@@ -1,5 +1,5 @@
 import React from 'react'
-import type { EmailBody, EmailMessage } from '../../../../shared/types'
+import type { EmailAttachment, EmailBody, EmailMessage } from '../../../../shared/types'
 
 interface ReadingPaneProps {
   email: EmailMessage | null
@@ -7,6 +7,8 @@ interface ReadingPaneProps {
   aiSummary: string | null
   isLoadingBody: boolean
   onTriggerAiSummary: () => void
+  onSmartReply?: (replyText: string) => void
+  onPreviewAttachment?: (att: EmailAttachment) => void
 }
 
 export const ReadingPane: React.FC<ReadingPaneProps> = ({
@@ -15,6 +17,8 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
   aiSummary,
   isLoadingBody,
   onTriggerAiSummary,
+  onSmartReply,
+  onPreviewAttachment,
 }) => {
   if (!email) {
     return (
@@ -32,6 +36,18 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
   }
 
   const initial = (email.senderName || email.senderEmail || 'U').charAt(0).toUpperCase()
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const smartReplies = [
+    'Dạ em đã nhận được thông tin, sẽ xử lý ngay ạ.',
+    'Cảm ơn Sếp, báo cáo rất đầy đủ và chi tiết.',
+    'Em đã xem tài liệu và đồng ý với kế hoạch đề xuất.',
+  ]
 
   return (
     <div className="vuamail-reading">
@@ -56,7 +72,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
             </svg>
             VuaOffice AI Summary
           </div>
-          <div className="ai-summary-text">{aiSummary}</div>
+          <div className="ai-summary-text" style={{ whiteSpace: 'pre-line' }}>{aiSummary}</div>
         </div>
       )}
 
@@ -80,6 +96,59 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
       ) : (
         <div className="reading-body">{body?.plainText || email.snippet}</div>
       )}
+
+      {/* Attachments Section */}
+      {email.hasAttachments && email.attachments && email.attachments.length > 0 && (
+        <div className="reading-attachments">
+          <div className="attachments-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+            Tệp đính kèm ({email.attachments.length})
+          </div>
+          <div className="attachments-list">
+            {email.attachments.map((att) => (
+              <div key={att.id} className="attachment-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0078d4" strokeWidth="2">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                  <polyline points="13 2 13 9 20 9" />
+                </svg>
+                <div>
+                  <div className="attachment-name">{att.filename}</div>
+                  <div className="attachment-size">{formatFileSize(att.sizeBytes)}</div>
+                </div>
+                <button
+                  className="attachment-btn"
+                  onClick={() => onPreviewAttachment?.(att)}
+                >
+                  Xem trước
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AI Smart Reply Section */}
+      <div className="smart-reply-bar">
+        <div className="smart-reply-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0078d4" strokeWidth="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
+          Phản hồi nhanh AI (Smart Reply)
+        </div>
+        <div className="smart-reply-chips">
+          {smartReplies.map((reply, idx) => (
+            <button
+              key={idx}
+              className="smart-reply-chip"
+              onClick={() => onSmartReply?.(reply)}
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
