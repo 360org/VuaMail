@@ -1,36 +1,38 @@
-# IDEA.md — VuaOffice Whitelabel & Rebrand
+# IDEA.md — VuaOffice & VuaMail Suite
 
-> Tài liệu ý tưởng gốc từ Product Owner (Sếp). AI không chỉnh sửa nội dung — chỉ format.
+> Tài liệu ý tưởng gốc từ Product Owner (Sếp Châu). AI không chỉnh sửa mục tiêu cốt lõi — chỉ format và cập nhật cấu trúc.
 
 ## Bài toán cần giải quyết
-Sản phẩm office suite AI-native hiện tại (GenOffice) đang mang thương hiệu mặc định của upstream và phụ thuộc vào hệ thống API của Genspark. Sếp cần một phiên bản tuỳ biến thương hiệu riêng (Whitelabel) thành **VuaOffice** thuộc hệ sinh thái **360 CORP** nhằm cung cấp cho khách hàng doanh nghiệp của công ty mà không bị lộ nguồn gốc sản phẩm gốc. Đồng thời, hệ thống AI cần tích hợp trực tiếp với AI Router riêng của 360 CORP (**9router / omirouter**) để chủ động quản lý chi phí, mô hình và bảo mật dữ liệu.
+1. **Bộ ứng dụng văn phòng AI-Native VuaOffice**:
+   Sản phẩm office suite AI-native (Docs, Sheets, Slides, PDF, Markdown) cần mang thương hiệu Việt (**VuaOffice** by **360 CORP**), loại bỏ nhận diện của upstream GenOffice/Genspark. Hệ thống AI định tuyến trực tiếp qua AI Router riêng của 360 CORP (**omirouter / 9router / hermes**) để tối ưu chi phí, tốc độ và bảo mật dữ liệu.
 
-Quá trình rebrand này phải diễn ra tự động bằng kịch bản cấu hình để khi upstream có bản cập nhật mới, việc merge code và build lại không bị xung đột (conflict).
+2. **Email Client Ngoại tuyến VuaMail (Outlook Clone)**:
+   Doanh nghiệp thiếu một giải pháp Email Client chuyên nghiệp, nhẹ, tốc độ cao, hỗ trợ đầy đủ tiếng Việt và giao diện Microsoft 365 Outlook quen thuộc. Cần tích hợp trực tiếp **VuaMail** (`apps/mail`) vào VuaOffice Suite với khả năng hoạt động Offline (SQLite WAL Engine), OpQueue hàng đợi đồng bộ và trợ lý AI tóm tắt/soạn thảo thư thông minh.
+
+3. **Quy trình Phát triển Song song & Zero-Conflict**:
+   `VuaMail` được phát triển chuyên sâu trên repository/nhánh riêng, định kỳ rebase và merge trực tiếp vào `vuaoffice` (nhánh `main`) mà tuyệt đối không gây conflict với các ứng dụng khác trong bộ Office Suite.
 
 ## Đối tượng khách hàng
-Các khách hàng doanh nghiệp trong hệ sinh thái của **360 CORP**, các doanh nghiệp sử dụng giải pháp văn phòng tích hợp AI tại Việt Nam.
+Các khách hàng doanh nghiệp trong hệ sinh thái của **360 CORP**, các doanh nghiệp và chuyên gia cần bộ công cụ văn phòng và email client tích hợp AI tại Việt Nam.
 
 ## Vision sản phẩm
-- Trở thành bộ ứng dụng văn phòng AI-native mang thương hiệu Việt (**VuaOffice** by **360 CORP**).
-- Thay thế hoàn toàn nhận diện thương hiệu cũ (GenOffice) từ logo, icon, text hiển thị, thông tin build sản phẩm.
-- Sử dụng hạ tầng AI Router độc lập (omirouter/9router) làm default provider.
-- Cơ chế Whitelabel dạng Plug-and-Play: Chạy lệnh apply trước khi build, restore về codebase gốc trước khi pull/merge upstream.
+- Trở thành hệ sinh thái văn phòng AI-native toàn diện: **VuaOffice** (Docs, Sheets, Slides, PDF) + **VuaMail** (Email, Calendar, Contacts, Tasks).
+- Giao diện Fluent UI hiện đại, chuẩn xác theo Microsoft Outlook & Microsoft 365 Ribbon.
+- Sử dụng hạ tầng AI Router độc lập (omirouter/9router/hermes) làm default provider.
+- Cơ chế Whitelabel và Module hóa: Phát triển độc lập từng module và kết hợp liền mạch vào Shell đa tab.
 
 ## Giá trị cốt lõi
-1. **Thương hiệu đồng nhất:** Tích hợp sâu vào hệ sinh thái 360 CORP với tên gọi VuaOffice.
-2. **Chủ động hạ tầng AI:** Sử dụng AI Router riêng của 360 CORP để phân phối request AI tối ưu.
-3. **Bảo trì dễ dàng (Maintainability):** Không can thiệp cứng vào codebase gốc để tránh conflict khi cập nhật code từ upstream GenOffice.
-4. **An toàn & Riêng tư:** Dữ liệu AI đi qua gateway riêng (omirouter/9router), bảo mật thông tin doanh nghiệp.
+1. **Thương hiệu đồng nhất:** Tích hợp sâu vào hệ sinh thái 360 CORP với tên gọi VuaOffice và VuaMail.
+2. **Offline-First & Siêu tốc:** Lưu trữ dữ liệu SQLite cục bộ, mở thư và tìm kiếm tức thì.
+3. **Chủ động hạ tầng AI:** Sử dụng AI Router riêng của 360 CORP để phân phối request AI tối ưu.
+4. **Bảo trì & Tích hợp dễ dàng:** Cấu trúc module rõ ràng, merge sạch sẽ với `vuaoffice/main`.
+5. **An toàn & Riêng tư:** Dữ liệu email và tài liệu nằm an toàn tại máy người dùng; kết nối mã hoá HTTPS/TLS.
 
 ## Hệ sinh thái / Liên kết
-Nằm trong hệ sinh thái giải pháp doanh nghiệp của **360 CORP** (cùng với Vua Hệ Thống, CloudPanel, Hermes, 9router...).
-
-## Ghi chú thêm
-- Kịch bản build tự động cần hỗ trợ đa nền tảng (macOS, Windows, Linux).
-- Đảm bảo các asset hình ảnh (logo SVG, icon PNG/ICNS/ICO) được thay thế chuẩn xác tại các vị trí hiển thị của Electron shell.
+Nằm trong hệ sinh thái giải pháp doanh nghiệp của **360 CORP** (cùng với Vua Hệ Thống, CloudPanel, Hermes, 9router, OmiRouter...).
 
 ---
 
 **Người viết:** Sếp (Product Owner)
-**Ngày:** 2026-08-10
-**Trạng thái:** Confirmed
+**Ngày cập nhật:** 2026-08-15
+**Trạng thái:** Confirmed & In Progress
