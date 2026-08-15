@@ -11,7 +11,30 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
   - **Outlook Fluent UI**: Giao diện Microsoft 365 Outlook clone (Blazorise port sang React 19) gồm 3 cột (AppRail/FolderTree, Message List Focused/Other, Reading Pane) và Compose Modal có AI prompt.
   - **VuaOffice AI Assistant**: Tích hợp tóm tắt chuỗi email thông minh (`ai:summarize-thread`) và tự động sinh bản nháp phản hồi (`ai:generate-draft`).
   - **Shell Integration**: Nhúng `apps/mail` trực tiếp vào VuaOffice Shell qua `WebContentsView`, hỗ trợ đa tab trên `TabBar`, quick start card và badge `VuaMail` tại màn hình Home.
-- Bổ sung tài liệu thiết kế kiến trúc chi tiết tại `/Volumes/DATA/DEV/vuaoffice/docs/CODEMAPS/vuamail-architecture.md`, đồng bộ cập nhật `/Volumes/DATA/DEV/vuaoffice/ARCH.md`, `/Volumes/DATA/DEV/vuaoffice/SPEC.md`, và `/Volumes/DATA/DEV/vuaoffice/REQUIREMENTS.md`.
+- Bổ sung tài liệu thiết kế kiến trúc chi tiết tại `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-architecture.md`, `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-codemap.md`, `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-ui-integration.md`, đồng bộ cập nhật `/Volumes/DATA/DEV/VuaMail/ARCH.md`, `/Volumes/DATA/DEV/VuaMail/SPEC.md`, và `/Volumes/DATA/DEV/VuaMail/REQUIREMENTS.md`.
+
+## [0.6.7] - 2026-08-15
+
+### Added
+- **Kiểm tra Cập nhật Thủ công (Manual Check for Updates)**:
+  - Bổ sung hàm `checkForUpdatesManual()` trong `apps/shell/src/main/updater.ts` với hộp thoại phản hồi trực quan (phân biệt bản dev và production release, thông báo khi đã ở bản mới nhất hoặc lỗi mạng).
+  - Tích hợp mục "Check for Updates…" vào Menu hệ thống: macOS Application Menu (ngay dưới `About VuaOffice`) và menu `Help` trên Windows/Linux.
+  - Tích hợp nút "Check for Updates…" vào Account dropdown menu tại màn hình chính `Home.tsx`.
+- **Hỗ trợ Nhà cung cấp AI Hermes Agent**:
+  - Bổ sung provider `hermes` với endpoint mặc định `https://hermes.vuahethong.com/v1` trong `@genoffice/ai-provider`.
+
+### Changed
+- **Đồng bộ Tài nguyên Icon & Logo Thương hiệu VuaOffice**:
+  - Chuẩn hoá toàn bộ icon ứng dụng từ `whitelabel/Logo/vuaoffice-icon.svg` và `whitelabel/Logo/Vua Office Icon.png`.
+  - Tạo lại bộ icon native macOS đa độ phân giải (`whitelabel/assets/icon.icns`), Windows (`whitelabel/assets/icon.ico`) và PNG assets (`whitelabel/assets/icon.png`, `whitelabel/assets/app-icon.png`).
+  - Đồng bộ icon vector và raster sang toàn bộ các app con (`apps/docs`, `apps/sheets`, `apps/slides`, `apps/pdf`, `apps/markdown`, `apps/shell`, `apps/mail`).
+- **Tối ưu Cấu hình Developer Mode**:
+  - Di chuyển tuỳ chọn "Enable Developer Mode" sang menu `Help > Troubleshooting > Enable Developer Mode` dạng checkbox.
+  - Đồng bộ trạng thái developer mode theo thời gian thực giữa Main process và Renderer qua IPC (`app:developer-mode-changed`).
+
+### Fixed
+- Sửa lỗi thiếu import biến toàn cục `webContents` trong `apps/docs/src/main/docs-main.ts`, `apps/sheets/src/main/sheets-main.ts` và `apps/slides/src/main/ai-ipc.ts`.
+- Sửa URL auto-update fallback download từ `genspark-ai/genoffice` sang `360org/vuaoffice`.
 
 ## [0.6.6] - 2026-08-15
 
