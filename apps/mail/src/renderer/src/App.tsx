@@ -5,13 +5,15 @@ import { MailRibbon } from './components/ribbon/MailRibbon'
 import { MailList } from './components/list/MailList'
 import { ReadingPane } from './components/detail/ReadingPane'
 import { ComposeModal } from './components/compose/ComposeModal'
+import { PeopleView } from './components/people/PeopleView'
+import { CalendarView } from './components/calendar/CalendarView'
 import type { EmailAccount, EmailBody, EmailMessage, MailFolder } from '../../shared/types'
 import './styles/mail-theme.css'
 
 export const App: React.FC = () => {
   const [activeRailTab, setActiveRailTab] = useState<AppRailTab>('mail')
   const [accounts, setAccounts] = useState<EmailAccount[]>([])
-  const [activeAccount, setActiveAccount] = useState<EmailAccount | null>(null)
+  const [activeAccountId, setActiveAccountId] = useState<string>('acc_primary')
   const [folders, setFolders] = useState<MailFolder[]>([])
   const [activeFolderId, setActiveFolderId] = useState<string>('f_inbox')
   const [categoryTab, setCategoryTab] = useState<'focused' | 'other'>('focused')
@@ -22,6 +24,7 @@ export const App: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
 
   // Load initial accounts & folders
   useEffect(() => {
@@ -31,18 +34,32 @@ export const App: React.FC = () => {
       setAccounts(accList)
       if (accList.length > 0) {
         const primary = accList[0]
-        setActiveAccount(primary)
+        setActiveAccountId(primary.id)
         const fList = await window.vuaMail.getFolders(primary.id)
         setFolders(fList)
+        if (fList.length > 0) {
+          setActiveFolderId(fList[0].id)
+        }
       }
     }
     loadInitial()
   }, [])
 
+  // Switch account handler
+  const handleSelectAccount = async (accountId: string) => {
+    setActiveAccountId(accountId)
+    if (!window.vuaMail) return
+    const fList = await window.vuaMail.getFolders(accountId)
+    setFolders(fList)
+    if (fList.length > 0) {
+      setActiveFolderId(fList[0].id)
+    }
+  }
+
   // Load emails when folder or category changes
   useEffect(() => {
     async function loadEmails() {
-      if (!window.vuaMail) return
+      if (!window.vuaMail || !activeFolderId) return
       const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
       setEmails(list)
       if (list.length > 0) {
@@ -72,6 +89,7 @@ export const App: React.FC = () => {
     loadBody()
   }, [selectedEmailId])
 
+  const activeAccount = accounts.find((a) => a.id === activeAccountId) || accounts[0] || null
   const selectedEmail = emails.find((e) => e.id === selectedEmailId) || null
 
   const filteredEmails = emails.filter((e) => {
@@ -104,8 +122,6 @@ export const App: React.FC = () => {
       `📌 Tóm tắt nội dung chính:\n• Email thông báo tiến độ cập nhật và vận hành của hệ thống VuaMail.\n• Đã kết nối thành công SQLite Engine và giao diện Fluent UI Outlook 365.\n• Đề xuất Sếp kiểm tra lại và duyệt release.`
     )
   }
-
-  const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
 
   const handleSmartReply = (replyText: string) => {
     if (!selectedEmail) return
@@ -144,6 +160,15 @@ export const App: React.FC = () => {
       subject: draft.subject,
       bodyHtml: draft.bodyHtml,
     })
+  }
+
+  const handleSendEmailToContact = (email: string, _name: string) => {
+    setComposeInitial({
+      to: email,
+      subject: '',
+      body: '',
+    })
+    setIsComposeOpen(true)
   }
 
   return (
@@ -186,34 +211,54 @@ export const App: React.FC = () => {
         hasSelectedEmail={Boolean(selectedEmail)}
       />
 
-      {/* 3-Column Outlook Main View */}
+      {/* Outlook Main Body */}
       <div className="vuamail-body">
         <AppRail activeTab={activeRailTab} onTabChange={setActiveRailTab} />
 
-        <FolderTree
-          folders={folders}
-          activeFolderId={activeFolderId}
-          onSelectFolder={setActiveFolderId}
-          accountEmail={activeAccount?.email || ''}
-        />
+        {activeRailTab === 'mail' && (
+          <>
+            <FolderTree
+              accounts={accounts}
+              activeAccountId={activeAccountId}
+              onSelectAccount={handleSelectAccount}
+              folders={folders}
+              activeFolderId={activeFolderId}
+              onSelectFolder={setActiveFolderId}
+            />
 
-        <MailList
-          emails={filteredEmails}
-          selectedEmailId={selectedEmailId}
-          onSelectEmail={setSelectedEmailId}
-          categoryTab={categoryTab}
-          onCategoryChange={setCategoryTab}
-        />
+            <MailList
+              emails={filteredEmails}
+              selectedEmailId={selectedEmailId}
+              onSelectEmail={setSelectedEmailId}
+              categoryTab={categoryTab}
+              onCategoryChange={setCategoryTab}
+            />
 
-        <ReadingPane
-          email={selectedEmail}
-          body={activeBody}
-          aiSummary={aiSummary}
-          isLoadingBody={isLoadingBody}
-          onTriggerAiSummary={handleTriggerAiSummary}
-          onSmartReply={handleSmartReply}
-          onPreviewAttachment={handlePreviewAttachment}
-        />
+            <ReadingPane
+              email={selectedEmail}
+              body={activeBody}
+              aiSummary={aiSummary}
+              isLoadingBody={isLoadingBody}
+              onTriggerAiSummary={handleTriggerAiSummary}
+              onSmartReply={handleSmartReply}
+              onPreviewAttachment={handlePreviewAttachment}
+            />
+          </>
+        )}
+
+        {activeRailTab === 'people' && (
+          <PeopleView onSendEmailTo={handleSendEmailToContact} />
+        )}
+
+        {activeRailTab === 'calendar' && (
+          <CalendarView />
+        )}
+
+        {activeRailTab === 'todo' && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+            📝 To-Do & Tasks Sync (Sắp ra mắt trong bản cập nhật kế tiếp)
+          </div>
+        )}
       </div>
 
       {/* Compose Email Modal */}
@@ -228,3 +273,4 @@ export const App: React.FC = () => {
     </div>
   )
 }
+

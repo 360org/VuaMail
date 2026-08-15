@@ -32,19 +32,29 @@ export class SQLiteMailStorage {
     if (count > 0) return
 
     const accountId = 'acc_primary'
+    const accountId2 = 'acc_secondary'
     const now = Date.now()
 
     this.db.prepare(`
       INSERT INTO accounts (id, email, name, provider, is_default, created_at)
       VALUES (?, ?, ?, ?, 1, ?)
-    `).run(accountId, 'chau.le@360.org.vn', 'Châu Lê', 'google', now)
+    `).run(accountId, 'chau.le@360.org.vn', 'Châu Lê (360 CORP)', 'google', now)
+
+    this.db.prepare(`
+      INSERT INTO accounts (id, email, name, provider, is_default, created_at)
+      VALUES (?, ?, ?, ?, 0, ?)
+    `).run(accountId2, 'ceo@vuahethong.com', 'Châu Lê (Vua Hệ Thống)', 'microsoft', now)
 
     const folders = [
-      { id: 'f_inbox', name: 'Inbox', kind: 'inbox', icon: 'Inbox', unread: 2, total: 12, fav: 1 },
-      { id: 'f_drafts', name: 'Drafts', kind: 'drafts', icon: 'Drafts', unread: 0, total: 2, fav: 1 },
-      { id: 'f_sent', name: 'Sent Items', kind: 'sent', icon: 'Send', unread: 0, total: 25, fav: 1 },
-      { id: 'f_archive', name: 'Archive', kind: 'archive', icon: 'Archive', unread: 0, total: 40, fav: 0 },
-      { id: 'f_trash', name: 'Deleted Items', kind: 'trash', icon: 'Delete', unread: 0, total: 5, fav: 0 },
+      { id: 'f_inbox', accountId, name: 'Inbox', kind: 'inbox', icon: 'Inbox', unread: 2, total: 12, fav: 1 },
+      { id: 'f_drafts', accountId, name: 'Drafts', kind: 'drafts', icon: 'Drafts', unread: 0, total: 2, fav: 1 },
+      { id: 'f_sent', accountId, name: 'Sent Items', kind: 'sent', icon: 'Send', unread: 0, total: 25, fav: 1 },
+      { id: 'f_archive', accountId, name: 'Archive', kind: 'archive', icon: 'Archive', unread: 0, total: 40, fav: 0 },
+      { id: 'f_trash', accountId, name: 'Deleted Items', kind: 'trash', icon: 'Delete', unread: 0, total: 5, fav: 0 },
+
+      { id: 'f2_inbox', accountId: accountId2, name: 'Inbox', kind: 'inbox', icon: 'Inbox', unread: 4, total: 18, fav: 1 },
+      { id: 'f2_sent', accountId: accountId2, name: 'Sent Items', kind: 'sent', icon: 'Send', unread: 0, total: 10, fav: 1 },
+      { id: 'f2_archive', accountId: accountId2, name: 'Archive', kind: 'archive', icon: 'Archive', unread: 0, total: 15, fav: 0 },
     ]
 
     const folderStmt = this.db.prepare(`
@@ -53,7 +63,7 @@ export class SQLiteMailStorage {
     `)
 
     for (const f of folders) {
-      folderStmt.run(f.id, accountId, f.name, f.kind, f.icon, f.unread, f.total, f.fav)
+      folderStmt.run(f.id, f.accountId, f.name, f.kind, f.icon, f.unread, f.total, f.fav)
     }
 
     const demoEmails = [

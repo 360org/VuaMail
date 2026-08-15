@@ -17,9 +17,9 @@
 | **Zero-Conflict Sync** | Thiết lập remote `vuaoffice` và merge không xung đột | ✅ Hoàn thành | P0 | AI |
 | **Attachment & Preview** | Preview file Docx/PDF đính kèm trong thư | ✅ Hoàn thành | P1 | AI |
 | **AI Assistant** | AI Thread Summary, Compose Draft & Smart Reply | ✅ Hoàn thành | P1 | AI |
-| **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | 🔄 Đang thực hiện | P1 | AI |
+| **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | ✅ Hoàn thành | P1 | AI |
+| **Calendar & Contacts** | Tích hợp People Page & Calendar Page | ✅ Hoàn thành | P1 | AI |
 | **Network Protocols** | IMAP / SMTP client kết nối thực tế | ⏳ Chờ xử lý | P2 | AI |
-| **Calendar & Contacts** | Tích hợp People Page & Calendar Page | ⏳ Chờ xử lý | P2 | AI |
 
 ---
 

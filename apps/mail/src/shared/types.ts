@@ -63,6 +63,36 @@ export interface MailOp {
   createdAt: number
 }
 
+export interface ContactInfo {
+  id: string
+  name: string
+  email: string
+  jobTitle?: string
+  department?: string
+  company?: string
+  phone?: string
+  isFavorite?: boolean
+}
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  startIso: string
+  endIso: string
+  location?: string
+  description?: string
+  isAllDay?: boolean
+  category?: 'work' | 'personal' | 'important'
+}
+
+export interface TodoItem {
+  id: string
+  title: string
+  isCompleted: boolean
+  dueDateIso?: string
+  priority?: 'high' | 'normal' | 'low'
+}
+
 export interface VuaMailApi {
   getAccounts: () => Promise<EmailAccount[]>
   getFolders: (accountId: string) => Promise<MailFolder[]>
