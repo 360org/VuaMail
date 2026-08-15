@@ -3,6 +3,16 @@
 Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaOffice sẽ được ghi lại trong tài liệu này.
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/) và dự án này tuân thủ [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-08-15
+
+### Added
+- Khởi tạo ứng dụng **VuaMail** (`apps/mail`) trong VuaOffice Suite trên branch `VuaMail`:
+  - **Local Mail Engine**: Kiến trúc Offline-first sử dụng SQLite Storage (`better-sqlite3` + WAL mode) kết hợp hàng đợi đột biến `op_queue`.
+  - **Outlook Fluent UI**: Giao diện Microsoft 365 Outlook clone (Blazorise port sang React 19) gồm 3 cột (AppRail/FolderTree, Message List Focused/Other, Reading Pane) và Compose Modal có AI prompt.
+  - **VuaOffice AI Assistant**: Tích hợp tóm tắt chuỗi email thông minh (`ai:summarize-thread`) và tự động sinh bản nháp phản hồi (`ai:generate-draft`).
+  - **Shell Integration**: Nhúng `apps/mail` trực tiếp vào VuaOffice Shell qua `WebContentsView`, hỗ trợ đa tab trên `TabBar`, quick start card và badge `VuaMail` tại màn hình Home.
+- Bổ sung tài liệu thiết kế kiến trúc chi tiết tại `/Volumes/DATA/DEV/vuaoffice/docs/CODEMAPS/vuamail-architecture.md`, đồng bộ cập nhật `/Volumes/DATA/DEV/vuaoffice/ARCH.md`, `/Volumes/DATA/DEV/vuaoffice/SPEC.md`, và `/Volumes/DATA/DEV/vuaoffice/REQUIREMENTS.md`.
+
 ## [0.6.6] - 2026-08-15
 
 ### Fixed
