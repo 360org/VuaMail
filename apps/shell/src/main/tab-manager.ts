@@ -226,7 +226,7 @@ export class TabManager {
       id,
       kind: 'mail',
       view,
-      title: 'VuaOffice Mail',
+      title: 'AI Mail',
     })
     this.activateTab(id)
     return id

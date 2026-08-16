@@ -1936,7 +1936,7 @@ export function Home() {
     { ext: 'xlsx', title: t('newSheet'), sub: '.xlsx', action: handleNewSheet },
     { ext: 'pptx', title: t('newSlide'), sub: '.pptx', action: handleNewSlide },
     { ext: 'md', title: t('newMarkdown'), sub: '.md', action: handleNewMarkdown },
-    { ext: 'eml', title: t('newMail'), sub: 'Outlook UI', action: handleNewMail },
+    { ext: 'eml', title: t('newMail'), sub: '.pst', action: handleNewMail },
   ]
 
   function renderQuickCards() {
