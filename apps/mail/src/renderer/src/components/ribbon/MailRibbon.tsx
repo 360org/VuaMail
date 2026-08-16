@@ -29,7 +29,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
   return (
     <div className="vuamail-ribbon">
       <RibbonButton
-        label={isSyncing ? "Syncing..." : "Send / Receive"}
+        label={isSyncing ? "Đang đồng bộ..." : "Gửi / Nhận"}
         disabled={isSyncing}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -39,7 +39,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
         onClick={onSyncNow}
       />
       <RibbonButton
-        label="Rules & Filters"
+        label="Quy tắc & Bộ lọc"
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -49,7 +49,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
       />
       <div className="ribbon-divider" />
       <RibbonButton
-        label="Delete"
+        label="Xoá thư"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -59,7 +59,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
         onClick={onDelete}
       />
       <RibbonButton
-        label="Archive"
+        label="Lưu trữ"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -72,7 +72,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
       />
       <div className="ribbon-divider" />
       <RibbonButton
-        label="Reply"
+        label="Trả lời"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -83,7 +83,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
         onClick={onReply}
       />
       <RibbonButton
-        label="Reply All"
+        label="Trả lời tất cả"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,7 +95,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
         onClick={onReplyAll}
       />
       <RibbonButton
-        label="Forward"
+        label="Chuyển tiếp"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -107,7 +107,7 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
       />
       <div className="ribbon-divider" />
       <RibbonButton
-        label="AI Assist"
+        label="AI Trợ lý"
         disabled={!hasSelectedEmail}
         icon={
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0078d4" strokeWidth="2">

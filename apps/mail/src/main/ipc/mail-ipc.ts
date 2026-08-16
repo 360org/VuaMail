@@ -75,6 +75,20 @@ export function registerMailIpc(
         } else if (!existsSync(targetPath)) {
           writeFileSync(targetPath, Buffer.from('PK\x03\x04Demo Word Document'))
         }
+      } else if (attachment.filename.endsWith('.xlsx')) {
+        const sampleXlsx = join(__dirname, '../../../../fixtures/generated/sample.xlsx')
+        if (existsSync(sampleXlsx)) {
+          copyFileSync(sampleXlsx, targetPath)
+        } else if (!existsSync(targetPath)) {
+          writeFileSync(targetPath, Buffer.from('PK\x03\x04Demo Excel Spreadsheet'))
+        }
+      } else if (attachment.filename.endsWith('.pptx')) {
+        const samplePptx = join(__dirname, '../../../../fixtures/generated/sample.pptx')
+        if (existsSync(samplePptx)) {
+          copyFileSync(samplePptx, targetPath)
+        } else if (!existsSync(targetPath)) {
+          writeFileSync(targetPath, Buffer.from('PK\x03\x04Demo PowerPoint Presentation'))
+        }
       } else if (attachment.filename.endsWith('.pdf')) {
         const samplePdf = join(__dirname, '../../../../fixtures/generated/sample.pdf')
         if (existsSync(samplePdf)) {

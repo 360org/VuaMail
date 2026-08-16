@@ -24,6 +24,11 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
   - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
 
 ### Changed
+- **Chuẩn hoá Toàn diện 100% Giao diện Tiếng Việt & Sửa Lỗi UI Mail List**:
+  - Dọn dẹp triệt để trùng lặp trong mục `MỤC YÊU THÍCH` (Favorites), chỉ hiển thị các thư mục của tài khoản đang active.
+  - Khắc phục lỗi lọc `categoryTab` khiến danh sách thư không hiển thị khi chọn tab `Tất cả`.
+  - Ẩn thanh cuộn ngang vỡ bố cục trên bộ lọc phân loại Category Pills.
+  - Việt hoá toàn bộ nhãn Ribbon và ReadingPane (*Gửi / Nhận, Quy tắc & Bộ lọc, Xoá thư, Lưu trữ, Trả lời, Chuyển tiếp, AI Trợ lý, Chọn một email để đọc nội dung*).
 - **Tinh gọn Thanh Ribbon VuaMail & Hợp nhất Cài đặt vào Profile**:
   - Loại bỏ các nút trùng lặp trên Ribbon (`New mail`, `Import/Export`, `Cài đặt tài khoản`) giúp giao diện tối giản, tập trung vào các thao tác xử lý thư cốt lõi: Send/Receive, Rules & Filters, Delete, Archive, Reply, Reply All, Forward, AI Assist.
   - Tích hợp tính năng **Nhập / Xuất dữ liệu Email (.pst & .eml)** trực tiếp vào tab Cài đặt chung trong `ProfileView`.

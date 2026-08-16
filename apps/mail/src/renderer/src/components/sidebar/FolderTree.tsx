@@ -75,17 +75,33 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
     }
   }
 
-  // Favorite quick links
-  const favoriteFolders = folders.filter((f) => f.isFavorite)
+  const getFolderLabel = (f: MailFolder) => {
+    switch (f.kind) {
+      case 'inbox':
+        return 'Hộp thư đến'
+      case 'drafts':
+        return 'Thư nháp'
+      case 'sent':
+        return 'Thư đã gửi'
+      case 'archive':
+        return 'Kho lưu trữ'
+      case 'trash':
+        return 'Thùng rác'
+      default:
+        return f.name
+    }
+  }
+
+  // Favorite quick links: only show favorites for current active account to avoid duplicates
+  const favoriteFolders = folders.filter((f) => f.accountId === activeAccountId && f.isFavorite)
 
   return (
     <div className="vuamail-folders">
       {/* Favorites Section */}
       {favoriteFolders.length > 0 && (
         <div className="folder-section">
-          <div className="folder-group-title">Favorites</div>
+          <div className="folder-group-title">MỤC YÊU THÍCH</div>
           {favoriteFolders.map((f) => {
-            const acc = accounts.find((a) => a.id === f.accountId)
             const isActive = activeFolderId === f.id && activeAccountId === f.accountId
             return (
               <div
@@ -98,8 +114,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {getFolderIcon(f.kind)}
-                  <span>{f.name}</span>
-                  {acc && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({acc.name.split(' ')[0]})</span>}
+                  <span>{getFolderLabel(f)}</span>
                 </div>
                 {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
               </div>
@@ -146,7 +161,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {getFolderIcon(f.kind)}
-                        <span>{f.name}</span>
+                        <span>{getFolderLabel(f)}</span>
                       </div>
                       {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
                     </div>

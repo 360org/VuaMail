@@ -18,6 +18,8 @@ const CATEGORY_TABS = [
   { id: 'updates', label: 'Cập nhật' },
 ]
 
+type FilterType = 'all' | 'unread' | 'flagged' | 'attachments'
+
 const AVATAR_COLORS = ['#0078d4', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e', '#d83b01']
 
 export const MailList: React.FC<MailListProps> = ({
@@ -29,14 +31,23 @@ export const MailList: React.FC<MailListProps> = ({
   onRefresh,
 }) => {
   const [filterQuery, setFilterQuery] = useState('')
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
 
   const filtered = emails.filter((m) => {
+    // Category tab filter
     if (categoryTab !== 'all') {
       if (categoryTab === 'primary' && m.category === 'other') return false
       if (categoryTab === 'social' && !m.snippet.toLowerCase().includes('social') && !m.subject.toLowerCase().includes('mạng xã hội')) return false
       if (categoryTab === 'promotions' && !m.snippet.toLowerCase().includes('khuyến mãi') && !m.subject.toLowerCase().includes('ưu đãi')) return false
       if (categoryTab === 'updates' && !m.snippet.toLowerCase().includes('cập nhật') && !m.subject.toLowerCase().includes('update') && !m.subject.toLowerCase().includes('vcloud') && !m.subject.toLowerCase().includes('testflight')) return false
     }
+
+    // Advanced filter type (unread / flagged / attachments)
+    if (activeFilter === 'unread' && m.isRead) return false
+    if (activeFilter === 'flagged' && !m.isStarred) return false
+    if (activeFilter === 'attachments' && !m.hasAttachments) return false
+
+    // Search query filter
     if (filterQuery.trim()) {
       const q = filterQuery.toLowerCase()
       return (
@@ -224,6 +235,46 @@ export const MailList: React.FC<MailListProps> = ({
         </div>
       </div>
 
+      {/* Advanced Quick Filters: All / Unread / Flagged / Attachments */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '6px 12px',
+          borderBottom: '1px solid var(--border-subtle, #f0f0f0)',
+          backgroundColor: '#ffffff',
+        }}
+      >
+        {[
+          { id: 'all', label: 'Tất cả' },
+          { id: 'unread', label: 'Chưa đọc' },
+          { id: 'flagged', label: '⭐ Gắn cờ' },
+          { id: 'attachments', label: '📎 Đính kèm' },
+        ].map((f) => {
+          const isActive = activeFilter === f.id
+          return (
+            <button
+              key={f.id}
+              onClick={() => setActiveFilter(f.id as FilterType)}
+              style={{
+                background: isActive ? 'var(--hover, #eef3fc)' : 'transparent',
+                border: 'none',
+                color: isActive ? '#0078d4' : 'var(--text-secondary, #606366)',
+                fontWeight: isActive ? 700 : 500,
+                fontSize: '11px',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.1s ease',
+              }}
+            >
+              {f.label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Category Filter Pills (GenMail + Outlook hybrid) */}
       <div
         style={{
@@ -231,6 +282,8 @@ export const MailList: React.FC<MailListProps> = ({
           gap: '6px',
           padding: '8px 12px',
           overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
           borderBottom: '1px solid var(--border, #e3e6ea)',
           backgroundColor: 'var(--surface-subtle, #f6f7f9)',
         }}

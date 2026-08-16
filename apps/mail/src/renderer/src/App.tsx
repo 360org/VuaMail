@@ -95,7 +95,10 @@ export const App: React.FC = () => {
   useEffect(() => {
     async function loadEmails() {
       if (!window.vuaMail || !activeFolderId) return
-      const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
+      const list = await window.vuaMail.getEmails(
+        activeFolderId,
+        categoryTab === 'primary' ? 'focused' : categoryTab === 'all' ? undefined : 'other'
+      )
       setEmails(list)
       if (list.length > 0) {
         setSelectedEmailId(list[0].id)
