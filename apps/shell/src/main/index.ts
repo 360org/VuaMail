@@ -184,6 +184,12 @@ import { normalizeRecentQuery, pageRecentPaths, statExistingPaths } from './rece
 import { TabManager } from './tab-manager'
 import { applyUpdateChannel, checkForUpdatesManual, initAutoUpdater } from './updater'
 import { isUpdateChannel, type UpdateChannel } from '../shared/update-api'
+import {
+  exportDiagnosticReportToFile,
+  generateDiagnosticReportData,
+  submitDiagnosticReportToGitLab,
+} from './diagnostic-report'
+import type { DiagnosticReportData } from '../shared/home-api'
 
 /**
  * VuaOffice unified shell: ONE Electron app, ONE BrowserWindow, hosting the
@@ -421,6 +427,7 @@ const tMain = createI18n({
     menuHelp: '帮助',
     menuTroubleshooting: '故障排除',
     menuDeveloperMode: '启用开发者模式',
+    menuDiagnosticReport: '生成日志与诊断报告…',
     menuCheckForUpdates: '检查更新…',
     thirdPartyNotices: '第三方软件声明',
     menuExportDocx: '导出为 Word…',
@@ -478,6 +485,7 @@ const tMain = createI18n({
     menuHelp: 'Help',
     menuTroubleshooting: 'Troubleshooting',
     menuDeveloperMode: 'Enable Developer Mode',
+    menuDiagnosticReport: 'Generate Log, Diagnostic Report…',
     menuCheckForUpdates: 'Check for Updates…',
     thirdPartyNotices: 'Third-Party Notices',
     menuExportDocx: 'Export as Word…',
@@ -540,6 +548,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'トラブルシューティング',
     menuDeveloperMode: '開発者モードを有効にする',
     menuCheckForUpdates: 'アップデートを確認…',
+    menuDiagnosticReport: 'ログ・診断レポートを生成…',
     thirdPartyNotices: 'サードパーティソフトウェアに関する通知',
     menuExportDocx: 'Word として書き出す…',
     pdfDocxLoginMsg: 'Word への書き出しには 360 CORP へのログインが必要です。',
@@ -601,6 +610,7 @@ const tMain = createI18n({
     menuTroubleshooting: '문제 해결',
     menuDeveloperMode: '개발자 모드 활성화',
     menuCheckForUpdates: '업데이트 확인…',
+    menuDiagnosticReport: '로그 및 진단 보고서 생성…',
     thirdPartyNotices: '타사 소프트웨어 고지',
     menuExportDocx: 'Word로 내보내기…',
     pdfDocxLoginMsg: 'Word로 내보내려면 360 CORP 로그인이 필요합니다.',
@@ -661,6 +671,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Dépannage',
     menuDeveloperMode: 'Activer le mode développeur',
     menuCheckForUpdates: 'Rechercher les mises à jour…',
+    menuDiagnosticReport: 'Générer un rapport de diagnostic et des logs…',
     thirdPartyNotices: 'Mentions relatives aux logiciels tiers',
     menuExportDocx: 'Exporter en Word…',
     pdfDocxLoginMsg: "L'export en Word nécessite une connexion à 360 CORP.",
@@ -722,6 +733,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Fehlerbehebung',
     menuDeveloperMode: 'Entwicklermodus aktivieren',
     menuCheckForUpdates: 'Nach Updates suchen…',
+    menuDiagnosticReport: 'Protokoll- und Diagnosebericht erstellen…',
     thirdPartyNotices: 'Hinweise zu Drittanbietersoftware',
     menuExportDocx: 'Als Word exportieren…',
     pdfDocxLoginMsg: 'Für den Word-Export ist eine Anmeldung bei 360 CORP erforderlich.',
@@ -783,6 +795,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Solución de problemas',
     menuDeveloperMode: 'Habilitar modo desarrollador',
     menuCheckForUpdates: 'Buscar actualizaciones…',
+    menuDiagnosticReport: 'Generar registro e informe de diagnóstico…',
     thirdPartyNotices: 'Avisos de software de terceros',
     menuExportDocx: 'Exportar como Word…',
     pdfDocxLoginMsg: 'Para exportar como Word es necesario iniciar sesión en 360 CORP.',
@@ -844,6 +857,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'การแก้ไขปัญหา',
     menuDeveloperMode: 'เปิดใช้งานโหมดนักพัฒนา',
     menuCheckForUpdates: 'ตรวจสอบการอัปเดต…',
+    menuDiagnosticReport: 'สร้างบันทึกและรายงานการวินิจฉัย…',
     thirdPartyNotices: 'ประกาศเกี่ยวกับซอฟต์แวร์ของบุคคลที่สาม',
     menuExportDocx: 'ส่งออกเป็น Word…',
     pdfDocxLoginMsg: 'การส่งออกเป็น Word ต้องเข้าสู่ระบบ 360 CORP',
@@ -903,6 +917,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Pemecahan Masalah',
     menuDeveloperMode: 'Aktifkan Mode Pengembang',
     menuCheckForUpdates: 'Periksa Pembaruan…',
+    menuDiagnosticReport: 'Buat Laporan Diagnostik & Log…',
     thirdPartyNotices: 'Pemberitahuan Perangkat Lunak Pihak Ketiga',
     menuExportDocx: 'Ekspor sebagai Word…',
     pdfDocxLoginMsg: 'Ekspor sebagai Word memerlukan login ke 360 CORP.',
@@ -964,6 +979,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Устранение неполадок',
     menuDeveloperMode: 'Включить режим разработчика',
     menuCheckForUpdates: 'Проверить обновления…',
+    menuDiagnosticReport: 'Создать журнал и диагностический отчет…',
     thirdPartyNotices: 'Уведомления о стороннем ПО',
     menuExportDocx: 'Экспортировать в Word…',
     pdfDocxLoginMsg: 'Для экспорта в Word требуется вход в 360 CORP.',
@@ -1025,6 +1041,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'استكشاف الأخطاء وإصلاحها',
     menuDeveloperMode: 'تمكين وضع المطور',
     menuCheckForUpdates: 'التحقق من وجود تحديثات…',
+    menuDiagnosticReport: 'إنشاء سجل وتقرير تشخيصي…',
     thirdPartyNotices: 'إشعارات برامج الجهات الخارجية',
     menuExportDocx: 'تصدير كملف Word…',
     pdfDocxLoginMsg: 'يتطلب التصدير كملف Word تسجيل الدخول إلى 360 CORP.',
@@ -1084,6 +1101,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Solução de problemas',
     menuDeveloperMode: 'Habilitar modo desenvolvedor',
     menuCheckForUpdates: 'Verificar atualizações…',
+    menuDiagnosticReport: 'Gerar relatório de diagnóstico e log…',
     thirdPartyNotices: 'Avisos de software de terceiros',
     menuExportDocx: 'Exportar como Word…',
     pdfDocxLoginMsg: 'Exportar como Word requer login no 360 CORP.',
@@ -1145,6 +1163,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Risoluzione dei problemi',
     menuDeveloperMode: 'Abilita modalità sviluppatore',
     menuCheckForUpdates: 'Controlla aggiornamenti…',
+    menuDiagnosticReport: 'Genera registro e rapporto di diagnostica…',
     thirdPartyNotices: 'Note sul software di terze parti',
     menuExportDocx: 'Esporta come Word…',
     pdfDocxLoginMsg: 'Per esportare come Word è necessario accedere a 360 CORP.',
@@ -1206,6 +1225,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Rozwiązywanie problemów',
     menuDeveloperMode: 'Włącz tryb dewelopera',
     menuCheckForUpdates: 'Sprawdź dostępność aktualizacji…',
+    menuDiagnosticReport: 'Wygeneruj raport diagnostyczny i dzienniki…',
     thirdPartyNotices: 'Informacje o oprogramowaniu innych firm',
     menuExportDocx: 'Eksportuj jako Word…',
     pdfDocxLoginMsg: 'Eksport do formatu Word wymaga zalogowania do 360 CORP.',
@@ -1267,6 +1287,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Probleemoplossing',
     menuDeveloperMode: 'Ontwikkelaarsmodus inschakelen',
     menuCheckForUpdates: 'Controleren op updates…',
+    menuDiagnosticReport: 'Log- en diagnostisch rapport genereren…',
     thirdPartyNotices: 'Kennisgevingen over software van derden',
     menuExportDocx: 'Exporteren als Word…',
     pdfDocxLoginMsg: 'Exporteren als Word vereist inloggen bij 360 CORP.',
@@ -1328,6 +1349,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'Penyelesaian Masalah',
     menuDeveloperMode: 'Pilih Mod Pembangun',
     menuCheckForUpdates: 'Semak Kemas Kini…',
+    menuDiagnosticReport: 'Jana Log, Laporan Diagnostik…',
     thirdPartyNotices: 'Notis Perisian Pihak Ketiga',
     menuExportDocx: 'Eksport sebagai Word…',
     pdfDocxLoginMsg: 'Eksport sebagai Word memerlukan log masuk ke 360 CORP.',
@@ -1389,6 +1411,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'פתרון בעיות',
     menuDeveloperMode: 'הפעלת מצב מפתח',
     menuCheckForUpdates: 'בדוק אם יש עדכונים…',
+    menuDiagnosticReport: 'צור יומן, דוח אבחון…',
     thirdPartyNotices: 'הודעות על תוכנות צד שלישי',
     menuExportDocx: 'ייצוא כ-Word…',
     pdfDocxLoginMsg: 'ייצוא כ-Word דורש התחברות ל-360 CORP.',
@@ -1447,6 +1470,7 @@ const tMain = createI18n({
     menuTroubleshooting: 'त्रुटि निवारण',
     menuDeveloperMode: 'डेवलपर मोड सक्षम करें',
     menuCheckForUpdates: 'अपडेट के लिए जांचें…',
+    menuDiagnosticReport: 'लॉग और डायग्नोस्टिक रिपोर्ट जेनरेट करें…',
     thirdPartyNotices: 'तृतीय-पक्ष सॉफ़्टवेयर सूचनाएँ',
     menuExportDocx: 'Word के रूप में निर्यात करें…',
     pdfDocxLoginMsg: 'Word के रूप में निर्यात करने के लिए 360 CORP में लॉगिन आवश्यक है।',
@@ -1508,6 +1532,7 @@ const tMain = createI18n({
     menuTroubleshooting: '疑難排解',
     menuDeveloperMode: '啟用開發者模式',
     menuCheckForUpdates: '檢查更新…',
+    menuDiagnosticReport: '產生記錄與診斷報告…',
     thirdPartyNotices: '第三方軟體聲明',
     menuExportDocx: '匯出為 Word…',
     pdfDocxLoginMsg: '匯出為 Word 需要登入 360 CORP 帳號。',
@@ -2242,26 +2267,8 @@ function registerHomeIpc(): void {
   // returning true also counts as "shown": the renderer displays it
   // unconditionally, so no separate mark-shown round-trip is needed
   ipcMain.handle(HOME_CHANNELS.starPromptShouldShow, (): StarPromptShow => {
-    if (starPromptSessionGrant) return starPromptSessionGrant
-    const now = Date.now()
-    const state = readStarPrompt()
-    const docOpens = state.docOpens ?? 0
-    // dev preview of the card without waiting out the value thresholds
-    // (same pattern as GENOFFICE_FAKE_UPDATE); nothing is recorded
-    if (!app.isPackaged && process.env.GENOFFICE_FORCE_STAR_PROMPT) return { show: true, docOpens }
-    const grant = (): StarPromptShow => {
-      writeStarPrompt(withShown(state, now))
-      starPromptSessionGrant = { show: true, docOpens }
-      return starPromptSessionGrant
-    }
-    // first launch after an upgrade: skip the value gates once for a
-    // never-prompted user (they are a proven repeat user already)
-    if (upgradeStarPromptPending) {
-      upgradeStarPromptPending = false
-      if (shouldShowUpgradeStarPrompt(state)) return grant()
-    }
-    if (!shouldShowStarPrompt(state, now)) return { show: false, docOpens }
-    return grant()
+    // Disabled star prompt
+    return { show: false, docOpens: 0 }
   })
 
   ipcMain.handle(HOME_CHANNELS.starPromptAction, (_event, action: unknown) => {
@@ -2285,6 +2292,21 @@ function registerHomeIpc(): void {
     const url = cloudProjectExternalUrl(projectUrl)
     if (url) void shell.openExternal(url)
   })
+
+  ipcMain.handle(HOME_CHANNELS.generateDiagnosticReport, async () => {
+    return await generateDiagnosticReportData(APP_SETTINGS_PATH())
+  })
+
+  ipcMain.handle(HOME_CHANNELS.exportDiagnosticReport, async (_event, report: DiagnosticReportData) => {
+    return await exportDiagnosticReportToFile(report)
+  })
+
+  ipcMain.handle(
+    HOME_CHANNELS.sendDiagnosticReport,
+    async (_event, report: DiagnosticReportData, userNote?: string) => {
+      return await submitDiagnosticReportToGitLab(report, userNote)
+    }
+  )
 }
 
 function stringPaths(value: unknown): string[] {
@@ -2466,6 +2488,17 @@ function helpMenuSubmenu(extraItems: MenuItemConstructorOptions[] = []): MenuIte
             if (tabManager) {
               const active = tabManager.activeTab()
               if (active) applyMenuFor(active.kind)
+            }
+          },
+        },
+        {
+          label: tm('menuDiagnosticReport'),
+          click: () => {
+            // Trigger diagnostic modal in shell / active window
+            for (const wc of webContents.getAllWebContents()) {
+              if (!wc.isDestroyed()) {
+                wc.send('app:open-diagnostic-report')
+              }
             }
           },
         },
