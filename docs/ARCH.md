@@ -12,13 +12,13 @@ VuaOffice được xây dựng trên mô hình **Monorepo Kiến trúc Đa Lớp
 
 ```mermaid
 graph TD
-    subgraph "Desktop Shell Layer (apps/shell)"
+    subgraph Shell["Desktop Shell Layer (apps/shell)"]
         MainProcess["Electron Main Process<br/>(tab-manager, updater, app-settings, menu)"]
         PreloadBridge["Preload ContextBridge<br/>(IPC API Channels, Security Isolation)"]
         HomeRenderer["Home Launcher & Settings<br/>(React 19, Semantic Tokens, Project Store)"]
     end
 
-    subgraph "Application Suite Layer (apps/*)"
+    subgraph Apps["Application Suite Layer (apps/*)"]
         DocsApp["apps/docs<br/>(Word/Docx Editor)"]
         SheetsApp["apps/sheets<br/>(Excel/Xlsx Engine)"]
         SlidesApp["apps/slides<br/>(PowerPoint/Pptx)"]
@@ -27,18 +27,23 @@ graph TD
         MailApp["apps/mail<br/>(VuaMail Client)"]
     end
 
-    subgraph "Core Engine & Shared Libraries Layer (packages/*)"
+    subgraph Packages["Core Engine & Shared Libraries Layer (packages/*)"]
         DocxEng["@genoffice/docx-engine<br/>(OpenXML Parser & Paging)"]
         PptxEng["@genoffice/pptx-engine<br/>(Slide Layout & Shapes)"]
         PptxRnd["@genoffice/pptx-render<br/>(HarfBuzz & Konva)"]
         FileParse["@genoffice/file-parse<br/>(Binary & Stream Parser)"]
+        FontMetrics["@genoffice/font-metrics<br/>(Canvas & Font Fallback)"]
+        MailEngine["@genoffice/mail-engine<br/>(PST & RFC822 EML Engine)"]
         UiLib["@genoffice/ui<br/>(Semantic Tokens & Components)"]
         I18nLib["@genoffice/i18n<br/>(19 Languages Core)"]
         AgentCore["@genoffice/agent-core<br/>(Agentic Loop & Tools)"]
         AiProvider["@genoffice/ai-provider<br/>(OmiRouter, 9Router, Hermes)"]
+        AiSearch["@genoffice/ai-search<br/>(Embedding & Hybrid Search)"]
+        ProjectStore["@genoffice/project-store<br/>(Unified Cache & History)"]
+        ElecUtils["@genoffice/electron-utils<br/>(IPC & Window Helpers)"]
     end
 
-    subgraph "Whitelabel & Distribution Layer"
+    subgraph Whitelabel["Whitelabel & Distribution Layer"]
         BrandCfg["whitelabel/brand-config.json"]
         BrandScript["scripts/whitelabel.js"]
         CiBuild["GitHub Actions CI/CD<br/>(release.yml)"]
@@ -48,14 +53,16 @@ graph TD
     PreloadBridge --> MainProcess
     MainProcess --> DocsApp & SheetsApp & SlidesApp & PdfApp & MdApp & MailApp
 
-    DocsApp --> DocxEng & UiLib & I18nLib & AiProvider & AgentCore
-    SheetsApp --> UiLib & I18nLib & AiProvider & AgentCore
-    SlidesApp --> PptxEng & PptxRnd & UiLib & I18nLib & AiProvider & AgentCore
+    DocsApp --> DocxEng & FontMetrics & UiLib & I18nLib & AiProvider & AgentCore & ProjectStore
+    SheetsApp --> UiLib & I18nLib & AiProvider & AgentCore & ProjectStore
+    SlidesApp --> PptxEng & PptxRnd & FontMetrics & UiLib & I18nLib & AiProvider & AgentCore
     PdfApp --> FileParse & UiLib & I18nLib & AiProvider & AgentCore
     MdApp --> UiLib & I18nLib & AiProvider & AgentCore
-    MailApp --> UiLib & I18nLib & AiProvider & AgentCore
+    MailApp --> MailEngine & UiLib & I18nLib & AiProvider & AgentCore & ProjectStore
 
-    BrandCfg & BrandScript -.-> Desktop Shell Layer & Application Suite Layer
+    MainProcess --> ElecUtils & AiSearch
+    BrandScript -.-> MainProcess
+    BrandCfg -.-> BrandScript
 ```
 
 ---
