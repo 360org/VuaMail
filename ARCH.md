@@ -77,12 +77,13 @@ sequenceDiagram
   - Tách biệt logic API endpoint khỏi các ứng dụng client.
   - Cung cấp cơ chế tự động điền URL mặc định cho omirouter/9router nhưng vẫn cho phép user thay đổi Base URL qua giao diện cấu hình.
 
-### 3.4 Module VuaMail (`apps/mail`)
-- **Nhiệm vụ**: Cung cấp ứng dụng email client phong cách Microsoft Outlook tích hợp Mail Engine và AI Assistant trong bộ VuaOffice.
+### 3.4 Module VuaMail (`apps/mail` & `packages/mail-engine`)
+- **Nhiệm vụ**: Cung cấp ứng dụng email client phong cách Microsoft Outlook tích hợp Mail Engine độc lập và AI Assistant trong bộ VuaOffice.
 - **Đặc điểm**:
-  - **Data Engine**: Kế thừa SQLite storage, offline op-queue và sync engine từ GenMail.
-  - **UI Layer**: React 19 Fluent UI Ribbon 3 cột (AppRail/Folders, Message List, Reading/Compose Pane) chuẩn VuaOffice Theme Tokens.
-  - **AI Integration**: Hỗ trợ tóm tắt chuỗi thư, phản hồi nhanh và tạo bản nháp qua `@genoffice/ai-provider`.
+  - **Core Engine (`packages/mail-engine`)**: Xử lý RFC822 EML parser/builder, Outlook PST container reader, Conversation threading và Rule evaluation độc lập.
+  - **Data Engine (`apps/mail/src/main/db`)**: SQLite storage kết hợp `node:worker_threads` (DB Worker) chạy ngầm không block UI thread, cơ chế offline mutation `op_queue` và background sync orchestrator.
+  - **UI Layer**: React 19 Fluent UI Ribbon (Mail, People, Calendar, To-Do), Wizards (Import/Export EML & PST, Rules Manager, Rich-text Composer với Auto-save nháp 15s) chuẩn VuaOffice Theme Tokens.
+  - **AI Integration**: Hỗ trợ tóm tắt chuỗi thư, phản hồi nhanh (Smart Reply) và tạo bản nháp qua `@genoffice/ai-provider`.
 
 ---
 

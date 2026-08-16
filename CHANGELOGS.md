@@ -3,15 +3,21 @@
 Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaOffice sẽ được ghi lại trong tài liệu này.
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/) và dự án này tuân thủ [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-08-15
+## [Unreleased] - 2026-08-16
 
 ### Added
-- Khởi tạo ứng dụng **VuaMail** (`apps/mail`) trong VuaOffice Suite trên branch `VuaMail`:
-  - **Local Mail Engine**: Kiến trúc Offline-first sử dụng SQLite Storage (`better-sqlite3` + WAL mode) kết hợp hàng đợi đột biến `op_queue`.
-  - **Outlook Fluent UI**: Giao diện Microsoft 365 Outlook clone (Blazorise port sang React 19) gồm 3 cột (AppRail/FolderTree, Message List Focused/Other, Reading Pane) và Compose Modal có AI prompt.
-  - **VuaOffice AI Assistant**: Tích hợp tóm tắt chuỗi email thông minh (`ai:summarize-thread`) và tự động sinh bản nháp phản hồi (`ai:generate-draft`).
-  - **Shell Integration**: Nhúng `apps/mail` trực tiếp vào VuaOffice Shell qua `WebContentsView`, hỗ trợ đa tab trên `TabBar`, quick start card và badge `VuaMail` tại màn hình Home.
-- Bổ sung tài liệu thiết kế kiến trúc chi tiết tại `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-architecture.md`, `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-codemap.md`, `/Volumes/DATA/DEV/VuaMail/docs/CODEMAPS/vuamail-ui-integration.md`, đồng bộ cập nhật `/Volumes/DATA/DEV/VuaMail/ARCH.md`, `/Volumes/DATA/DEV/VuaMail/SPEC.md`, và `/Volumes/DATA/DEV/VuaMail/REQUIREMENTS.md`.
+- **Core Engine `@genoffice/mail-engine`**:
+  - Parser & Builder RFC822 EML, hỗ trợ multipart MIME và attachments base64.
+  - Bộ đọc Outlook PST Container (`!BDN` header & folder hierarchy inspector).
+  - Conversation Threading theo chuẩn `Message-ID`, `In-Reply-To`, `References`.
+  - Rule Evaluation Engine hỗ trợ so khớp điều kiện và kích hoạt action tự động.
+- **Worker Threading cho SQLite Storage**:
+  - Tách truy vấn `better-sqlite3` sang luồng Worker chạy ngầm (`node:worker_threads`) chống block UI thread.
+- **Tính năng UI chuẩn Outlook**:
+  - **Import/Export Wizard**: Nhận diện và import trực tiếp file `.eml` / `.pst`.
+  - **Rules & Filter Manager Modal**: Giao diện tạo, kích hoạt và quản lý bộ lọc thư.
+  - **Rich-text Composer**: Thanh công cụ định dạng trực quan, AI Smart Draft và Auto-save nháp ngầm 15 giây.
+  - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
 
 ## [0.6.7] - 2026-08-15
 
