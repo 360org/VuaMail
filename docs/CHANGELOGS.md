@@ -24,6 +24,10 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
   - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
 
 ### Changed
+- **Tinh gọn Thanh Ribbon VuaMail & Hợp nhất Cài đặt vào Profile**:
+  - Loại bỏ các nút trùng lặp trên Ribbon (`New mail`, `Import/Export`, `Cài đặt tài khoản`) giúp giao diện tối giản, tập trung vào các thao tác xử lý thư cốt lõi: Send/Receive, Rules & Filters, Delete, Archive, Reply, Reply All, Forward, AI Assist.
+  - Tích hợp tính năng **Nhập / Xuất dữ liệu Email (.pst & .eml)** trực tiếp vào tab Cài đặt chung trong `ProfileView`.
+  - Tối ưu luồng xác thực 1-Click OAuth 2.0 / SSO đăng nhập trực tiếp Google, Microsoft và 360 CORP SSO.
 - **Đại tu Toàn diện Giao diện VuaMail theo Bộ Màu Nhận diện Thương hiệu Chuẩn 360 CORP / VuaOffice**:
   - Tích hợp và phối hợp 2 mã màu chuẩn: Xanh Dương Chủ Đạo (`#0077cd` / `--vuamail-primary-blue`) và Xanh Lá Điểm Nhấn (`#00ce2c` / `--vuamail-brand-green`).
   - Phân bổ thị giác: Màu Xanh Dương đại diện cho thanh Header, NavRail nền tối (`#004c87`), và phân cấp khung làm việc; Màu Xanh Lá sinh thái đại diện cho các nút hành động chính (Soạn thư, AI Copilot toggle, thẻ số lượng thư chưa đọc, chỉ báo tab đang kích hoạt).

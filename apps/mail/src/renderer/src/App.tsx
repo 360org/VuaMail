@@ -292,10 +292,7 @@ export const App: React.FC = () => {
         <div className="vuamail-canvas-container">
           {/* Top Ribbon Toolbar */}
           <MailRibbon
-            onNewEmail={handleOpenComposeNew}
-            onImportExport={() => setIsImportExportOpen(true)}
             onManageRules={() => setIsRulesOpen(true)}
-            onOpenSettings={() => setIsSettingsOpen(true)}
             onDelete={handleDelete}
             onArchive={handleArchive}
             onReply={handleReplySelected}
@@ -324,6 +321,7 @@ export const App: React.FC = () => {
                   setFolders(combinedFolders)
                 }}
                 onSelectAccount={handleSelectAccount}
+                onOpenImportExport={() => setIsImportExportOpen(true)}
               />
             )}
 

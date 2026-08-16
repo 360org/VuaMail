@@ -6,6 +6,7 @@ interface ProfileViewProps {
   activeAccountId: string
   onAccountsUpdated: () => void
   onSelectAccount: (accountId: string) => void
+  onOpenImportExport?: () => void
 }
 
 type ProfileTab = 'profile' | 'accounts' | 'general' | 'signatures' | 'shortcuts'
@@ -62,6 +63,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   activeAccountId,
   onAccountsUpdated,
   onSelectAccount,
+  onOpenImportExport,
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>('profile')
   const [isAddingAccount, setIsAddingAccount] = useState(false)
@@ -698,6 +700,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <input type="checkbox" defaultChecked />
                 <span>Tự động gợi ý câu trả lời thông minh (Smart Reply) và tóm tắt thư</span>
               </label>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                Sao lưu & Phục hồi dữ liệu Email (.pst / .eml):
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                Nhập kho lưu trữ Outlook (.pst), file RFC822 (.eml) hoặc xuất toàn bộ hộp thư lưu trữ an toàn.
+              </div>
+              <button
+                type="button"
+                onClick={onOpenImportExport}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: 'var(--surface-subtle, #f1f5f9)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>📦</span>
+                <span>Mở Trình hướng dẫn Nhập / Xuất dữ liệu (.pst & .eml)</span>
+              </button>
             </div>
           </div>
         )}
