@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import type { EmailMessage } from '../../../../shared/types'
+import { GensparkMark } from '../ribbon/GensparkMark'
 
 interface AiPanelProps {
   isOpen: boolean
@@ -20,8 +21,8 @@ export const AiPanel: React.FC<AiPanelProps> = ({
   isOpen,
   onClose,
   selectedEmail,
-  onApplyReply,
-  onCreateTask,
+  onApplyReply: _onApplyReply,
+  onCreateTask: _onCreateTask,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -34,8 +35,41 @@ export const AiPanel: React.FC<AiPanelProps> = ({
   ])
   const [inputQuery, setInputQuery] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [panelWidth, setPanelWidth] = useState(340)
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(340)
 
-  if (!isOpen) return null
+  // Resizing logic for AI Dock
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return
+      const delta = startXRef.current - e.clientX
+      const newWidth = Math.min(Math.max(280, startWidthRef.current + delta), 540)
+      setPanelWidth(newWidth)
+    }
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [])
+
+  const handleStartResize = (e: React.MouseEvent) => {
+    isDraggingRef.current = true
+    startXRef.current = e.clientX
+    startWidthRef.current = panelWidth
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
 
   const handleSend = (textToSend?: string) => {
     const query = textToSend || inputQuery
@@ -86,211 +120,147 @@ export const AiPanel: React.FC<AiPanelProps> = ({
 
   return (
     <div
-      style={{
-        width: '340px',
-        minWidth: '300px',
-        borderLeft: '1px solid var(--border, #e3e6ea)',
-        backgroundColor: 'var(--surface, #ffffff)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        flexShrink: 0,
-        zIndex: 5,
-      }}
+      className={`ai-dock ${isOpen ? 'open' : 'collapsed'}`}
+      style={{ width: isOpen ? `${panelWidth}px` : '34px' }}
     >
-      {/* AI Panel Header */}
-      <div
-        style={{
-          height: '44px',
-          borderBottom: '1px solid var(--border, #e3e6ea)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 14px',
-          backgroundColor: 'var(--surface-subtle, #f6f7f9)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '13px', color: 'var(--text-primary, #232425)' }}>
-          <span style={{ color: '#0078d4', fontSize: '16px' }}>✨</span>
-          <span>VuaOffice AI Agent</span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <button
-            onClick={() => setMessages([messages[0]])}
-            title="Làm mới đoạn chat"
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', color: 'var(--text-muted, #878e96)', fontSize: '13px' }}
-          >
-            🔄
-          </button>
-          <button
-            onClick={onClose}
-            title="Đóng bảng AI"
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', color: 'var(--text-muted, #878e96)', fontSize: '14px', fontWeight: 700 }}
-          >
-            ✕
-          </button>
-        </div>
-      </div>
-
-      {/* Selected Context Chip */}
-      {selectedEmail && (
-        <div
-          style={{
-            padding: '8px 12px',
-            backgroundColor: 'var(--surface-subtle, #f6f7f9)',
-            borderBottom: '1px solid var(--border-subtle, #efefef)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '11px',
-            color: 'var(--text-secondary, #606366)',
-          }}
+      {/* Collapsed Rail Button */}
+      {!isOpen && (
+        <button
+          type="button"
+          className="ai-rail"
+          onClick={onClose}
+          title="Mở bảng trợ lý VuaOffice AI"
         >
-          <span style={{ fontSize: '12px' }}>✉️</span>
-          <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>
-            {selectedEmail.subject || '(Không có tiêu đề)'}
-          </span>
-          <span style={{ fontSize: '9px', backgroundColor: '#0078d4', color: '#fff', padding: '1px 4px', borderRadius: '3px' }}>
-            Context
-          </span>
-        </div>
+          <GensparkMark size={20} />
+          <span className="ai-rail-text">VuaOffice AI</span>
+        </button>
       )}
 
-      {/* Chat Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {messages.map((m) => (
+      {/* Expanded AI Panel Dock */}
+      {isOpen && (
+        <div className="ai-dock-content">
+          {/* Drag Resizer Left Edge */}
           <div
-            key={m.id}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '90%',
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: m.role === 'user' ? '#0078d4' : 'var(--surface-subtle, #f6f7f9)',
-                color: m.role === 'user' ? '#ffffff' : 'var(--text-primary, #232425)',
-                padding: '10px 12px',
-                borderRadius: m.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                fontSize: '12px',
-                lineHeight: '1.5',
-                border: m.role === 'user' ? 'none' : '1px solid var(--border, #e3e6ea)',
-                whiteSpace: 'pre-line',
-              }}
-            >
-              {m.content}
-            </div>
-            <span style={{ fontSize: '9px', color: 'var(--text-muted, #878e96)', marginTop: '2px', alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              {m.timestamp}
-            </span>
-          </div>
-        ))}
-
-        {isProcessing && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted, #878e96)', padding: '6px 0' }}>
-            <span style={{ animation: 'spin 1s infinite linear' }}>⏳</span> VuaOffice AI đang xử lý...
-          </div>
-        )}
-      </div>
-
-      {/* Quick Action Pills */}
-      <div style={{ padding: '8px 12px', display: 'flex', gap: '6px', overflowX: 'auto', borderTop: '1px solid var(--border-subtle, #efefef)' }}>
-        <button
-          onClick={() => handleSend('Tóm tắt email này cho anh')}
-          style={{
-            whiteSpace: 'nowrap',
-            padding: '4px 10px',
-            borderRadius: '12px',
-            border: '1px solid var(--border, #e3e6ea)',
-            backgroundColor: 'var(--surface, #ffffff)',
-            color: 'var(--text-primary, #232425)',
-            fontSize: '11px',
-            cursor: 'pointer',
-          }}
-        >
-          📌 Tóm tắt email
-        </button>
-        <button
-          onClick={() => handleSend('Soạn thư trả lời đồng ý và cảm ơn')}
-          style={{
-            whiteSpace: 'nowrap',
-            padding: '4px 10px',
-            borderRadius: '12px',
-            border: '1px solid var(--border, #e3e6ea)',
-            backgroundColor: 'var(--surface, #ffffff)',
-            color: 'var(--text-primary, #232425)',
-            fontSize: '11px',
-            cursor: 'pointer',
-          }}
-        >
-          ✍️ Soạn trả lời
-        </button>
-        <button
-          onClick={() => handleSend('Trích xuất việc cần làm vào To-Do')}
-          style={{
-            whiteSpace: 'nowrap',
-            padding: '4px 10px',
-            borderRadius: '12px',
-            border: '1px solid var(--border, #e3e6ea)',
-            backgroundColor: 'var(--surface, #ffffff)',
-            color: 'var(--text-primary, #232425)',
-            fontSize: '11px',
-            cursor: 'pointer',
-          }}
-        >
-          📋 Tạo To-Do
-        </button>
-      </div>
-
-      {/* Chat Input Bar */}
-      <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border, #e3e6ea)', backgroundColor: 'var(--surface-subtle, #f6f7f9)' }}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSend()
-          }}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <input
-            type="text"
-            placeholder="Hỏi VuaOffice AI Agent..."
-            value={inputQuery}
-            onChange={(e) => setInputQuery(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              borderRadius: '20px',
-              border: '1px solid var(--border, #e3e6ea)',
-              backgroundColor: 'var(--surface, #ffffff)',
-              color: 'var(--text-primary, #232425)',
-              fontSize: '12px',
-              outline: 'none',
-            }}
+            className="ai-dock-resizer"
+            onMouseDown={handleStartResize}
+            title="Kéo để thay đổi độ rộng bảng AI"
           />
-          <button
-            type="submit"
-            disabled={!inputQuery.trim() || isProcessing}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: inputQuery.trim() ? '#0078d4' : 'var(--border, #e3e6ea)',
-              color: '#ffffff',
-              border: 'none',
-              cursor: inputQuery.trim() ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '14px',
-            }}
-          >
-            ➤
-          </button>
-        </form>
-      </div>
+
+          {/* AI Panel Header */}
+          <div className="ai-panel-header">
+            <div className="ai-header-left">
+              <GensparkMark size={18} />
+              <span>VuaOffice AI</span>
+            </div>
+
+            <div className="ai-header-actions">
+              <button
+                type="button"
+                className="ai-action-btn"
+                onClick={() => setMessages([messages[0]])}
+                title="Làm mới đoạn chat"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="ai-action-btn"
+                onClick={onClose}
+                title="Thu gọn bảng AI"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Selected Email Context Tag */}
+          {selectedEmail && (
+            <div className="ai-context-banner">
+              <span className="context-icon">✉️</span>
+              <span className="context-subject">{selectedEmail.subject || '(Không có tiêu đề)'}</span>
+              <span className="context-badge">Context</span>
+            </div>
+          )}
+
+          {/* Chat Messages Body */}
+          <div className="ai-messages-scroll">
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`ai-message-bubble-wrapper ${m.role === 'user' ? 'user' : 'assistant'}`}
+              >
+                <div className="ai-message-bubble">
+                  {m.content}
+                </div>
+                <span className="ai-message-time">{m.timestamp}</span>
+              </div>
+            ))}
+
+            {isProcessing && (
+              <div className="ai-processing-state">
+                <span className="ai-spinner-dot" />
+                <span>VuaOffice AI đang phân tích và xử lý...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Action Suggestion Chips */}
+          <div className="ai-chips-bar">
+            <button
+              type="button"
+              className="ai-chip"
+              onClick={() => handleSend('Tóm tắt email này cho anh')}
+            >
+              📌 Tóm tắt
+            </button>
+            <button
+              type="button"
+              className="ai-chip"
+              onClick={() => handleSend('Soạn thư trả lời đồng ý và cảm ơn')}
+            >
+              ✍️ Soạn trả lời
+            </button>
+            <button
+              type="button"
+              className="ai-chip"
+              onClick={() => handleSend('Trích xuất việc cần làm vào To-Do')}
+            >
+              📋 Tạo To-Do
+            </button>
+          </div>
+
+          {/* Chat Input Box */}
+          <div className="ai-input-wrapper">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSend()
+              }}
+              className="ai-input-form"
+            >
+              <input
+                type="text"
+                placeholder="Hỏi VuaOffice AI Mail Copilot..."
+                value={inputQuery}
+                onChange={(e) => setInputQuery(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={!inputQuery.trim() || isProcessing}
+                className="ai-send-btn"
+                title="Gửi câu hỏi"
+              >
+                ➤
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

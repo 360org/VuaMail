@@ -32,7 +32,7 @@ export const App: React.FC = () => {
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [isImportExportOpen, setIsImportExportOpen] = useState(false)
   const [isRulesOpen, setIsRulesOpen] = useState(false)
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(true) // Open by default like GenMail
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(true) // Sliding AI Dock
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [rules, setRules] = useState<MailFilterRule[]>([
     {
@@ -61,7 +61,6 @@ export const App: React.FC = () => {
       if (accList.length > 0) {
         const primary = accList[0]
         setActiveAccountId(primary.id)
-        // Fetch folders for all accounts to show complete folder tree
         const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
         const folderResults = await Promise.all(allFolderPromises)
         const combinedFolders = folderResults.flat()
@@ -198,7 +197,6 @@ export const App: React.FC = () => {
     try {
       const status = await window.vuaMail.syncNow()
       if (status.syncedCount > 0) {
-        // reload emails
         const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
         setEmails(list)
       }
@@ -215,7 +213,6 @@ export const App: React.FC = () => {
       subject: draft.subject,
       bodyHtml: draft.bodyHtml,
     })
-    // reload sent folder if viewing sent
     if (activeFolderId === 'f_sent' || activeFolderId === 'f2_sent') {
       const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
       setEmails(list)
@@ -233,154 +230,154 @@ export const App: React.FC = () => {
 
   return (
     <div className="vuamail-app">
-      {/* GenMail Aubergine Modern Titlebar Header */}
-      <div className="vuamail-header">
-        <div className="vuamail-header-left">
-          <div className="vuamail-brand">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            <span>VuaOffice Mail</span>
-          </div>
+      {/* VuaOffice Standard Ribbon Header (Replaces legacy ad-hoc top bar) */}
+      <MailRibbon
+        onNewMail={handleOpenComposeNew}
+        onNewMeeting={() => setActiveRailTab('calendar')}
+        onDelete={handleDelete}
+        onArchive={handleArchive}
+        onJunk={async () => {
+          if (!selectedEmailId || !window.vuaMail) return
+          await window.vuaMail.deleteEmail(selectedEmailId)
+          setEmails((prev) => prev.filter((e) => e.id !== selectedEmailId))
+          setSelectedEmailId(null)
+        }}
+        onReply={handleReplySelected}
+        onReplyAll={handleReplySelected}
+        onForward={handleReplySelected}
+        onMarkReadUnread={async () => {
+          if (!selectedEmail) return
+          const updatedRead = !selectedEmail.isRead
+          if (window.vuaMail) {
+            await window.vuaMail.markAsRead(selectedEmail.id, updatedRead)
+          }
+          setEmails((prev) =>
+            prev.map((e) => (e.id === selectedEmail.id ? { ...e, isRead: updatedRead } : e))
+          )
+        }}
+        onToggleFlag={async () => {
+          if (!selectedEmail) return
+          const updatedStarred = !selectedEmail.isStarred
+          if (window.vuaMail) {
+            await window.vuaMail.toggleStar(selectedEmail.id, updatedStarred)
+          }
+          setEmails((prev) =>
+            prev.map((e) => (e.id === selectedEmail.id ? { ...e, isStarred: updatedStarred } : e))
+          )
+        }}
+        onCategorize={() => {
+          // Switch or highlight category tab
+          setCategoryTab(categoryTab === 'all' ? 'primary' : 'all')
+        }}
+        onMoveToFolder={() => {
+          setIsRulesOpen(true)
+        }}
+        onOpenAddressBook={() => setActiveRailTab('people')}
+        onFilterEmails={() => {
+          setCategoryTab(categoryTab === 'other' ? 'all' : 'other')
+        }}
+        onAiAssist={handleTriggerAiSummary}
+        onAiDraft={() => {
+          if (!selectedEmail) return
+          handleSmartReply('Kính gửi Quý đối tác/Khách hàng,\n\nTôi đã nhận được thông tin và hoàn toàn nhất trí với đề xuất. Đội ngũ VuaOffice sẽ triển khai theo đúng lộ trình.\n\nTrân trọng,')
+        }}
+        onSyncNow={handleSyncNow}
+        onManageRules={() => setIsRulesOpen(true)}
+        onOpenImportExport={() => setIsImportExportOpen(true)}
+        isSyncing={isSyncing}
+        hasSelectedEmail={Boolean(selectedEmail)}
+        isSelectedRead={selectedEmail ? selectedEmail.isRead : true}
+        isSelectedFlagged={selectedEmail ? Boolean(selectedEmail.isStarred) : false}
+        aiOpen={isAiPanelOpen}
+        onToggleAi={() => setIsAiPanelOpen(!isAiPanelOpen)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeAccountEmail={activeAccount?.email}
+      />
 
-          <button className="compose-btn-header" onClick={handleOpenComposeNew}>
-            <span>✏️</span>
-            <span>Soạn thư</span>
-          </button>
-        </div>
-
-        <div className="vuamail-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Tìm kiếm thư, danh bạ, nội dung..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="vuamail-header-right">
-          <button
-            className={`ai-toggle-btn ${isAiPanelOpen ? 'active' : ''}`}
-            onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
-          >
-            <span>✨</span>
-            <span>AI Copilot</span>
-          </button>
-
-          <button
-            className="settings-circle-btn"
-            onClick={() => setIsSettingsOpen(true)}
-            title="Cài đặt tài khoản Email"
-          >
-            ⚙️
-          </button>
-
-          <div className="header-account-tag">
-            {activeAccount?.email || 'chau.le@360.org.vn'}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Layout Container: NavRail + Curved Content Canvas */}
+      {/* Main Workspace Frame: AppRail + Content Multi-columns + Sliding AiDock */}
       <div className="vuamail-shell-layout">
-        {/* Leftmost Nav Rail */}
+        {/* Left Navigation Rail (56px) */}
         <AppRail activeTab={activeRailTab} onTabChange={setActiveRailTab} />
 
-        {/* Curved Content Canvas Window */}
-        <div className="vuamail-canvas-container">
-          {/* Top Ribbon Toolbar */}
-          <MailRibbon
-            onManageRules={() => setIsRulesOpen(true)}
-            onDelete={handleDelete}
-            onArchive={handleArchive}
-            onReply={handleReplySelected}
-            onReplyAll={handleReplySelected}
-            onForward={handleReplySelected}
-            onAiAssist={handleTriggerAiSummary}
-            onSyncNow={handleSyncNow}
-            isSyncing={isSyncing}
-            hasSelectedEmail={Boolean(selectedEmail)}
-          />
+        {/* Dynamic Workspace Body */}
+        <div className="vuamail-workspace">
+          {activeRailTab === 'brain' && (
+            <ProfileView
+              accounts={accounts}
+              activeAccountId={activeAccountId}
+              onAccountsUpdated={async () => {
+                if (!window.vuaMail) return
+                const api = window.vuaMail
+                const accList = await api.getAccounts()
+                setAccounts(accList)
+                const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
+                const folderResults = await Promise.all(allFolderPromises)
+                const combinedFolders = folderResults.flat()
+                setFolders(combinedFolders)
+              }}
+              onSelectAccount={handleSelectAccount}
+              onOpenImportExport={() => setIsImportExportOpen(true)}
+            />
+          )}
 
-          {/* Body Content Area */}
-          <div className="vuamail-body">
-            {activeRailTab === 'brain' && (
-              <ProfileView
+          {activeRailTab === 'mail' && (
+            <div className="vuamail-mail-columns">
+              <FolderTree
                 accounts={accounts}
                 activeAccountId={activeAccountId}
-                onAccountsUpdated={async () => {
-                  if (!window.vuaMail) return
-                  const api = window.vuaMail
-                  const accList = await api.getAccounts()
-                  setAccounts(accList)
-                  const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
-                  const folderResults = await Promise.all(allFolderPromises)
-                  const combinedFolders = folderResults.flat()
-                  setFolders(combinedFolders)
-                }}
                 onSelectAccount={handleSelectAccount}
-                onOpenImportExport={() => setIsImportExportOpen(true)}
+                folders={folders}
+                activeFolderId={activeFolderId}
+                onSelectFolder={handleSelectFolder}
               />
-            )}
 
-            {activeRailTab === 'mail' && (
-              <>
-                <FolderTree
-                  accounts={accounts}
-                  activeAccountId={activeAccountId}
-                  onSelectAccount={handleSelectAccount}
-                  folders={folders}
-                  activeFolderId={activeFolderId}
-                  onSelectFolder={handleSelectFolder}
-                />
+              <MailList
+                emails={filteredEmails}
+                selectedEmailId={selectedEmailId}
+                onSelectEmail={setSelectedEmailId}
+                categoryTab={categoryTab}
+                onCategoryChange={setCategoryTab}
+                onRefresh={handleSyncNow}
+              />
 
-                <MailList
-                  emails={filteredEmails}
-                  selectedEmailId={selectedEmailId}
-                  onSelectEmail={setSelectedEmailId}
-                  categoryTab={categoryTab}
-                  onCategoryChange={setCategoryTab}
-                  onRefresh={handleSyncNow}
-                />
+              <ReadingPane
+                email={selectedEmail}
+                body={activeBody}
+                aiSummary={aiSummary}
+                isLoadingBody={isLoadingBody}
+                onTriggerAiSummary={handleTriggerAiSummary}
+                onSmartReply={handleSmartReply}
+                onPreviewAttachment={handlePreviewAttachment}
+                onReply={handleReplySelected}
+                onReplyAll={handleReplySelected}
+                onForward={handleReplySelected}
+                onDelete={handleDelete}
+                onArchive={handleArchive}
+              />
 
-                <ReadingPane
-                  email={selectedEmail}
-                  body={activeBody}
-                  aiSummary={aiSummary}
-                  isLoadingBody={isLoadingBody}
-                  onTriggerAiSummary={handleTriggerAiSummary}
-                  onSmartReply={handleSmartReply}
-                  onPreviewAttachment={handlePreviewAttachment}
-                />
+              {/* VuaOffice Sliding AI Dock (Collapses to 34px rail when closed) */}
+              <AiPanel
+                isOpen={isAiPanelOpen}
+                onClose={() => setIsAiPanelOpen(!isAiPanelOpen)}
+                selectedEmail={selectedEmail}
+                onApplyReply={handleSmartReply}
+                onCreateTask={(_t) => setActiveRailTab('todo')}
+              />
+            </div>
+          )}
 
-                {/* GenMail AI Copilot Panel Right */}
-                <AiPanel
-                  isOpen={isAiPanelOpen}
-                  onClose={() => setIsAiPanelOpen(false)}
-                  selectedEmail={selectedEmail}
-                  onApplyReply={handleSmartReply}
-                  onCreateTask={(_t) => setActiveRailTab('todo')}
-                />
-              </>
-            )}
+          {activeRailTab === 'people' && (
+            <PeopleView onSendEmailTo={handleSendEmailToContact} />
+          )}
 
-            {activeRailTab === 'people' && (
-              <PeopleView onSendEmailTo={handleSendEmailToContact} />
-            )}
+          {activeRailTab === 'calendar' && (
+            <CalendarView />
+          )}
 
-            {activeRailTab === 'calendar' && (
-              <CalendarView />
-            )}
-
-            {activeRailTab === 'todo' && (
-              <TodoView />
-            )}
-          </div>
+          {activeRailTab === 'todo' && (
+            <TodoView />
+          )}
         </div>
       </div>
 

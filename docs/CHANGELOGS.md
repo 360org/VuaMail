@@ -6,6 +6,23 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-16
 
 ### Added
+- **Đại tu Toàn diện Layout VuaMail theo Chuẩn Ribbon 2 Tầng & Sliding AI Dock của VuaOffice Suite**:
+  - **Thanh Ribbon 2 Tầng Cố Định (Mail Ribbon 80px - Chuẩn Microsoft Outlook 365)**:
+    - Thay thế header tuỳ biến cũ bằng thanh Ribbon chuẩn mực VuaOffice & Outlook 365: tầng trên chứa Quick Access Toolbar (`.ribbon-qat`), Tabs (`.ribbon-tab-list`: *Trang chủ, Gửi / Nhận, Thư mục & Quy tắc, Xem & Bố cục*), Search Box trung tâm (`.ribbon-search-box`), Copilot badge (`.copilot-btn`), và Account status badge; tầng dưới là Ribbon Body cố định 80px chứa đầy đủ các nhóm nút công cụ chuẩn (*Mục mới / Soạn thư & Cuộc họp, Xử lý & Xoá / Lưu trữ / Thư rác, Phản hồi / Trả lời / Trả lời tất cả / Chuyển tiếp, Tags / Đã đọc - Chưa đọc / Theo dõi - Flag / Phân loại / Di chuyển, Danh bạ & Lọc thư, AI Suite*).
+  - **Khôi phục và Hoàn thiện Toàn bộ Hành động Thao tác Thư (Reply, Reply All, Forward, Quick Reply)**:
+    - Bổ sung thanh công cụ thao tác nhanh (*Trả lời, Trả lời tất cả, Chuyển tiếp, Lưu trữ, Xoá thư*) trực tiếp ngay trên header của `ReadingPane`.
+    - Tích hợp khung phản hồi nhanh tức thì (*Inline Quick Reply Box*) dưới chân mỗi email kèm gợi ý câu trả lời thông minh *AI Smart Reply* và đồng bộ trích dẫn ngữ cảnh thư gốc.
+  - **Hoàn thiện Tương tác Chi tiết Lịch biểu (Calendar Event Detail Inspector)**:
+    - Khắc phục lỗi click chọn sự kiện: hỗ trợ tương tác chọn xem chi tiết sự kiện từ cả Grid Tháng / Tuần / Ngày và danh sách Sự kiện sắp diễn ra.
+    - Bổ sung Mini Calendar Preview và bảng điều khiển chi tiết sự kiện kèm nút *Tham gia họp*, *Gửi thư mời* và *Xoá sự kiện*.
+  - **Khắc phục Triệt để Lỗi Thiếu CSS trên Giao diện Hồ sơ & Cài đặt (ProfileView & Brain View)**:
+    - Bổ sung toàn bộ style hoàn chỉnh cho hệ thống thẻ định danh doanh nghiệp (`.brain-identity-grid`), thẻ thông tin nổi bật (`.brain-card.hero-card`), danh sách tài khoản OAuth 2.0 / SSO trong `apps/mail/src/renderer/src/styles/mail-theme.css`.
+  - **Hệ thống Sliding AI Dock (`.ai-dock`) Đa Năng**:
+    - Cơ chế dock trượt thông minh: khi đóng thu gọn thành thanh ray 34px (`.ai-rail`) có icon vector `GensparkMark`, khi kích hoạt mở rộng linh hoạt với thanh kéo chuột resizer (`.ai-dock-resizer`, 280px - 540px) đảm bảo không chèn ép ReadingPane.
+    - Tích hợp khung gợi ý hành động nhanh (Tóm tắt, Soạn trả lời, Tạo To-Do) và kết nối với ngữ cảnh email đang chọn.
+  - **Tối ưu Bố cục Responsive Đa Cột & Flexbox Containment**:
+    - Phân bổ 5 cột tỷ lệ chuẩn: NavRail (56px) ➔ FolderTree (210px) ➔ MailList (340px) ➔ ReadingPane (`flex: 1`, `min-width: 320px`) ➔ AiDock (34px / 340px).
+    - Áp dụng triệt để `min-width: 0`, `overflow: hidden`, `box-sizing: border-box`, và `flex-shrink: 0` trên `.vuamail-shell-layout`, `.vuamail-workspace`, `.vuamail-mail-columns` để loại bỏ hoàn toàn scrollbar ngang và hiện tượng vỡ khung cửa sổ.
 - **Hệ thống Profile & Email Brain Tích hợp Cài đặt Tài khoản**:
   - Hợp nhất toàn bộ phân hệ quản lý tài khoản email, hồ sơ tri thức AI Brain và cài đặt cấu hình chung vào giao diện `ProfileView` khi nhấp chọn Avatar cá nhân trên NavRail.
   - **Cơ chế Đăng nhập Xác thực Nhanh Chuẩn OAuth 2.0 / SSO**: Hỗ trợ 1-click login trực tiếp với Microsoft Outlook (Office 365 / Exchange), Google Workspace (Gmail) và 360 CORP SSO bên cạnh cấu hình thủ công IMAP/SMTP.
@@ -19,6 +36,9 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
   - Tách truy vấn `better-sqlite3` sang luồng Worker chạy ngầm (`node:worker_threads`) chống block UI thread.
 - **Tính năng UI chuẩn Outlook**:
   - **Import/Export Wizard**: Nhận diện và import trực tiếp file `.eml` / `.pst`.
+  - **Rules & Filter Manager Modal**: Giao diện tạo, kích hoạt và quản lý bộ lọc thư.
+  - **Rich-text Composer**: Thanh công cụ định dạng trực quan, AI Smart Draft và Auto-save nháp ngầm 15 giây.
+  - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
   - **Rules & Filter Manager Modal**: Giao diện tạo, kích hoạt và quản lý bộ lọc thư.
   - **Rich-text Composer**: Thanh công cụ định dạng trực quan, AI Smart Draft và Auto-save nháp ngầm 15 giây.
   - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
