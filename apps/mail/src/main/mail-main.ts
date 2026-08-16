@@ -8,6 +8,22 @@ import { MailSyncOrchestrator } from './network/mail-sync-orchestrator'
 let asyncMailStorage: AsyncMailStorage | null = null
 let syncOrchestrator: MailSyncOrchestrator | null = null
 
+export interface MailRuntimeConfig {
+  preloadPath: string
+  rendererUrl?: string | undefined
+  rendererFile: string
+}
+
+let runtime: MailRuntimeConfig = {
+  preloadPath: join(__dirname, '../preload/index.js'),
+  rendererUrl: process.env.MAIL_RENDERER_URL,
+  rendererFile: join(__dirname, '../renderer/index.html'),
+}
+
+export function configureMailRuntime(config: MailRuntimeConfig): void {
+  runtime = config
+}
+
 export function initMailBackend(): AsyncMailStorage {
   if (!asyncMailStorage) {
     asyncMailStorage = new AsyncMailStorage()
@@ -19,27 +35,25 @@ export function initMailBackend(): AsyncMailStorage {
   return asyncMailStorage
 }
 
-
 export function createMailView(): WebContentsView {
   initMailBackend()
 
-  const preloadPath = app.isPackaged
-    ? join(process.resourcesPath, 'modules', 'mail', 'preload', 'index.js')
-    : join(__dirname, '../../mail/out/preload/index.js')
-
   const view = new WebContentsView({
     webPreferences: {
-      preload: preloadPath,
+      preload: runtime.preloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
       sandbox: false,
     },
   })
 
-  if (process.env.MAIL_RENDERER_URL) {
-    view.webContents.loadURL(process.env.MAIL_RENDERER_URL)
-  } else if (!app.isPackaged) {
-    view.webContents.loadURL('http://localhost:5178')
-  } else {
-    view.webContents.loadFile(join(process.resourcesPath, 'modules', 'mail', 'renderer', 'index.html'))
+  view.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  view.webContents.on('will-navigate', (event) => event.preventDefault())
+
+  if (runtime.rendererUrl) {
+    void view.webContents.loadURL(runtime.rendererUrl)
+  } else if (runtime.rendererFile) {
+    void view.webContents.loadFile(runtime.rendererFile)
   }
 
   return view

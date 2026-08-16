@@ -5,6 +5,12 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 
 ## [Unreleased] - 2026-08-16
 
+### Fixed
+- **Sửa triệt để lỗi Whitelabel bị revert về Genspark**: Nâng cấp pipeline AST/Regex trong `/Volumes/DATA/DEV/VuaMail/scripts/whitelabel.js` tự động rà soát toàn bộ source code `apps/**/src`, thay thế triệt để các nhãn và text nodes `Genspark AI` / `Genspark` sang `VuaOffice AI`.
+- **Khắc phục lỗi kích hoạt UI VuaMail từ Home Launcher**:
+  - Cấu hình `configureMailRuntime` đồng bộ đường dẫn preload và renderer HTML trong `/Volumes/DATA/DEV/VuaMail/apps/shell/src/main/index.ts`.
+  - Cập nhật `/Volumes/DATA/DEV/VuaMail/apps/mail/src/main/mail-main.ts` áp dụng bảo mật chuẩn `contextIsolation: true`, tải đúng bundle đã build và quản lý vòng đời view qua `TabManager`.
+
 ### Added
 - **Core Engine `@genoffice/mail-engine`**:
   - Parser & Builder RFC822 EML, hỗ trợ multipart MIME và attachments base64.

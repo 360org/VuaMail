@@ -38,35 +38,31 @@ if (fs.existsSync(logoDir) && fs.existsSync(shellAssets)) {
 }
 
 // Perform text replacements across all renderer files
-const files = glob.sync('apps/**/src/renderer/**/*.{ts,tsx,html,css}', { cwd: path.join(__dirname, '..') });
+const files = glob.sync('apps/**/src/**/*.{ts,tsx,html,css}', { cwd: path.join(__dirname, '..') });
 files.forEach(rel => {
   const full = path.join(__dirname, '..', rel);
   let c = fs.readFileSync(full, 'utf8');
   let changed = false;
 
-  if (c.includes('aria-label="Genspark"')) {
-    c = c.replace(/aria-label="Genspark"/g, 'aria-label="VuaOffice AI"');
-    changed = true;
-  }
-  if (c.includes('aria-label="Genspark AI"')) {
-    c = c.replace(/aria-label="Genspark AI"/g, 'aria-label="VuaOffice AI"');
-    changed = true;
-  }
-  if (c.includes('>Genspark<')) {
-    c = c.replace(/>Genspark</g, '>VuaOffice AI<');
-    changed = true;
-  }
-  if (c.includes("aiPanelTitle: 'Genspark'")) {
-    c = c.replace(/aiPanelTitle:\s*'Genspark'/g, "aiPanelTitle: 'VuaOffice AI'");
-    changed = true;
-  }
-  if (c.includes('aiPanelTitle: "Genspark"')) {
-    c = c.replace(/aiPanelTitle:\s*"Genspark"/g, 'aiPanelTitle: "VuaOffice AI"');
-    changed = true;
-  }
-  if (c.includes("ribbonAiAssistant: 'Genspark'")) {
-    c = c.replace(/ribbonAiAssistant:\s*'Genspark'/g, "ribbonAiAssistant: 'VuaOffice AI'");
-    changed = true;
+  const replacements = [
+    [/aria-label="Genspark AI"/g, 'aria-label="VuaOffice AI"'],
+    [/aria-label="Genspark"/g, 'aria-label="VuaOffice AI"'],
+    [/<strong>Genspark AI<\/strong>/g, '<strong>VuaOffice AI</strong>'],
+    [/<span>Genspark AI<\/span>/g, '<span>VuaOffice AI</span>'],
+    [/<div className="ribbon-group-label">Genspark AI<\/div>/g, '<div className="ribbon-group-label">VuaOffice AI</div>'],
+    [/>Genspark AI</g, '>VuaOffice AI<'],
+    [/>Genspark</g, '>VuaOffice AI<'],
+    [/aiPanelTitle:\s*'Genspark'/g, "aiPanelTitle: 'VuaOffice AI'"],
+    [/aiPanelTitle:\s*"Genspark"/g, 'aiPanelTitle: "VuaOffice AI"'],
+    [/ribbonAiAssistant:\s*'Genspark'/g, "ribbonAiAssistant: 'VuaOffice AI'"],
+    [/ribbonAiAssistant:\s*"Genspark"/g, 'ribbonAiAssistant: "VuaOffice AI"'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    if (regex.test(c)) {
+      c = c.replace(regex, replacement);
+      changed = true;
+    }
   }
 
   if (changed) {
