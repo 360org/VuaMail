@@ -1,145 +1,60 @@
-# VuaMail Architecture & Integration Specification
+# Kiến trúc VuaMail (So sánh & Tương thích VuaOffice / GenMail / Outlook)
 
-> Module: `@genoffice/mail` (`apps/mail`)  
-> Thuộc bộ ứng dụng: **VuaOffice Desktop Suite** (Electron + React 19 + TypeScript)  
-> Branch phát triển: `VuaMail`
+## 1. Bối cảnh & Mục tiêu
+VuaMail được thiết kế như một module ứng dụng email chuyên nghiệp trong hệ sinh thái **VuaOffice Suite**, kết hợp:
+1. **Kiến trúc Monorepo & Module của VuaOffice**:
+   - `packages/mail-engine`: Core logic phân tích RFC822 EML, cấu trúc PST, threading hội thoại và rule engine (tương đương `docx-engine`, `pptx-engine`).
+   - `apps/mail`: Renderer React/TypeScript, Main Process WebContentsView, SQLite cache cục bộ, sync loop.
+   - `apps/shell`: Điều phối TabManager, window management, app launcher card, menu, shortcuts.
+2. **Kinh nghiệm kiến trúc từ GenMail.app (`/Applications/GenMail.app/`)**:
+   - Tách biệt DB Worker Thread (`Worker` from `node:worker_threads`) tránh block main event loop.
+   - Sử dụng `better-sqlite3` kết hợp SegmentStore và Metadata Overlay Ops để quản lý optimistic UI update.
+   - Cung cấp tính năng Calendar Cache, Tombstones chống race condition khi prefetch.
+3. **Mô hình trải nghiệm từ Microsoft Outlook (`/Applications/Microsoft Outlook.app/`)**:
+   - 3-Pane Layout kinh điển: Navigation Bar (Mail, Calendar, Contacts, To-Do) + Folder Tree ➔ Message List ➔ Reading Pane.
+   - Hỗ trợ định dạng PST/OST cục bộ, hội thoại theo chuỗi (Conversation View), phân loại Focused/Other, Rules tự động.
 
 ---
 
-## 1. Tổng quan Dự án & Mục tiêu
+## 2. Bản đồ Kiến trúc VuaOffice Mail
 
-**VuaMail** là ứng dụng email client thế hệ mới tích hợp trực tiếp bên trong hệ sinh thái **VuaOffice Suite**, kết hợp:
-1. **Mail Engine Local**: Kế thừa kiến trúc SQLite Storage, Op-Queue offline, MIME parser và sync caching từ `GenMail.app`.
-2. **Outlook Fluent UI**: Giao diện Ribbon chuẩn Microsoft Office 365, bố cục 3 cột (AppRail/Folders - Message List - Reading/Compose Pane) được porting từ repo `360org/VuaMail` sang **React 19 + TypeScript**.
-3. **VuaOffice AI Integration**: Tích hợp trợ lý trí tuệ nhân tạo (AI Summary, Smart Reply, AI Draft Generator) qua gateway 360 CORP (`@genoffice/ai-provider`).
-4. **VuaOffice Shell Integration**: Chạy liền mạch trong hệ thống đa tab của `apps/shell`, hỗ trợ Dark/Light Theme Semantic Tokens (`packages/ui/src/tokens.css`).
-
----
-
-## 2. Kiến trúc Kỹ thuật (Layered Architecture)
-
-```mermaid
-graph TD
-    subgraph "VuaOffice Shell Host (apps/shell)"
-        ShellTab[TabBar Manager]
-        HomeUI[VuaOffice Home Launcher]
-    end
-
-    subgraph "VuaMail Module (apps/mail)"
-        subgraph "UI Layer (React 19 + Fluent UI)"
-            Ribbon[Mail Ribbon Menu]
-            AppRail[AppRail - Mail/Calendar/People/Todo]
-            FolderList[Folder Tree Pane]
-            MsgList[Message List Pane - Focused/Other]
-            ReadPane[Reading & Viewer Pane]
-            ComposeModal[Compose & Rich Editor]
-        end
-
-        subgraph "AI Assistant Layer"
-            AiSummary[AI Thread Summary]
-            AiReply[Smart Reply Assistant]
-            AiDraft[AI Compose Polish]
-            AiProvider[@genoffice/ai-provider Gateway]
-        end
-
-        subgraph "Engine & Storage Layer (Node/Electron Main)"
-            MailIPC[Mail IPC Bridge]
-            SQLiteDB[(Better-SQLite3 Storage)]
-            OpQueue[Offline Operation Queue]
-            MimeParser[Attachment & MIME Parser]
-            SyncManager[2-way Sync Manager]
-        end
-    end
-
-    HomeUI -->|Launch Mail Tab| ShellTab
-    ShellTab --> Ribbon
-    Ribbon --> MsgList
-    AppRail --> FolderList
-    FolderList --> MsgList
-    MsgList --> ReadPane
-    ReadPane --> AiSummary
-    ComposeModal --> AiDraft
-    AiSummary --> AiProvider
-    AiDraft --> AiProvider
-
-    ReadPane --> MailIPC
-    ComposeModal --> MailIPC
-    MailIPC --> SQLiteDB
-    MailIPC --> OpQueue
-    OpQueue --> SyncManager
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             VuaOffice Shell                                 │
+│  - TabManager (quản lý lifecycle WebContentsView cho AI Mail)                │
+│  - Quick Card Launcher: AI Mail (.pst)                                      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ IPC / WebContentsView
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                                 apps/mail                                   │
+│  ┌─────────────────────────────────┐   ┌─────────────────────────────────┐  │
+│  │         Main Process            │   │         Renderer (React)        │  │
+│  │ - WebContentsView Factory       │   │ - Left Activity Bar (Icons)     │  │
+│  │ - SQLite Storage / DB Worker    │   │ - Folder Tree & Accounts        │  │
+│  │ - Sync Orchestrator (IMAP/SMTP) │   │ - Message List (Search/Filter)  │  │
+│  │ - IPC Handlers (mail:*)         │   │ - Reading Pane (Attachments/AI) │  │
+│  └────────────────┬────────────────┘   └─────────────────────────────────┘  │
+└───────────────────┼─────────────────────────────────────────────────────────┘
+                    │
+┌───────────────────▼─────────────────────────────────────────────────────────┐
+│                           packages/mail-engine                              │
+│  - EML Parser / Builder (MIME, RFC822, multipart/mixed, attachments)        │
+│  - PST Container Reader & Parser (!BDN header, folder tree)                 │
+│  - Conversation Threading Engine (groupIntoThreads theo Message-ID)         │
+│  - Rule & Filter Engine (Condition evaluation, auto-folder/star/reply)      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Cấu trúc Thư mục Module (`apps/mail`)
+## 3. Ma trận Đối chiếu Tính năng & Kiến trúc
 
-```
-apps/mail/
-├── package.json                     # Định nghĩa module @genoffice/mail
-├── tsconfig.json                    # TypeScript strict mode
-├── electron.vite.config.ts          # Build cấu hình Electron Vite
-├── vite.renderer.config.ts          # Dev server cho UI renderer
-├── src/
-│   ├── main/                        # Mail Backend & Engine
-│   │   ├── index.ts                 # Main process entry
-│   │   ├── db/
-│   │   │   ├── schema.ts            # SQLite table definitions
-│   │   │   ├── sqlite-storage.ts    # CRUD operations cho emails, folders, contacts
-│   │   │   └── op-queue.ts          # Hàng đợi thao tác offline
-│   │   ├── ipc/
-│   │   │   └── mail-ipc.ts          # Đăng ký IPC channels với renderer
-│   │   └── sync/
-│   │       └── sync-manager.ts      # Quản lý đồng bộ hòm thư
-│   ├── preload/
-│   │   └── index.ts                 # ContextBridge phơi API `window.vuaMail`
-│   ├── shared/
-│   │   ├── types.ts                 # Kiểu dữ liệu Email, Folder, Contact, Attachment
-│   │   └── ipc-events.ts            # Danh mục IPC channels
-│   └── renderer/                    # Outlook UI (React 19)
-│       ├── index.html
-│       └── src/
-│           ├── main.tsx             # React Root
-│           ├── App.tsx              # Outlook Layout Root
-│           ├── components/
-│           │   ├── ribbon/          # TopBar Menu (Home, View, Help, AI Tools)
-│           │   │   ├── MailRibbon.tsx
-│           │   │   └── RibbonButton.tsx
-│           │   ├── sidebar/         # Cột 1: App Switcher + Folder List
-│           │   │   ├── AppRail.tsx
-│           │   │   └── FolderTree.tsx
-│           │   ├── list/            # Cột 2: Message List
-│           │   │   ├── MailList.tsx
-│           │   │   ├── MailListItem.tsx
-│           │   │   └── FilterTabs.tsx
-│           │   ├── detail/          # Cột 3: Reading Pane & Attachments
-│           │   │   ├── MailReadingPane.tsx
-│           │   │   ├── MailHeader.tsx
-│           │   │   ├── AttachmentChip.tsx
-│           │   │   └── AiSummaryBox.tsx
-│           │   └── compose/         # Soạn thư & AI Compose
-│           │       ├── MailComposeModal.tsx
-│           │       └── AiPromptBar.tsx
-│           └── styles/
-│               ├── mail-theme.css   # Semantic token compliance
-│               └── outlook-layout.css
-```
-
----
-
-## 4. SQLite Storage Schema (Tương thích GenMail Engine)
-
-Các bảng cơ sở dữ liệu chính:
-1. **`accounts`**: Lưu thông tin tài khoản email (Google, Outlook, IMAP/SMTP cá nhân).
-2. **`emails`**: Danh sách thư (`id`, `account_id`, `folder_id`, `sender_name`, `sender_email`, `recipient`, `subject`, `snippet`, `is_read`, `is_starred`, `has_attachments`, `date_ms`).
-3. **`email_bodies`**: Lưu nội dung thư đầy đủ dạng `html` và `plain_text` đã tách payload nặng.
-4. **`email_folders`**: Thư mục hòm thư (`inbox`, `sent`, `drafts`, `archive`, `trash`, `spam`, `custom`).
-5. **`op_queue`**: Hàng đợi offline (`id`, `op_type`, `email_id`, `payload`, `created_at`, `status`).
-6. **`contacts`**: Danh bạ liên hệ gợi ý tìm kiếm.
-
----
-
-## 5. Quy tắc Theming & UI Compliance
-
-* Tuân thủ triệt để token từ `/Volumes/DATA/DEV/vuaoffice/packages/ui/src/tokens.css`.
-* Sử dụng `--surface`, `--surface-subtle`, `--text-primary`, `--text-secondary`, `--border`, `--hover`.
-* Màu chủ đạo (Accent Color): VuaMail sử dụng mã màu chuẩn Outlook Microsoft: `--accent: #0078d4;` (kèm dark-mode adjusted `--accent: #2b88d8;`).
+| Tiêu chí | GenMail.app | Microsoft Outlook | VuaOffice Mail (VuaMail) |
+|---|---|---|---|
+| **Mô hình kiến trúc** | Single App Electron + Worker Threads | Native macOS Cocoa / CoreData | Multi-App Electron Monorepo (`packages/mail-engine` + `apps/mail` + `apps/shell`) |
+| **Engine lõi** | Vue 3 + Pinia + SQLite | C++ / Objective-C Engine + MAPI | TypeScript Native Engine (`@genoffice/mail-engine`) + SQLite |
+| **Giao diện & UX** | Web/Vue Hiện đại, AI Tích hợp | 3-Pane Classic / Modern Ribbon | 3-Pane Outlook Style + AI Smart Reply + File Attachment Preview |
+| **Định dạng dữ liệu** | Cloud sync Genspark | PST / OST / EML / MSG | EML / PST / SQLite Database cục bộ |
+| **Hội thoại & Thread** | Thread list | Conversation View | `groupIntoThreads` chuẩn RFC822/Message-ID |
+| **Quản lý Tài khoản** | Đa tài khoản Genspark/Google | IMAP/POP3/Exchange/Outlook.com | Đa tài khoản IMAP/SMTP + Local Mock Offline |
+| **Khả năng ngoại tuyến** | Cache SQLite | Offline Data File (.ost) | SQLite Local-First, OpQueue sync khi online |

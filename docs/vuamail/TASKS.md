@@ -1,54 +1,33 @@
-# TASKS.md — Bảng Theo dõi Nhiệm vụ & Tiến độ VuaMail
+# Kế hoạch Thực thi & Checklist Triển khai VuaMail
 
-> Danh sách công việc chi tiết phục vụ việc phát triển song song VuaMail và hợp nhất vào VuaOffice.
-
----
-
-## 📊 Bảng Tiến độ Tổng quan
-
-| Module / Tính năng | Nhiệm vụ chính | Trạng thái | Ưu tiên | Phụ trách |
-|---|---|---|---|---|
-| **Core Architecture** | SQLite WAL Storage Engine (`vuamail-local.db`) | ✅ Hoàn thành | P0 | AI / Sếp |
-| **Core Architecture** | Offline OpQueue Data Structure | ✅ Hoàn thành | P0 | AI / Sếp |
-| **Whitelabel & Branding** | Đồng bộ Icon & Assets VuaOffice sang apps/mail & docs | ✅ Hoàn thành | P0 | AI |
-| **UI Integration** | 3-Column Outlook Fluent UI (React 19) | ✅ Hoàn thành | P0 | AI |
-| **AI Assistant** | AI Thread Summary & Compose Draft Box | ✅ Hoàn thành | P1 | AI |
-| **Documentation** | IDEA, ARCH, SPEC, REQUIREMENTS, ROADMAP, CODEMAPS | ✅ Hoàn thành | P0 | AI |
-| **Zero-Conflict Sync** | Thiết lập remote `vuaoffice` và merge không xung đột | ✅ Hoàn thành | P0 | AI |
-| **Attachment & Preview** | Preview file Docx/PDF đính kèm trong thư | ✅ Hoàn thành | P1 | AI |
-| **AI Assistant** | AI Thread Summary, Compose Draft & Smart Reply | ✅ Hoàn thành | P1 | AI |
-| **Multi-Account** | Quản lý chuyển đổi nhiều tài khoản email | ✅ Hoàn thành | P1 | AI |
-| **Calendar & Contacts** | Tích hợp People Page & Calendar Page | ✅ Hoàn thành | P1 | AI |
-| **Network Protocols** | IMAP / SMTP client kết nối & OpQueue sync worker | ✅ Hoàn thành | P1 | AI |
+## 1. Giai đoạn 1: Chuẩn hóa Kiến trúc & Core Engine (Đã hoàn thành)
+- [x] **Package mail-engine**: Tạo package `@genoffice/mail-engine` tại `packages/mail-engine/` độc lập.
+- [x] **EML MIME RFC822**: Parser & Builder đầy đủ cho email đơn lẻ và multipart kèm file đính kèm.
+- [x] **PST Reader Specification**: Đọc header file PST `!BDN` và cấu trúc folder tree cục bộ.
+- [x] **Conversation Threading**: Thuật toán gom nhóm hội thoại theo `Message-ID`, `In-Reply-To`, `References`.
+- [x] **Rule Engine**: Đánh giá điều kiện lọc mail (sender, subject, attachment) và trigger action tự động.
+- [x] **Unit Testing**: Bộ test `mail-engine.test.ts` pass 100%.
 
 ---
 
-## 📝 Danh sách Chi tiết Công việc (Action Items)
+## 2. Giai đoạn 2: Tích hợp Hệ thống Shell & Đóng gói (Đã hoàn thành)
+- [x] **Native Addon ABI**: Rebuild `better-sqlite3` tương thích Electron 43 ABI 148.
+- [x] **Electron Builder ExtraResources**: Đóng gói `modules/mail` vào bundle ứng dụng macOS.
+- [x] **Launcher Quick Card**: Cập nhật nhãn **AI Mail** và subtitle **.pst** trên màn hình Home.
+- [x] **Shell Tab Navigation**: Tạo và kích hoạt WebContentsView qua `TabManager.openMailTab()`.
 
-### 1. Hạ tầng & Cơ sở dữ liệu (Database & Engine)
-- [x] Tạo file schema SQLite `apps/mail/src/main/db/schema.ts` gồm 5 bảng cốt lõi.
-- [x] Triển khai DAO `apps/mail/src/main/db/sqlite-storage.ts` với seed dữ liệu mẫu demo.
-- [x] Cấu hình chế độ WAL mode và lazy-loading cho email body.
-- [x] Nạp và truy vấn cấu trúc tệp đính kèm `attachments_json` từ database.
-- [x] Xây dựng background worker xử lý hàng đợi `op_queue` khi mạng online trở lại (`MailSyncOrchestrator`).
-- [x] Triển khai Native IMAP / SMTP socket client kết nối TLS (`mail-protocol-client.ts`).
+---
 
-### 2. Giao diện Người dùng (Outlook Clone UI)
-- [x] `AppRail.tsx`: Thanh chuyển đổi icon Mail, Calendar, People, To-Do bên trái.
-- [x] `FolderTree.tsx`: Cây danh mục Favorites và hộp thư riêng biệt.
-- [x] `MailList.tsx`: Danh sách thư phân tab Focused / Other, tìm kiếm và unread indicators.
-- [x] `ReadingPane.tsx`: Khung đọc email chi tiết, thông tin người gửi, ngày giờ, nội dung rich text.
-- [x] `ComposeModal.tsx`: Modal soạn email với trường To, Subject, Body, nút gửi và nút AI Assist.
-- [x] Thêm vùng hiển thị danh sách file đính kèm kèm nút xem trước (Preview) trong `ReadingPane.tsx`.
-- [x] Tích hợp thanh phản hồi nhanh 1-click **AI Smart Reply** trong `ReadingPane.tsx`.
+## 3. Giai đoạn 3: Tối ưu hoá DB Worker Thread & Background Sync (Đang tiến hành)
+- [ ] **DB Worker Threading**: Đưa tác vụ I/O SQLite nặng vào `Worker` (`node:worker_threads`) giống kiến trúc GenMail để chống block UI thread.
+- [ ] **Metadata Overlay Ops**: Áp dụng cơ chế Optimistic UI (đánh dấu đã đọc, gắn cờ, xoá mail ngay lập tức trên UI trước khi commit vào DB).
+- [ ] **Background Sync Orchestrator**: Polling định kỳ IMAP/SMTP và quản lý retry hàng đợi `OpQueue`.
+- [ ] **Attachment Cache Manager**: Quản lý lưu trữ file đính kèm cục bộ an toàn, preview nhanh ảnh/PDF/Office.
 
-### 3. Tích hợp AI (VuaOffice AI)
-- [x] Tích hợp hộp tóm tắt email thông minh (AI Summary) trong `ReadingPane.tsx`.
-- [x] Tích hợp thanh prompt AI gợi ý nội dung thư nháp trong `ComposeModal.tsx`.
-- [ ] Bổ sung tính năng Smart Reply (gợi ý 3 câu trả lời nhanh chỉ bằng 1 cú nhấp).
+---
 
-### 4. Quy trình Đồng bộ Song song VuaOffice (Zero-Conflict Merge)
-- [x] Kết nối remote nội bộ `vuaoffice` (`/Volumes/DATA/DEV/vuaoffice`).
-- [x] Giải quyết sạch sẽ toàn bộ conflict giữa nhánh `VuaMail` và `vuaoffice/main`.
-- [x] Đồng bộ bộ tài liệu tiêu chuẩn 7 docs (`IDEA.md`, `ARCH.md`, `SPEC.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `TASKS.md`, `CHANGELOGS.md`).
-- [ ] Chạy kiểm thử tự động build và typecheck trước khi tạo PR/merge vào `vuaoffice`.
+## 4. Giai đoạn 4: Tính năng Trải nghiệm Người dùng Outlook-Grade
+- [ ] **PST / EML Import & Export Wizard**: Hỗ trợ mở và import trực tiếp file `.pst` hoặc `.eml` từ máy tính.
+- [ ] **Rules & Filter Manager UI**: Giao diện cấu hình quy tắc lọc mail tự động.
+- [ ] **Rich-text Composer & Draft Auto-save**: Trình soạn thảo văn bản phong phú với tính năng lưu nháp tự động định kỳ.
+- [ ] **Calendar & People Deep-Integration**: Mở rộng giao diện danh bạ và lịch đồng bộ với VuaOffice Project Store.
