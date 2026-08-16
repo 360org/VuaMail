@@ -38,16 +38,26 @@ const NOTE_NS =
  * Root attributes for a regenerated part. Entries are spliced back in as original bytes, so
  * the root has to keep declaring whatever prefixes those bytes use: Word puts w14:paraId on
  * every paragraph it writes, and a literal namespace list leaves that prefix unbound.
+ *
+ * `required` lists namespaces the rebuild itself emits (e.g. w14 on rebuilt comments): they
+ * are appended when the reused original root does not declare them, since an original from
+ * a non-Word producer may bind fewer prefixes than our generated markup uses.
  */
 export function rootAttributes(
   originalXml: string | null,
   rootTag: string,
   fallback: string,
+  required: Record<string, string> = {},
 ): string {
   const attrs = originalXml
     ? new RegExp(`<${rootTag}\\b([^>]*?)/?>`).exec(originalXml)?.[1]?.trim()
     : undefined
-  return attrs && attrs.includes('xmlns:') ? attrs : fallback
+  const base = attrs && attrs.includes('xmlns:') ? attrs : fallback
+  const missing = Object.entries(required)
+    .filter(([prefix]) => !base.includes(`xmlns:${prefix}=`))
+    .map(([prefix, uri]) => ` xmlns:${prefix}="${uri}"`)
+    .join('')
+  return base + missing
 }
 
 /** real notes (separator entries excluded), in file order */
@@ -56,7 +66,8 @@ export function parseNotesXml(xml: string, kind: NoteKind): NoteInfo[] {
     const richParas = noteRichParas(entryXml)
     const hasFormat = richParas.some((paras) =>
       paras.some(
-        (r) => r.bold || r.italic || r.underline || r.strike || r.color || r.sizeHalfPoints,
+        (r) =>
+          r.bold || r.italic || r.underline || r.strike || r.color || r.sizeHalfPoints || r.caps,
       ),
     )
     return { id, text, ...(hasFormat ? { richParas } : {}) }
@@ -91,6 +102,8 @@ function noteRichParas(entryXml: string): NoteRun[][] {
       if (color) run.color = color.toUpperCase()
       const sz = /<w:sz [^>]*w:val="(\d+)"/.exec(rPr)?.[1]
       if (sz) run.sizeHalfPoints = parseInt(sz, 10)
+      if (flag(rPr, 'caps')) run.caps = 'all'
+      else if (flag(rPr, 'smallCaps')) run.caps = 'small'
       runs.push(run)
     }
     out.push(runs)

@@ -18,7 +18,7 @@ const { execFileSync } = require('node:child_process')
 const { existsSync } = require('node:fs')
 const { join } = require('node:path')
 
-const updateUrl = process.env.GENOFFICE_UPDATE_URL
+const updateUrl = process.env.GENOFFICE_UPDATE_URL || 'https://github.com/360org/vuaoffice/releases/latest/download'
 
 // GENOFFICE_MAC_X64=1 — opt into packaging the Intel (x64) dmg/zip alongside
 // arm64. Off by default: Intel packages must only ever ship signed with the
@@ -291,7 +291,12 @@ const config = {
     maintainer: '360 CORP',
     vendor: '360 CORP',
     category: 'Office',
-    icon: 'build/icon.png',
+    // Icon SET directory, not the single 1024px png: electron-builder does
+    // not resize a lone png, so deb/rpm would install only
+    // hicolor/1024x1024/apps/genoffice.png — a size absent from the hicolor
+    // theme index, leaving GNOME/KDE launchers on the generic fallback icon
+    // (genspark-ai/genoffice#90). The set ships every standard raster size.
+    icon: 'build/icons',
     // mac and win name the binary from productName; linux instead derives it
     // from package.json "name", and "@genoffice/shell" sanitizes to the
     // invalid "@genofficeshell". Setting it explicitly also makes the

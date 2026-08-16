@@ -20,10 +20,10 @@ import {
   dialog,
   ipcMain,
   Menu,
+  net,
   screen,
   session as electronSession,
   shell,
-  webContents,
   systemPreferences,
   WebContentsView,
 } from 'electron'
@@ -56,6 +56,7 @@ import {
   chatForProvider,
   defaultAiSettings,
   resolveAiSettings,
+  setRescueFetch,
   streamForProvider,
   type AiProviderId,
   type AiSettings,
@@ -2114,10 +2115,16 @@ export function registerSheetsAiIpc(): void {
   if (aiIpcRegistered) return
   aiIpcRegistered = true
 
+  // Node fetch (undici) direct connections get reset under VPN/tun setups; retry over Chromium's stack
+  setRescueFetch((url, init) => net.fetch(url, init))
+
   ipcMain.handle(IPC_CHANNELS.aiGetSettings, (event): AiSettings => {
     sessionFor(event)
     const stored = readJson<Partial<AiSettings> & LegacyAiSettings>(SETTINGS_PATH(), {})
     const settings = resolveAiSettings(stored, defaultAiSettings())
+    // AI features all go through Genspark (gsk login); legacy settings that chose
+    // another provider are reset
+    settings.provider = 'genspark'
     return settings
   })
 
@@ -2141,11 +2148,6 @@ export function registerSheetsAiIpc(): void {
     sessionFor(event)
     const settings = aiSettingsInputSchema.parse(input)
     writeJson(SETTINGS_PATH(), settings)
-    for (const wc of webContents.getAllWebContents()) {
-      if (!wc.isDestroyed()) {
-        wc.send('ai:settings-changed')
-      }
-    }
   })
 
   ipcMain.handle(IPC_CHANNELS.aiChat, async (event, input: unknown) => {

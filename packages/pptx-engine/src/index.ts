@@ -6,7 +6,7 @@
  */
 import JSZip from 'jszip'
 import { PackageArchive, relsPathFor, resolveTarget } from './zip'
-import { parseTheme, type Theme } from './theme'
+import { parseClrMap, parseTheme, type Theme } from './theme'
 import { parseSlide, parseDecorations, sliceGroupChildXmls, type ParseContext } from './parse'
 import { parsePlaceholderMap, parseMasterTextStyles } from './placeholder'
 import {
@@ -268,28 +268,36 @@ function parseSlideFromArchive(archive: PackageArchive, slidePath: string): Slid
 
   const chain = archive.resolveSlideChain(slidePath)
   const ctx: ParseContext = {}
-  if (chain.themePath) {
-    const themeXml = archive.readText(chain.themePath)
-    if (themeXml) ctx.theme = parseTheme(themeXml)
-  }
   // Placeholder geometry + text style inheritance + background inheritance: layout first, master fallback (read-only)
   const layoutXml = (chain.layoutPath ? archive.readText(chain.layoutPath) : undefined) ?? undefined
+  const masterXml = (chain.masterPath ? archive.readText(chain.masterPath) : undefined) ?? undefined
+  if (chain.themePath) {
+    const themeXml = archive.readText(chain.themePath)
+    if (themeXml) {
+      ctx.theme = parseTheme(themeXml)
+      // Dark masters remap schemeClr names (bg1→dk1 …); must be in place before any color resolution below
+      ctx.theme.clrMap = parseClrMap(masterXml, layoutXml, slideXml)
+    }
+  }
   if (layoutXml) {
     ctx.layoutPlaceholders = parsePlaceholderMap(layoutXml, ctx.theme)
     ctx.layoutBg = layoutXml
+    if (chain.layoutPath) ctx.layoutMediaRels = partMediaRels(archive, chain.layoutPath)
   }
-  const masterXml = (chain.masterPath ? archive.readText(chain.masterPath) : undefined) ?? undefined
   if (masterXml) {
     ctx.masterPlaceholders = parsePlaceholderMap(masterXml, ctx.theme)
     ctx.masterTextStyles = parseMasterTextStyles(masterXml, ctx.theme)
     ctx.masterBg = masterXml
+    if (chain.masterPath) ctx.masterMediaRels = partMediaRels(archive, chain.masterPath)
   }
   // Media rId → zip path; chart rId → chart part content
   const rels = archive.readRels(slidePath)
   const mediaRels = new Map<string, string>()
   const chartXmls = new Map<string, string>()
+  const chartMediaRels = new Map<string, Map<string, string>>()
   const avRels = new Map<string, { target: string; external?: boolean }>()
   const diagramDrawings = new Map<string, string>()
+  const diagramMediaRels = new Map<string, Map<string, string>>()
   const hlinkRels = new Map<string, string>()
   let slideOrder: string[] | undefined
   for (const rel of rels.values()) {
@@ -303,8 +311,12 @@ function parseSlideFromArchive(archive: PackageArchive, slidePath: string): Slid
     } else if (rel.type.endsWith('/image')) {
       mediaRels.set(rel.id, resolveTarget(slidePath, rel.target))
     } else if (rel.type.endsWith('/chart')) {
-      const xml = archive.readText(resolveTarget(slidePath, rel.target))
-      if (xml) chartXmls.set(rel.id, xml)
+      const target = resolveTarget(slidePath, rel.target)
+      const xml = archive.readText(target)
+      if (xml) {
+        chartXmls.set(rel.id, xml)
+        chartMediaRels.set(rel.id, partMediaRels(archive, target))
+      }
     } else if (/\/(?:video|audio|media)$/.test(rel.type)) {
       // Audio/video (r:link of a:videoFile/a:audioFile; embedded or external)
       const external = rel.targetMode === 'External'
@@ -323,18 +335,22 @@ function parseSlideFromArchive(archive: PackageArchive, slidePath: string): Slid
       if (relId) {
         const drawRel = rels.get(relId) ?? archive.readRels(dataPath).get(relId)
         const basePath = rels.get(relId) ? slidePath : dataPath
-        const drawingXml = drawRel
-          ? archive.readText(resolveTarget(basePath, drawRel.target))
-          : undefined
-        if (drawingXml) diagramDrawings.set(rel.id, drawingXml)
+        const drawingPath = drawRel ? resolveTarget(basePath, drawRel.target) : undefined
+        const drawingXml = drawingPath ? archive.readText(drawingPath) : undefined
+        if (drawingXml && drawingPath) {
+          diagramDrawings.set(rel.id, drawingXml)
+          diagramMediaRels.set(rel.id, partMediaRels(archive, drawingPath))
+        }
       }
     }
   }
   ctx.mediaRels = mediaRels
   ctx.chartXmls = chartXmls
+  if (chartMediaRels.size) ctx.chartMediaRels = chartMediaRels
   if (hlinkRels.size) ctx.hlinkRels = hlinkRels
   if (avRels.size) ctx.avRels = avRels
   if (diagramDrawings.size) ctx.diagramDrawings = diagramDrawings
+  if (diagramMediaRels.size) ctx.diagramMediaRels = diagramMediaRels
   // Table style definitions (embedded custom styles; built-in styles handled by table-style as fallback)
   ctx.tableStyles = archive.readText('ppt/tableStyles.xml') ?? undefined
 
@@ -435,32 +451,48 @@ function buildDecorations(
   const hasPh = (xml: string | undefined, type: string) =>
     !!xml && new RegExp(`<p:ph\\b[^>]*type="${type}"`).test(xml)
 
+  // Slide-level showMasterSp="0" ("hide background graphics") hides both master and layout
+  // decoration shapes; layout-level only stops the master's from showing through. Footer
+  // placeholders are not background graphics and keep following the <p:hf> toggles.
+  const slideHidesInherited = /<p:sld\b[^>]*showMasterSp="(?:0|false)"/.test(slideXml)
   const masterShown =
-    !/<p:sld\b[^>]*showMasterSp="(?:0|false)"/.test(slideXml) &&
+    !slideHidesInherited &&
     !(layoutXml && /<p:sldLayout\b[^>]*showMasterSp="(?:0|false)"/.test(layoutXml))
 
-  if (masterShown && masterXml && parts.masterPath) {
+  if (masterXml && parts.masterPath) {
     const hfTypes = new Set([...enabled].filter((k) => !slidePh.has(k) && !hasPh(layoutXml, k)))
-    const ctx: ParseContext = {
-      theme: parts.theme,
-      mediaRels: partMediaRels(archive, parts.masterPath),
+    if (masterShown || hfTypes.size) {
+      const ctx: ParseContext = {
+        theme: parts.theme,
+        mediaRels: partMediaRels(archive, parts.masterPath),
+      }
+      out.push(
+        ...parseDecorations(masterXml, ctx, {
+          hfTypes,
+          hideShapes: !masterShown,
+          ...(slideNum != null ? { slideNum } : {}),
+        }),
+      )
     }
-    out.push(
-      ...parseDecorations(masterXml, ctx, { hfTypes, ...(slideNum != null ? { slideNum } : {}) }),
-    )
   }
   if (layoutXml && parts.layoutPath) {
     const hfTypes = new Set([...enabled].filter((k) => !slidePh.has(k)))
-    // Layout footer placeholders often omit xfrm/font size, inheriting from the master
-    const ctx: ParseContext = {
-      theme: parts.theme,
-      mediaRels: partMediaRels(archive, parts.layoutPath),
-      masterPlaceholders: parts.masterPlaceholders,
-      masterTextStyles: parts.masterTextStyles,
+    if (!slideHidesInherited || hfTypes.size) {
+      // Layout footer placeholders often omit xfrm/font size, inheriting from the master
+      const ctx: ParseContext = {
+        theme: parts.theme,
+        mediaRels: partMediaRels(archive, parts.layoutPath),
+        masterPlaceholders: parts.masterPlaceholders,
+        masterTextStyles: parts.masterTextStyles,
+      }
+      out.push(
+        ...parseDecorations(layoutXml, ctx, {
+          hfTypes,
+          hideShapes: slideHidesInherited,
+          ...(slideNum != null ? { slideNum } : {}),
+        }),
+      )
     }
-    out.push(
-      ...parseDecorations(layoutXml, ctx, { hfTypes, ...(slideNum != null ? { slideNum } : {}) }),
-    )
   }
   return out
 }
@@ -771,6 +803,58 @@ export function setPictureOpacity(slide: Slide, sourceId: string, opacity: numbe
   } else {
     delete pic.opacity
   }
+  el.dirty = el.dirtyTransform = el.dirtyFill = el.dirtyStroke = false
+  el.dirtySrcRect = false
+  el.dirtyPPr = undefined
+  el.anchor.originalXml = xml
+  slide.structureDirty = true
+  return true
+}
+
+/**
+ * Swap a picture's backing image for new bytes, keeping frame, z-order, border
+ * and effects. New media part + rel; the <a:blip> reference is re-pointed via
+ * byte surgery baked into originalXml (same pattern as setPictureOpacity).
+ * srcRect is kept only when the caller knows the new image shares the old one's
+ * pixel geometry (e.g. background-removal output) — otherwise the stale crop
+ * would show an arbitrary window of the new image.
+ */
+export function replacePictureBytes(
+  opened: OpenedPptx,
+  slide: Slide,
+  sourceId: string,
+  bytes: Uint8Array,
+  ext: string,
+  opts?: { keepSrcRect?: boolean },
+): boolean {
+  const el = slide.elements.find((e) => e.id === sourceId && e.type === 'picture')
+  if (!el) return false
+  const pic = el as import('./types').PictureElement
+  let xml = patchedElementXml(el)
+  const blip = /<a:blip\b[^>]*\/?>/.exec(xml)
+  if (!blip) return false
+  const added = addImageMediaAndRel(opened, slide, bytes, ext)
+  if (!added) return false
+  let tag = blip[0]
+  // A coexisting r:link ("insert and link" pictures) would keep refreshing from
+  // the old external file, so it is dropped once the embed points at new bytes
+  if (/r:embed="/.test(tag))
+    tag = tag.replace(/r:embed="[^"]*"/, `r:embed="${added.rid}"`).replace(/\s+r:link="[^"]*"/, '')
+  else if (/r:link="/.test(tag)) tag = tag.replace(/r:link="[^"]*"/, `r:embed="${added.rid}"`)
+  else tag = tag.replace(/<a:blip\b/, `<a:blip r:embed="${added.rid}"`)
+  xml = xml.slice(0, blip.index) + tag + xml.slice(blip.index + blip[0].length)
+  // The replacement is always raster (IMAGE_MIME gate), and PowerPoint prefers a
+  // leftover Office-2016 <asvg:svgBlip> extension over the retargeted r:embed —
+  // drop that extension entry (and its wrapper when nothing else remains)
+  xml = xml
+    .replace(/<a:ext\b[^>]*>\s*<\w+:svgBlip\b[\s\S]*?<\/a:ext>/, '')
+    .replace(/<a:extLst>\s*<\/a:extLst>/, '')
+  if (!opts?.keepSrcRect) {
+    xml = xml.replace(/<a:srcRect\b[^>]*\/>|<a:srcRect\b[^>]*>[\s\S]*?<\/a:srcRect>/, '')
+    delete pic.srcRect
+  }
+  pic.mediaRef = added.mediaPath
+  delete pic.dataUrl // the media resolver re-derives it from the new mediaRef
   el.dirty = el.dirtyTransform = el.dirtyFill = el.dirtyStroke = false
   el.dirtySrcRect = false
   el.dirtyPPr = undefined
@@ -1720,11 +1804,15 @@ export function editChartElement(
             ? 'barPercentStacked'
             : existing.grouping === 'stacked'
               ? 'barStacked'
-              : 'bar'
+              : existing.pseudo3D // 3-D column survives data/style-only rebuilds (stacked 3-D degrades to 2-D stacked)
+                ? 'bar3D'
+                : 'bar'
           : existing.kind === 'pie'
             ? (existing.holePct ?? 0) > 0
               ? 'doughnut'
-              : 'pie'
+              : existing.pseudo3D
+                ? 'pie3D'
+                : 'pie'
             : (existing.kind as NewChartKind)
   const kind: NewChartKind = patch.kind ?? derivedKind
   // Horizontal bar direction is preserved through rebuilds; an explicit type change resets it unless the patch asks for barDir 'bar' (the gallery's horizontal-bar entry)
@@ -1898,9 +1986,12 @@ function applyFontPatch(paragraphs: Paragraph[], patch: ElementFontPatch): void 
     for (const r of p.runs) {
       if (patch.fontFamily !== undefined) {
         r.fontFamily = patch.fontFamily
-        // User explicitly changed the font: the original latin/ea keep-flags no longer apply, write the new font back
+        // User explicitly changed the font: the original latin/ea/cs keep-flags no longer
+        // apply, write the new font back. csFont has to go with them or a rebuilt run
+        // re-emits the old complex-script typeface and Arabic text never changes.
         delete r.latinFont
         delete r.eaFont
+        delete r.csFont
         delete r.fontImplicit
       }
       if (patch.fontSizePt !== undefined) {

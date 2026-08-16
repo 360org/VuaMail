@@ -35,6 +35,7 @@ const worksheetMetadataSchema = z
           hidden: z.boolean(),
           outlineLevel: z.number().int().min(1).max(7).optional(),
           collapsed: z.boolean().optional(),
+          styleIndex: z.number().int().positive().optional(),
         })
         .strict(),
     ),
@@ -393,6 +394,7 @@ export const workbookRangeResultSchema = z
             hidden: z.boolean(),
             outlineLevel: z.number().int().min(1).max(7).optional(),
             collapsed: z.boolean().optional(),
+            styleIndex: z.number().int().positive().optional(),
           })
           .strict(),
       )
@@ -1441,6 +1443,9 @@ export const workbookSaveRequestSchema = z
   .strict()
   .refine(
     (request) =>
+      // Explicit Save As is a valid request even with nothing to apply: it
+      // writes the unchanged workbook to a new path.
+      request.mode === 'save-as' ||
       request.edits.length > 0 ||
       request.structuralOps.length > 0 ||
       request.chartEdits.length > 0 ||
@@ -1735,7 +1740,6 @@ export const aiSettingsInputSchema = z
   .object({
     provider: z.string().min(1),
     providers: z.record(z.string(), aiProviderConfigSchema),
-    developerMode: z.boolean().optional(),
   })
   .strict()
 
@@ -1896,6 +1900,8 @@ export interface AttachmentImageResult {
   error?: string
 }
 
+export type UiTheme = 'light' | 'dark' | 'system'
+
 export interface DesktopApi {
   /** current UI language (persisted by the shell in app-settings.json) */
   getLanguage(): Promise<'zh' | 'en' | 'ja' | 'ko' | 'fr' | 'de' | 'es' | 'th' | 'id' | 'ru' | 'ar'>
@@ -1905,6 +1911,16 @@ export interface DesktopApi {
       lang: 'zh' | 'en' | 'ja' | 'ko' | 'fr' | 'de' | 'es' | 'th' | 'id' | 'ru' | 'ar',
     ) => void,
   ): () => void
+  /** current UI theme preference (persisted by the shell in app-settings.json) */
+  getTheme(): Promise<UiTheme>
+  /** theme switched from the shell home page */
+  onThemeChanged(handler: (theme: UiTheme) => void): () => void
+  /**
+   * the user pressed the shell chrome (tab strip) or started dragging the
+   * window — no DOM event or blur reaches this view, so the shell relays the
+   * press for dismissing open popovers
+   */
+  onChromePressed(handler: () => void): () => void
   selectWorkbook(): Promise<WorkbookFile | null>
   readWorkbookRange(request: WorkbookRangeRequest): Promise<WorkbookRangeResult>
   readWorkbookFormulas(request: WorkbookFormulaCellsRequest): Promise<WorkbookFormulaCellsResult>

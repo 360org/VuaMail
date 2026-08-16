@@ -15,6 +15,7 @@ import type {
   DesktopApi,
   ScreenCaptureResult,
   ScreenSourcesResult,
+  UiTheme,
   WorkbookCellStyle,
   WorkbookConditionalRule,
   WorkbookFile,
@@ -45,6 +46,17 @@ const desktopApi: DesktopApi = {
     ) => handler(lang)
     ipcRenderer.on('app:language-changed', listener)
     return () => ipcRenderer.removeListener('app:language-changed', listener)
+  },
+  getTheme: () => ipcRenderer.invoke('app:get-theme'),
+  onThemeChanged(handler) {
+    const listener = (_event: Electron.IpcRendererEvent, theme: UiTheme) => handler(theme)
+    ipcRenderer.on('app:theme-changed', listener)
+    return () => ipcRenderer.removeListener('app:theme-changed', listener)
+  },
+  onChromePressed(handler) {
+    const listener = () => handler()
+    ipcRenderer.on('app:chrome-pressed', listener)
+    return () => ipcRenderer.removeListener('app:chrome-pressed', listener)
   },
   async selectWorkbook() {
     const result: unknown = await ipcRenderer.invoke(IPC_CHANNELS.selectWorkbook)
@@ -250,11 +262,6 @@ const desktopApi: DesktopApi = {
   },
   async setAiSettings(settings) {
     await ipcRenderer.invoke(IPC_CHANNELS.aiSetSettings, settings)
-  },
-  onAiSettingsChanged(handler) {
-    const listener = () => handler()
-    ipcRenderer.on('ai:settings-changed', listener)
-    return () => ipcRenderer.removeListener('ai:settings-changed', listener)
   },
   async aiChat(request) {
     const result: unknown = await ipcRenderer.invoke(IPC_CHANNELS.aiChat, request)
@@ -553,7 +560,9 @@ function parseWorkbookFile(input: unknown): WorkbookFile {
         typeof columnWidth.hidden !== 'boolean' ||
         (columnWidth.outlineLevel !== undefined &&
           (!isNonnegativeInteger(columnWidth.outlineLevel) || columnWidth.outlineLevel > 7)) ||
-        (columnWidth.collapsed !== undefined && typeof columnWidth.collapsed !== 'boolean')
+        (columnWidth.collapsed !== undefined && typeof columnWidth.collapsed !== 'boolean') ||
+        (columnWidth.styleIndex !== undefined &&
+          (!isNonnegativeInteger(columnWidth.styleIndex) || columnWidth.styleIndex === 0))
       ) {
         throw new Error('Invalid worksheet column width.')
       }
@@ -566,6 +575,7 @@ function parseWorkbookFile(input: unknown): WorkbookFile {
           ? {}
           : { outlineLevel: columnWidth.outlineLevel }),
         ...(columnWidth.collapsed === undefined ? {} : { collapsed: columnWidth.collapsed }),
+        ...(columnWidth.styleIndex === undefined ? {} : { styleIndex: columnWidth.styleIndex }),
       }
     })
     return {
@@ -797,7 +807,9 @@ function parseRangeResult(input: unknown): WorkbookRangeResult {
       typeof row.hidden !== 'boolean' ||
       (row.outlineLevel !== undefined &&
         (!isNonnegativeInteger(row.outlineLevel) || row.outlineLevel > 7)) ||
-      (row.collapsed !== undefined && typeof row.collapsed !== 'boolean')
+      (row.collapsed !== undefined && typeof row.collapsed !== 'boolean') ||
+      (row.styleIndex !== undefined &&
+        (!isNonnegativeInteger(row.styleIndex) || row.styleIndex === 0))
     ) {
       throw new Error('Invalid workbook row response.')
     }
@@ -807,6 +819,7 @@ function parseRangeResult(input: unknown): WorkbookRangeResult {
       ...(row.height === undefined ? {} : { height: row.height }),
       ...(row.outlineLevel === undefined ? {} : { outlineLevel: row.outlineLevel }),
       ...(row.collapsed === undefined ? {} : { collapsed: row.collapsed }),
+      ...(row.styleIndex === undefined ? {} : { styleIndex: row.styleIndex }),
     }
   })
   const merges = input.merges.map((merge) => {

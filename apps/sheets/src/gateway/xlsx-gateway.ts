@@ -53,10 +53,12 @@ import {
   parseRelationships,
   parseSheetElements,
   partPathForRels,
+  pivotCacheReadsFromSheet,
   prepareClonedSheetRels,
   removePartOverride,
   removeRelationshipById,
   tableDisplayName,
+  renameSheetInPivotCacheSource,
   renameSheetReferencesInChart,
   renameSheetReferencesInDefinedNames,
   renameSheetReferencesInWorksheet,
@@ -1169,6 +1171,9 @@ async function applySheetPlanToPackage(
   const chartPaths = packagePaths.filter(
     (path) => path.startsWith('xl/charts/') && path.endsWith('.xml'),
   )
+  const pivotCacheDefinitionPaths = packagePaths.filter((path) =>
+    /^xl\/pivotCache\/pivotCacheDefinition[^/]*\.xml$/.test(path),
+  )
 
   // Satellite parts owned by the removed sheets — drawings with their images
   // and charts, legacy VML, comments, tables — die with the sheet. The
@@ -1267,16 +1272,30 @@ async function applySheetPlanToPackage(
         `A workbook defined name references "${removal}" — deleting it is not allowed.`,
       )
     }
+    // A pivot hosted on a surviving sheet may read its source rows from the
+    // removed sheet; only the pivotCacheDefinition records that link
+    // (cacheSource/worksheetSource@sheet), so the hosting-sheet pivotTable
+    // fail-close in classifyRemovedSheetRels cannot catch it.
+    for (const cachePath of pivotCacheDefinitionPaths) {
+      if (pivotCacheReadsFromSheet(await pkg.readText(cachePath), removal)) {
+        throw new SheetEditError(
+          `A pivot table reads its source data from "${removal}" — deleting it is not allowed.`,
+        )
+      }
+    }
     // Structured references (DecoTable[Amount]) into a removed table are not
     // sheet-qualified, so the sheet-name checks above cannot catch them.
+    // Excel treats table names as case-insensitive, so the scan must too;
+    // entries too large to patch fall back to the sidecar's exact-case scan.
     for (const part of ownedPartsByRemoval.get(removal) ?? []) {
       if (!removedOwnedParts.has(part) || !/^xl\/tables\/[^/]+\.xml$/.test(part)) continue
       const name = tableDisplayName(await pkg.readText(part))
       if (name === undefined) continue
       const needle = `${name}[`
+      const needleLower = needle.toLowerCase()
       for (const path of survivingWorksheetPaths) {
         const referenced = (await pkg.canPatch(path))
-          ? (await pkg.readText(path)).includes(needle)
+          ? (await pkg.readText(path)).toLowerCase().includes(needleLower)
           : await pkg.containsText(path, needle)
         if (referenced) {
           throw new SheetEditError(
@@ -1329,6 +1348,16 @@ async function applySheetPlanToPackage(
       if (renamed !== xml) {
         pkg.write(chartPath, renamed)
         touchedEntries.add(chartPath)
+      }
+    }
+    // Pivot caches sourced from the renamed sheet keep working only if their
+    // worksheetSource@sheet follows the rename.
+    for (const cachePath of pivotCacheDefinitionPaths) {
+      const xml = await pkg.readText(cachePath)
+      const renamed = renameSheetInPivotCacheSource(xml, rename.sheetName, rename.newName)
+      if (renamed !== xml) {
+        pkg.write(cachePath, renamed)
+        touchedEntries.add(cachePath)
       }
     }
     workbookXml = renameSheetReferencesInDefinedNames(workbookXml, rename.sheetName, rename.newName)
@@ -1427,16 +1456,41 @@ export function toA1Address(row: number, column: number): string {
   return `${letters}${row + 1}`
 }
 
+/**
+ * Flush a freshly written file before it is renamed into place. The handle
+ * must be writable — Windows' FlushFileBuffers rejects read-only handles
+ * with EPERM (#356) — and the flush is best-effort on top of that: inside
+ * cloud-sync folders (OneDrive/Dropbox) or under AV locks, reopening or
+ * syncing can still be refused with EPERM/EACCES/EBUSY. The bytes are
+ * already written at this point, so a refused flush only weakens crash
+ * durability and must not fail the save itself.
+ */
+export async function syncFileBestEffort(path: string): Promise<void> {
+  const tolerated = (error: unknown) =>
+    ['EPERM', 'EACCES', 'EBUSY', 'EINVAL', 'ENOSYS'].includes(
+      (error as NodeJS.ErrnoException).code ?? '',
+    )
+  let handle
+  try {
+    handle = await open(path, 'r+')
+  } catch (error: unknown) {
+    if (tolerated(error)) return
+    throw error
+  }
+  try {
+    await handle.sync()
+  } catch (error: unknown) {
+    if (!tolerated(error)) throw error
+  } finally {
+    await handle.close()
+  }
+}
+
 export async function writeXlsxAtomically(path: string, buffer: Buffer): Promise<void> {
   const temporaryPath = join(dirname(path), `.${crypto.randomUUID()}.tmp.xlsx`)
   try {
     await writeFile(temporaryPath, buffer, { flag: 'wx' })
-    const handle = await open(temporaryPath, 'r+')
-    try {
-      await handle.sync()
-    } finally {
-      await handle.close()
-    }
+    await syncFileBestEffort(temporaryPath)
     await rename(temporaryPath, path)
   } catch (error: unknown) {
     await rm(temporaryPath, { force: true })

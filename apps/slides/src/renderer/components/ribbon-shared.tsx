@@ -197,6 +197,7 @@ export type RibbonPanelKey =
   | 'layoutPick'
   | 'slideSize'
   | 'transparency'
+  | 'pictureBorder'
   | 'table'
   | 'layout'
   | 'translate'
@@ -273,6 +274,9 @@ export interface Props {
   hasDoc: boolean
   /** True when no slide has real content — the one-click AI actions grey out then */
   deckEmpty: boolean
+  /** Undo/redo stack occupancy (pushed from the main process): the QAT buttons grey out when empty */
+  canUndo: boolean
+  canRedo: boolean
   /** Open file name (shown on the right of the tab row; the title bar row was removed) */
   dirty: boolean
   editing: boolean
@@ -290,7 +294,7 @@ export interface Props {
   onExportImages: () => void
   onFormat: (cmd: FormatCmd) => void
   zoom: number
-  onZoom: (z: number) => void
+  onZoom: (z: number | ((current: number) => number)) => void
   showThumbs: boolean
   onToggleThumbs: () => void
   aiOpen: boolean
@@ -486,8 +490,8 @@ export interface Props {
   recording: boolean
   onToggleScreenRecord: () => void
   // ── Contextual tabs: table design / chart design / picture format ────────────────
-  /** Current single-selection element type (undefined = none/multi-select; 'table'|'chart'|'picture' shows the contextual tab) */
-  contextElementType?: 'table' | 'chart' | 'picture' | 'shape' | null
+  /** Current selection category used to expose and activate contextual tabs */
+  contextElementType?: 'table' | 'chart' | 'picture' | 'shape' | 'textShape' | null
   /** Currently selected element sourceId (for contextual tab operation callbacks) */
   contextElementId?: string
   /** Current page index (for contextual tab operations) */
@@ -501,10 +505,16 @@ export interface Props {
   contextPictureCanCutout?: boolean
   /** Picture: enter crop mode */
   onPictureCrop?: () => void
+  /** Crop mode is live — the Crop button shows its selected state */
+  cropActive?: boolean
   /** Picture opacity (1 = opaque) */
   onPictureOpacity?: (opacity: number) => void
   /** Picture: enter cutout (background removal) mode */
   onPictureCutout?: () => void
+  /** Selected picture's current border (null = none) */
+  contextPictureStroke?: { color: string; widthPt: number; dashPreset?: string } | null
+  /** Picture border (null clears it) */
+  onPictureStroke?: (stroke: { color: string; widthPt: number; dash?: string } | null) => void
   /** Execute a table style operation */
   onEditTableStyle?: (op: Omit<EditTableStyleOp, 'slideIndex' | 'sourceId'>) => void
   /** Selected table's header-row/banded-rows current state (toggle display) */

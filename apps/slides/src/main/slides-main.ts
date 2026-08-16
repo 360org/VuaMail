@@ -108,6 +108,7 @@ import {
   pasteElements,
   reorderElement,
   reparseDeck,
+  replacePictureBytes,
   savePptx,
   savePptxToFile,
   commitSaved,
@@ -161,6 +162,7 @@ import type {
   AddElementOp,
   AddImageBytesOp,
   AddInkOp,
+  ReplacePictureBytesOp,
   AddMediaBytesOp,
   AddBlankSlideOp,
   AddSlideOp,
@@ -228,6 +230,7 @@ import type {
   AnimationItem,
   ShapeKey,
 } from '../shared/ipc'
+import { buildPrintDocumentHtml } from '../shared/print-html'
 
 import { tm } from './i18n-main'
 import { tiffToPng } from './tiff-decode'
@@ -247,7 +250,9 @@ import {
   restoreSnapshot,
   settleStaleHistoryBatch,
   runtime,
+  scheduleHistoryNotify,
   sessions,
+  showChrome,
   takeSnapshot,
   windowRefs,
   type Session,
@@ -271,6 +276,7 @@ export {
   configureSlidesRuntime,
   setActiveSlidesWebContents,
   setSlidesShellWindow,
+  setSlidesShowBleed,
 } from './session-state'
 export { registerAiIpc } from './ai-ipc'
 
@@ -679,6 +685,7 @@ async function openAndBuild(
     redoStack: [],
     ...(recovered ? { metaDirty: true } : {}),
   })
+  scheduleHistoryNotify(sessions.get(wc.id)!)
   await pushRecent(path)
   slidesOpenedHook?.(wc, path)
   let slides = buildAllRenderSlides(opened, fitWidthPx)
@@ -1569,6 +1576,7 @@ export function registerSlidesIpc(): void {
   ipcMain.handle('slides:new-blank', async (e, fitWidthPx: number): Promise<OpenResult> => {
     const opened = await openPptx(await createBlankPptx())
     sessions.set(e.sender.id, { path: '', opened, fitWidthPx, undoStack: [], redoStack: [] })
+    scheduleHistoryNotify(sessions.get(e.sender.id)!)
     return {
       path: '',
       slides: buildAllRenderSlides(opened, fitWidthPx),
@@ -1640,7 +1648,11 @@ export function registerSlidesIpc(): void {
       }
       return rebuildSlide(session, op.slideIndex)
     }
-    const el = findEl(slide, op.sourceId)
+    // Unlike findEl, pictures are strokable too (picture border)
+    const el = slide.elements.find(
+      (x) =>
+        x.id === op.sourceId && (x.type === 'text' || x.type === 'shape' || x.type === 'picture'),
+    ) as TextElement | undefined
     if (!el) return null
     pushHistory(session)
     el.stroke = op.stroke
@@ -1712,6 +1724,27 @@ export function registerSlidesIpc(): void {
     if (!editPictureSrcRect(slide, op.sourceId, op.srcRect)) {
       session.undoStack.pop()
       return null
+    }
+    // Crop confirm also shrinks the element frame to the crop frame — same history
+    // push, so a single undo restores frame and crop together (no distorted middle state)
+    if (op.boxPx && op.fitWidthPx) {
+      const el = slide.elements.find((x) => x.id === op.sourceId)
+      if (el) {
+        const baseWidthPx = session.opened.deck.size.cx / EMU_PER_PX_96
+        const scale = op.fitWidthPx / baseWidthPx
+        const toEmu = (px: number) => Math.round((px / scale) * EMU_PER_PX_96)
+        el.transform = {
+          ...el.transform,
+          offset: {
+            x: toEmu(op.boxPx.x),
+            y: toEmu(op.boxPx.y),
+            cx: toEmu(op.boxPx.w),
+            cy: toEmu(op.boxPx.h),
+          },
+        }
+        el.dirtyTransform = true
+        updateConnectorsForMoved(slide, [op.sourceId])
+      }
     }
     return rebuildSlide(session, op.slideIndex)
   })
@@ -2778,6 +2811,27 @@ export function registerSlidesIpc(): void {
     return rebuilt ? { slide: rebuilt, sourceId: el.id } : null
   })
 
+  ipcMain.handle('slides:replace-picture-bytes', (e, op: ReplacePictureBytesOp) => {
+    const session = sessions.get(e.sender.id)
+    if (!session) return null
+    const slide = session.opened.deck.slides[op.slideIndex]
+    if (!slide) return null
+    pushHistory(session)
+    const ok = replacePictureBytes(
+      session.opened,
+      slide,
+      op.sourceId,
+      new Uint8Array(Buffer.from(op.base64, 'base64')),
+      op.ext,
+      op.keepSrcRect ? { keepSrcRect: true } : undefined,
+    )
+    if (!ok) {
+      session.undoStack.pop()
+      return { error: 'unsupported' as const, ext: op.ext }
+    }
+    return rebuildSlide(session, op.slideIndex)
+  })
+
   // Show a dialog to pick video/audio and embed it. Video poster frame prefers the system thumbnail (QuickLook), falling back to a solid color on failure.
   ipcMain.handle(
     'slides:insert-media',
@@ -3387,6 +3441,7 @@ export function registerSlidesIpc(): void {
     if (session.undoStack.length === 0) return null
     session.redoStack.push(takeSnapshot(session))
     restoreSnapshot(session, session.undoStack.pop()!)
+    scheduleHistoryNotify(session)
     return buildAllRenderSlides(session.opened, session.fitWidthPx)
   })
 
@@ -3397,6 +3452,7 @@ export function registerSlidesIpc(): void {
     if (session.redoStack.length === 0) return null
     session.undoStack.push(takeSnapshot(session))
     restoreSnapshot(session, session.redoStack.pop()!)
+    scheduleHistoryNotify(session)
     return buildAllRenderSlides(session.opened, session.fitWidthPx)
   })
 
@@ -3555,71 +3611,15 @@ html, body { margin: 0; padding: 0; }
   ipcMain.handle(
     'slides:print',
     async (e, op: PrintSlidesOp): Promise<{ ok: boolean; error?: string }> => {
-      const layout = op.layout ?? 'full'
-      const ratio = op.widthPx / op.heightPx
-      // Full page: page size matches the slide ratio; handouts/notes: A4 portrait holding multiple thumbnails
-      const slideH = 7.5
-      const slideW = Math.round(ratio * slideH * 1000) / 1000
-      const isFull = layout === 'full'
-      const pageW = isFull ? slideW : 8.27
-      const pageH = isFull ? slideH : 11.69
-      const perPage =
-        layout === 'handout2' ? 2 : layout === 'handout3' ? 3 : layout === 'handout6' ? 6 : 1
-      const esc = (x: string) =>
-        x.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
-
-      let body: string
-      if (isFull) {
-        body = op.pngsBase64
-          .map((b64) => `<div class="page"><img src="data:image/png;base64,${b64}"></div>`)
-          .join('')
-      } else if (layout === 'notes') {
-        // Notes page: slide on top + notes text below
-        body = op.pngsBase64
-          .map(
-            (b64, i) =>
-              `<div class="page notes"><img src="data:image/png;base64,${b64}">` +
-              `<div class="note">${esc(op.notes?.[i] ?? '').replace(/\n/g, '<br>')}</div></div>`,
-          )
-          .join('')
-      } else {
-        // Handouts: perPage thumbnails per page (with 3, ruled lines on the right for handwriting)
-        const pages: string[] = []
-        for (let i = 0; i < op.pngsBase64.length; i += perPage) {
-          const cells = op.pngsBase64
-            .slice(i, i + perPage)
-            .map(
-              (b64) =>
-                `<div class="cell"><img src="data:image/png;base64,${b64}">` +
-                (perPage === 3 ? '<div class="rules"></div>' : '') +
-                '</div>',
-            )
-            .join('')
-          pages.push(`<div class="page handout h${perPage}">${cells}</div>`)
-        }
-        body = pages.join('')
-      }
-
-      const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-@page { size: ${pageW}in ${pageH}in; margin: 0; }
-html, body { margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
-.page { width: ${pageW}in; height: ${pageH}in; overflow: hidden; page-break-after: always; box-sizing: border-box; }
-.page:last-child { page-break-after: auto; }
-.page > img { display: block; width: 100%; height: 100%; }
-.page.handout { padding: 0.4in; display: flex; flex-direction: column; gap: 0.24in; }
-.page.handout .cell { display: flex; gap: 0.2in; align-items: center; flex: 1; min-height: 0; }
-.page.handout .cell img { border: 1px solid #bbb; object-fit: contain; max-height: 100%; }
-.page.handout.h2 .cell img, .page.handout.h6 .cell img { width: 100%; height: auto; max-height: 100%; }
-.page.handout.h3 .cell img { width: 55%; height: auto; }
-.page.handout.h3 .rules {
-  flex: 1; align-self: stretch;
-  background: repeating-linear-gradient(#fff 0 0.28in, #ccc 0.28in calc(0.28in + 1px));
-}
-.page.handout.h6 { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; }
-.page.notes { padding: 0.5in; display: flex; flex-direction: column; }
-.page.notes img { width: 100%; height: auto; border: 1px solid #bbb; }
-.page.notes .note { margin-top: 0.3in; font-size: 11pt; line-height: 1.5; white-space: pre-wrap; }
-</style></head><body>${body}</body></html>`
+      // Page assembly is shared with the renderer's print-preview pane (print-html.ts)
+      const html = buildPrintDocumentHtml({
+        srcs: op.pngsBase64.map((b64) => `data:image/png;base64,${b64}`),
+        ratio: op.widthPx / op.heightPx,
+        layout: op.layout ?? 'full',
+        ...(op.notes ? { notes: op.notes } : {}),
+        ...(op.orientation ? { orientation: op.orientation } : {}),
+        ...(op.frame ? { frame: true } : {}),
+      })
       const owner = BrowserWindow.fromWebContents(e.sender) ?? dialogParent()
       const win = new BrowserWindow({
         show: false,
@@ -3653,8 +3653,10 @@ html, body { margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', sans
             (success, failureReason) => resolve({ success, failureReason }),
           )
         })
-        // Canceling is a normal completion, not a print failure to surface in the status bar.
-        if (!result.success && result.failureReason !== 'Print job canceled') {
+        if (!result.success) {
+          // Canceling is a normal completion, not a print failure: ok=false without an
+          // error keeps the renderer's print dialog (and its chosen options) open.
+          if (result.failureReason === 'Print job canceled') return { ok: false }
           return { ok: false, error: result.failureReason }
         }
         return { ok: true }
@@ -3667,6 +3669,53 @@ html, body { margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', sans
   )
 
   ipcMain.handle('slides:recent', () => readRecent())
+
+  // ── Show fullscreen: macOS native fullscreen is an animated Space transition, so
+  // the slideshow would render windowed for ~1s mid-flight. Instead one call covers
+  // everything while the show's black root hides the relayout: the tab view bleeds
+  // over the tab strip (shell hook) and the window snaps via simpleFullScreen (same
+  // trick as the audience window in presenter-show.ts). The renderer skips HTML
+  // fullscreen on macOS entirely. Snap is skipped when the user already fullscreened
+  // the window into its own Space; Windows/Linux keep HTML fullscreen (instant there)
+  // and only need the bleed. Release is debounced: React strict-mode remounts and
+  // presenter→show handoffs flip off→on within a tick, and honoring the off
+  // immediately makes the window visibly bounce. ──
+  let showFsRelease: ReturnType<typeof setTimeout> | null = null
+  ipcMain.handle('slides:show-fullscreen', (e, on: boolean) => {
+    const win = BrowserWindow.fromWebContents(e.sender) ?? windowRefs.shellWindow
+    if (!win || win.isDestroyed()) return
+    const wc = e.sender
+    if (showFsRelease) {
+      clearTimeout(showFsRelease)
+      showFsRelease = null
+    }
+    if (on) {
+      showChrome.setBleed?.(wc, true)
+      if (process.platform === 'darwin' && !win.isFullScreen()) {
+        win.setFullScreenable(false)
+        if (!win.isSimpleFullScreen()) win.setSimpleFullScreen(true)
+      }
+      // The snap can leave the window's first responder on the shell chrome view, so
+      // keys land in the tab-strip renderer (Esc dead until a click on the show).
+      // win.focus() must NOT be used here — it focuses the shell renderer itself.
+      // Focus the tab's webContents now and once more on the next tick (the snap's
+      // responder change lands async). HTML fullscreen used to do this implicitly.
+      wc.focus()
+      setTimeout(() => {
+        if (!wc.isDestroyed()) wc.focus()
+      }, 50)
+    } else {
+      showFsRelease = setTimeout(() => {
+        showFsRelease = null
+        if (!wc.isDestroyed()) showChrome.setBleed?.(wc, false)
+        if (win.isDestroyed()) return
+        if (process.platform === 'darwin') {
+          if (win.isSimpleFullScreen()) win.setSimpleFullScreen(false)
+          win.setFullScreenable(true)
+        }
+      }, 150)
+    }
+  })
 
   // ── Chat attachments (slides:files-*) ──
   registerAttachmentIpc()
