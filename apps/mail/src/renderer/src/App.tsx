@@ -7,8 +7,12 @@ import { ReadingPane } from './components/detail/ReadingPane'
 import { ComposeModal } from './components/compose/ComposeModal'
 import { PeopleView } from './components/people/PeopleView'
 import { CalendarView } from './components/calendar/CalendarView'
+import { TodoView } from './components/todo/TodoView'
+import { ProfileView } from './components/profile/ProfileView'
 import { ImportExportModal } from './components/wizard/ImportExportModal'
 import { RulesModal } from './components/rules/RulesModal'
+import { AiPanel } from './components/ai/AiPanel'
+import { SettingsModal } from './components/settings/SettingsModal'
 import type { MailFilterRule } from '@genoffice/mail-engine'
 import type { EmailAccount, EmailBody, EmailMessage, MailFolder } from '../../shared/types'
 import './styles/mail-theme.css'
@@ -19,7 +23,7 @@ export const App: React.FC = () => {
   const [activeAccountId, setActiveAccountId] = useState<string>('acc_primary')
   const [folders, setFolders] = useState<MailFolder[]>([])
   const [activeFolderId, setActiveFolderId] = useState<string>('f_inbox')
-  const [categoryTab, setCategoryTab] = useState<'focused' | 'other'>('focused')
+  const [categoryTab, setCategoryTab] = useState<string>('all')
   const [emails, setEmails] = useState<EmailMessage[]>([])
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null)
   const [activeBody, setActiveBody] = useState<EmailBody | null>(null)
@@ -28,6 +32,8 @@ export const App: React.FC = () => {
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [isImportExportOpen, setIsImportExportOpen] = useState(false)
   const [isRulesOpen, setIsRulesOpen] = useState(false)
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(true) // Open by default like GenMail
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [rules, setRules] = useState<MailFilterRule[]>([
     {
       id: 'r_vip',
@@ -45,19 +51,25 @@ export const App: React.FC = () => {
   const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
   const [isSyncing, setIsSyncing] = useState(false)
 
-  // Load initial accounts & folders
+  // Load initial accounts & all folders
   useEffect(() => {
     async function loadInitial() {
       if (!window.vuaMail) return
-      const accList = await window.vuaMail.getAccounts()
+      const api = window.vuaMail
+      const accList = await api.getAccounts()
       setAccounts(accList)
       if (accList.length > 0) {
         const primary = accList[0]
         setActiveAccountId(primary.id)
-        const fList = await window.vuaMail.getFolders(primary.id)
-        setFolders(fList)
-        if (fList.length > 0) {
-          setActiveFolderId(fList[0].id)
+        // Fetch folders for all accounts to show complete folder tree
+        const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
+        const folderResults = await Promise.all(allFolderPromises)
+        const combinedFolders = folderResults.flat()
+        setFolders(combinedFolders)
+
+        const defaultFolder = combinedFolders.find((f) => f.accountId === primary.id && f.kind === 'inbox') || combinedFolders[0]
+        if (defaultFolder) {
+          setActiveFolderId(defaultFolder.id)
         }
       }
     }
@@ -65,21 +77,25 @@ export const App: React.FC = () => {
   }, [])
 
   // Switch account handler
-  const handleSelectAccount = async (accountId: string) => {
+  const handleSelectAccount = (accountId: string) => {
     setActiveAccountId(accountId)
-    if (!window.vuaMail) return
-    const fList = await window.vuaMail.getFolders(accountId)
-    setFolders(fList)
-    if (fList.length > 0) {
-      setActiveFolderId(fList[0].id)
+    const accFolder = folders.find((f) => f.accountId === accountId && f.kind === 'inbox') || folders.find((f) => f.accountId === accountId)
+    if (accFolder) {
+      setActiveFolderId(accFolder.id)
     }
+  }
+
+  // Switch folder handler
+  const handleSelectFolder = (folderId: string, accountId: string) => {
+    setActiveAccountId(accountId)
+    setActiveFolderId(folderId)
   }
 
   // Load emails when folder or category changes
   useEffect(() => {
     async function loadEmails() {
       if (!window.vuaMail || !activeFolderId) return
-      const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
+      const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
       setEmails(list)
       if (list.length > 0) {
         setSelectedEmailId(list[0].id)
@@ -137,8 +153,9 @@ export const App: React.FC = () => {
 
   const handleTriggerAiSummary = () => {
     if (!selectedEmail) return
+    setIsAiPanelOpen(true)
     setAiSummary(
-      `📌 Tóm tắt nội dung chính:\n• Email thông báo tiến độ cập nhật và vận hành của hệ thống VuaMail.\n• Đã kết nối thành công SQLite Engine và giao diện Fluent UI Outlook 365.\n• Đề xuất Sếp kiểm tra lại và duyệt release.`
+      `📌 Tóm tắt nội dung chính:\n• Email thông báo tiến độ cập nhật và vận hành của hệ sinh thái VuaMail.\n• Đã kết nối thành công SQLite Engine và giao diện Fluent UI Outlook 365.\n• Đề xuất Sếp kiểm tra lại và duyệt release.`
     )
   }
 
@@ -167,8 +184,9 @@ export const App: React.FC = () => {
     setIsComposeOpen(true)
   }
 
-  const handlePreviewAttachment = (att: { filename: string }) => {
-    alert(`Đang mở xem trước tệp tài liệu: ${att.filename}\n(Tích hợp Office Engine Viewer)`)
+  const handlePreviewAttachment = async (att: any) => {
+    if (!window.vuaMail) return
+    await window.vuaMail.openAttachment(att)
   }
 
   const handleSyncNow = async () => {
@@ -178,7 +196,7 @@ export const App: React.FC = () => {
       const status = await window.vuaMail.syncNow()
       if (status.syncedCount > 0) {
         // reload emails
-        const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
+        const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
         setEmails(list)
       }
     } finally {
@@ -194,6 +212,11 @@ export const App: React.FC = () => {
       subject: draft.subject,
       bodyHtml: draft.bodyHtml,
     })
+    // reload sent folder if viewing sent
+    if (activeFolderId === 'f_sent' || activeFolderId === 'f2_sent') {
+      const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
+      setEmails(list)
+    }
   }
 
   const handleSendEmailToContact = (email: string, _name: string) => {
@@ -207,14 +230,21 @@ export const App: React.FC = () => {
 
   return (
     <div className="vuamail-app">
-      {/* Outlook Top Header */}
+      {/* GenMail Aubergine Modern Titlebar Header */}
       <div className="vuamail-header">
-        <div className="vuamail-brand">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-          <span>VuaOffice Mail</span>
+        <div className="vuamail-header-left">
+          <div className="vuamail-brand">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <span>VuaOffice Mail</span>
+          </div>
+
+          <button className="compose-btn-header" onClick={handleOpenComposeNew}>
+            <span>✏️</span>
+            <span>Soạn thư</span>
+          </button>
         </div>
 
         <div className="vuamail-search">
@@ -224,79 +254,133 @@ export const App: React.FC = () => {
           </svg>
           <input
             type="text"
-            placeholder="Search email, contacts, keywords..."
+            placeholder="Tìm kiếm thư, danh bạ, nội dung..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div style={{ fontSize: '13px', fontWeight: 500 }}>{activeAccount?.email || 'chau.le@360.org.vn'}</div>
+        <div className="vuamail-header-right">
+          <button
+            className={`ai-toggle-btn ${isAiPanelOpen ? 'active' : ''}`}
+            onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+          >
+            <span>✨</span>
+            <span>AI Copilot</span>
+          </button>
+
+          <button
+            className="settings-circle-btn"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Cài đặt tài khoản Email"
+          >
+            ⚙️
+          </button>
+
+          <div className="header-account-tag">
+            {activeAccount?.email || 'chau.le@360.org.vn'}
+          </div>
+        </div>
       </div>
 
-      {/* Top Ribbon Toolbar */}
-      <MailRibbon
-        onNewEmail={handleOpenComposeNew}
-        onImportExport={() => setIsImportExportOpen(true)}
-        onManageRules={() => setIsRulesOpen(true)}
-        onDelete={handleDelete}
-        onArchive={handleArchive}
-        onReply={handleReplySelected}
-        onReplyAll={handleReplySelected}
-        onForward={handleReplySelected}
-        onAiAssist={handleTriggerAiSummary}
-        onSyncNow={handleSyncNow}
-        isSyncing={isSyncing}
-        hasSelectedEmail={Boolean(selectedEmail)}
-      />
-
-      {/* Outlook Main Body */}
-      <div className="vuamail-body">
+      {/* Main Layout Container: NavRail + Curved Content Canvas */}
+      <div className="vuamail-shell-layout">
+        {/* Leftmost Nav Rail */}
         <AppRail activeTab={activeRailTab} onTabChange={setActiveRailTab} />
 
-        {activeRailTab === 'mail' && (
-          <>
-            <FolderTree
-              accounts={accounts}
-              activeAccountId={activeAccountId}
-              onSelectAccount={handleSelectAccount}
-              folders={folders}
-              activeFolderId={activeFolderId}
-              onSelectFolder={setActiveFolderId}
-            />
+        {/* Curved Content Canvas Window */}
+        <div className="vuamail-canvas-container">
+          {/* Top Ribbon Toolbar */}
+          <MailRibbon
+            onNewEmail={handleOpenComposeNew}
+            onImportExport={() => setIsImportExportOpen(true)}
+            onManageRules={() => setIsRulesOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onDelete={handleDelete}
+            onArchive={handleArchive}
+            onReply={handleReplySelected}
+            onReplyAll={handleReplySelected}
+            onForward={handleReplySelected}
+            onAiAssist={handleTriggerAiSummary}
+            onSyncNow={handleSyncNow}
+            isSyncing={isSyncing}
+            hasSelectedEmail={Boolean(selectedEmail)}
+          />
 
-            <MailList
-              emails={filteredEmails}
-              selectedEmailId={selectedEmailId}
-              onSelectEmail={setSelectedEmailId}
-              categoryTab={categoryTab}
-              onCategoryChange={setCategoryTab}
-            />
+          {/* Body Content Area */}
+          <div className="vuamail-body">
+            {activeRailTab === 'brain' && (
+              <ProfileView
+                accounts={accounts}
+                activeAccountId={activeAccountId}
+                onAccountsUpdated={async () => {
+                  if (!window.vuaMail) return
+                  const api = window.vuaMail
+                  const accList = await api.getAccounts()
+                  setAccounts(accList)
+                  const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
+                  const folderResults = await Promise.all(allFolderPromises)
+                  const combinedFolders = folderResults.flat()
+                  setFolders(combinedFolders)
+                }}
+                onSelectAccount={handleSelectAccount}
+              />
+            )}
 
-            <ReadingPane
-              email={selectedEmail}
-              body={activeBody}
-              aiSummary={aiSummary}
-              isLoadingBody={isLoadingBody}
-              onTriggerAiSummary={handleTriggerAiSummary}
-              onSmartReply={handleSmartReply}
-              onPreviewAttachment={handlePreviewAttachment}
-            />
-          </>
-        )}
+            {activeRailTab === 'mail' && (
+              <>
+                <FolderTree
+                  accounts={accounts}
+                  activeAccountId={activeAccountId}
+                  onSelectAccount={handleSelectAccount}
+                  folders={folders}
+                  activeFolderId={activeFolderId}
+                  onSelectFolder={handleSelectFolder}
+                />
 
-        {activeRailTab === 'people' && (
-          <PeopleView onSendEmailTo={handleSendEmailToContact} />
-        )}
+                <MailList
+                  emails={filteredEmails}
+                  selectedEmailId={selectedEmailId}
+                  onSelectEmail={setSelectedEmailId}
+                  categoryTab={categoryTab}
+                  onCategoryChange={setCategoryTab}
+                  onRefresh={handleSyncNow}
+                />
 
-        {activeRailTab === 'calendar' && (
-          <CalendarView />
-        )}
+                <ReadingPane
+                  email={selectedEmail}
+                  body={activeBody}
+                  aiSummary={aiSummary}
+                  isLoadingBody={isLoadingBody}
+                  onTriggerAiSummary={handleTriggerAiSummary}
+                  onSmartReply={handleSmartReply}
+                  onPreviewAttachment={handlePreviewAttachment}
+                />
 
-        {activeRailTab === 'todo' && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-            📝 To-Do & Tasks Sync (Sắp ra mắt trong bản cập nhật kế tiếp)
+                {/* GenMail AI Copilot Panel Right */}
+                <AiPanel
+                  isOpen={isAiPanelOpen}
+                  onClose={() => setIsAiPanelOpen(false)}
+                  selectedEmail={selectedEmail}
+                  onApplyReply={handleSmartReply}
+                  onCreateTask={(_t) => setActiveRailTab('todo')}
+                />
+              </>
+            )}
+
+            {activeRailTab === 'people' && (
+              <PeopleView onSendEmailTo={handleSendEmailToContact} />
+            )}
+
+            {activeRailTab === 'calendar' && (
+              <CalendarView />
+            )}
+
+            {activeRailTab === 'todo' && (
+              <TodoView />
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Compose Email Modal */}
@@ -321,7 +405,7 @@ export const App: React.FC = () => {
             subject: `[Imported] ${parsed.subject || '(No subject)'}`,
             bodyHtml: parsed.htmlBody || `<pre>${parsed.textBody || ''}</pre>`,
           })
-          const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
+          const list = await window.vuaMail.getEmails(activeFolderId, categoryTab === 'primary' ? 'focused' : 'other')
           setEmails(list)
         }}
       />
@@ -335,7 +419,31 @@ export const App: React.FC = () => {
           setRules(newRules)
         }}
       />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        accounts={accounts}
+        activeAccountId={activeAccountId}
+        onAccountsUpdated={async () => {
+          if (!window.vuaMail) return
+          const api = window.vuaMail
+          const accList = await api.getAccounts()
+          setAccounts(accList)
+          const allFolderPromises = accList.map((acc) => api.getFolders(acc.id))
+          const folderResults = await Promise.all(allFolderPromises)
+          const combinedFolders = folderResults.flat()
+          setFolders(combinedFolders)
+          if (accList.length > 0 && !accList.some((a) => a.id === activeAccountId)) {
+            setActiveAccountId(accList[0].id)
+            const defaultFolder = combinedFolders.find((f) => f.accountId === accList[0].id && f.kind === 'inbox') || combinedFolders[0]
+            if (defaultFolder) {
+              setActiveFolderId(defaultFolder.id)
+            }
+          }
+        }}
+      />
     </div>
   )
 }
-

@@ -5,13 +5,11 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 
 ## [Unreleased] - 2026-08-16
 
-### Fixed
-- **Sửa triệt để lỗi Whitelabel bị revert về Genspark**: Nâng cấp pipeline AST/Regex trong `/Volumes/DATA/DEV/VuaMail/scripts/whitelabel.js` tự động rà soát toàn bộ source code `apps/**/src`, thay thế triệt để các nhãn và text nodes `Genspark AI` / `Genspark` sang `VuaOffice AI`.
-- **Khắc phục lỗi kích hoạt UI VuaMail từ Home Launcher**:
-  - Cấu hình `configureMailRuntime` đồng bộ đường dẫn preload và renderer HTML trong `/Volumes/DATA/DEV/VuaMail/apps/shell/src/main/index.ts`.
-  - Cập nhật `/Volumes/DATA/DEV/VuaMail/apps/mail/src/main/mail-main.ts` áp dụng bảo mật chuẩn `contextIsolation: true`, tải đúng bundle đã build và quản lý vòng đời view qua `TabManager`.
-
 ### Added
+- **Hệ thống Profile & Email Brain Tích hợp Cài đặt Tài khoản**:
+  - Hợp nhất toàn bộ phân hệ quản lý tài khoản email, hồ sơ tri thức AI Brain và cài đặt cấu hình chung vào giao diện `ProfileView` khi nhấp chọn Avatar cá nhân trên NavRail.
+  - **Cơ chế Đăng nhập Xác thực Nhanh Chuẩn OAuth 2.0 / SSO**: Hỗ trợ 1-click login trực tiếp với Microsoft Outlook (Office 365 / Exchange), Google Workspace (Gmail) và 360 CORP SSO bên cạnh cấu hình thủ công IMAP/SMTP.
+  - Quản lý chữ ký thư điện tử HTML rich-text, cấu hình chu kỳ đồng bộ và bảng phím tắt tiện lợi.
 - **Core Engine `@genoffice/mail-engine`**:
   - Parser & Builder RFC822 EML, hỗ trợ multipart MIME và attachments base64.
   - Bộ đọc Outlook PST Container (`!BDN` header & folder hierarchy inspector).
@@ -24,6 +22,18 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
   - **Rules & Filter Manager Modal**: Giao diện tạo, kích hoạt và quản lý bộ lọc thư.
   - **Rich-text Composer**: Thanh công cụ định dạng trực quan, AI Smart Draft và Auto-save nháp ngầm 15 giây.
   - **People & Calendar**: Quản lý danh bạ liên hệ và lịch biểu sự kiện đồng bộ.
+
+### Changed
+- **Đại tu Toàn diện Giao diện VuaMail theo Bộ Màu Nhận diện Thương hiệu Chuẩn 360 CORP / VuaOffice**:
+  - Tích hợp và phối hợp 2 mã màu chuẩn: Xanh Dương Chủ Đạo (`#0077cd` / `--vuamail-primary-blue`) và Xanh Lá Điểm Nhấn (`#00ce2c` / `--vuamail-brand-green`).
+  - Phân bổ thị giác: Màu Xanh Dương đại diện cho thanh Header, NavRail nền tối (`#004c87`), và phân cấp khung làm việc; Màu Xanh Lá sinh thái đại diện cho các nút hành động chính (Soạn thư, AI Copilot toggle, thẻ số lượng thư chưa đọc, chỉ báo tab đang kích hoạt).
+  - Cập nhật khung Canvas bo góc cong 16px hiện đại trên nền Surface trắng.
+
+### Fixed
+- **Sửa triệt để lỗi Whitelabel bị revert về Genspark**: Nâng cấp pipeline AST/Regex trong `/Volumes/DATA/DEV/VuaMail/scripts/whitelabel.js` tự động rà soát toàn bộ source code `apps/**/src`, thay thế triệt để các nhãn và text nodes `Genspark AI` / `Genspark` sang `VuaOffice AI`.
+- **Khắc phục lỗi kích hoạt UI VuaMail từ Home Launcher**:
+  - Cấu hình `configureMailRuntime` đồng bộ đường dẫn preload và renderer HTML trong `/Volumes/DATA/DEV/VuaMail/apps/shell/src/main/index.ts`.
+  - Cập nhật `/Volumes/DATA/DEV/VuaMail/apps/mail/src/main/mail-main.ts` áp dụng bảo mật chuẩn `contextIsolation: true`, tải đúng bundle đã build và quản lý vòng đời view qua `TabManager`.
 
 ## [0.6.7] - 2026-08-15
 

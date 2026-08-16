@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { EmailAccount, MailFolder } from '../../../../shared/types'
 
 interface FolderTreeProps {
@@ -7,7 +7,7 @@ interface FolderTreeProps {
   onSelectAccount: (accountId: string) => void
   folders: MailFolder[]
   activeFolderId: string
-  onSelectFolder: (folderId: string) => void
+  onSelectFolder: (folderId: string, accountId: string) => void
 }
 
 export const FolderTree: React.FC<FolderTreeProps> = ({
@@ -18,71 +18,145 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   activeFolderId,
   onSelectFolder,
 }) => {
-  const favorites = folders.filter((f) => f.isFavorite)
-  const allFolders = folders
-  const currentAccount = accounts.find((a) => a.id === activeAccountId) || accounts[0]
+  const [expandedAccounts, setExpandedAccounts] = useState<Record<string, boolean>>({
+    acc_primary: true,
+    acc_secondary: true,
+  })
+
+  const toggleExpand = (accId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setExpandedAccounts((prev) => ({ ...prev, [accId]: !prev[accId] }))
+  }
+
+  const getFolderIcon = (kind: string) => {
+    switch (kind) {
+      case 'inbox':
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+          </svg>
+        )
+      case 'drafts':
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+        )
+      case 'sent':
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        )
+      case 'archive':
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="21 8 21 21 3 21 3 8" />
+            <rect x="1" y="3" width="22" height="5" />
+            <line x1="10" y1="12" x2="14" y2="12" />
+          </svg>
+        )
+      case 'trash':
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        )
+      default:
+        return (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        )
+    }
+  }
+
+  // Favorite quick links
+  const favoriteFolders = folders.filter((f) => f.isFavorite)
 
   return (
     <div className="vuamail-folders">
-      {/* Account Switcher Header */}
-      {accounts.length > 1 && (
-        <div className="account-switcher-box" style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>
-            Tài khoản (Accounts)
-          </div>
-          <select
-            value={activeAccountId}
-            onChange={(e) => onSelectAccount(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              fontSize: '12px',
-              borderRadius: '4px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--text)',
-              cursor: 'pointer',
-              outline: 'none',
-              fontWeight: 500,
-            }}
-          >
-            {accounts.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.name} ({acc.email})
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {favorites.length > 0 && (
-        <>
+      {/* Favorites Section */}
+      {favoriteFolders.length > 0 && (
+        <div className="folder-section">
           <div className="folder-group-title">Favorites</div>
-          {favorites.map((f) => (
-            <div
-              key={`fav_${f.id}`}
-              className={`folder-item ${activeFolderId === f.id ? 'active' : ''}`}
-              onClick={() => onSelectFolder(f.id)}
-            >
-              <span>{f.name}</span>
-              {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
-            </div>
-          ))}
-        </>
+          {favoriteFolders.map((f) => {
+            const acc = accounts.find((a) => a.id === f.accountId)
+            const isActive = activeFolderId === f.id && activeAccountId === f.accountId
+            return (
+              <div
+                key={`fav_${f.id}`}
+                className={`folder-item ${isActive ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectAccount(f.accountId)
+                  onSelectFolder(f.id, f.accountId)
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {getFolderIcon(f.kind)}
+                  <span>{f.name}</span>
+                  {acc && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({acc.name.split(' ')[0]})</span>}
+                </div>
+                {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
+              </div>
+            )
+          })}
+        </div>
       )}
 
-      <div className="folder-group-title">{currentAccount?.email || 'Mailbox'}</div>
-      {allFolders.map((f) => (
-        <div
-          key={f.id}
-          className={`folder-item ${activeFolderId === f.id ? 'active' : ''}`}
-          onClick={() => onSelectFolder(f.id)}
-        >
-          <span>{f.name}</span>
-          {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
-        </div>
-      ))}
+      {/* Account Trees */}
+      {accounts.map((acc) => {
+        const isExpanded = expandedAccounts[acc.id] ?? true
+        const accFolders = folders.filter((f) => f.accountId === acc.id)
+
+        return (
+          <div key={acc.id} className="folder-account-group" style={{ marginTop: '8px' }}>
+            <div
+              className={`folder-account-header ${activeAccountId === acc.id ? 'current-acc' : ''}`}
+              onClick={() => onSelectAccount(acc.id)}
+            >
+              <button
+                className="expand-btn"
+                onClick={(e) => toggleExpand(acc.id, e)}
+              >
+                {isExpanded ? '▼' : '▶'}
+              </button>
+              <div className="account-title-box">
+                <span className="account-name">{acc.name}</span>
+                <span className="account-email">{acc.email}</span>
+              </div>
+            </div>
+
+            {isExpanded && (
+              <div className="account-folders-list">
+                {accFolders.map((f) => {
+                  const isActive = activeFolderId === f.id && activeAccountId === acc.id
+                  return (
+                    <div
+                      key={f.id}
+                      className={`folder-item ${isActive ? 'active' : ''}`}
+                      onClick={() => {
+                        onSelectAccount(acc.id)
+                        onSelectFolder(f.id, acc.id)
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {getFolderIcon(f.kind)}
+                        <span>{f.name}</span>
+                      </div>
+                      {f.unreadCount > 0 && <span className="folder-unread">{f.unreadCount}</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
-

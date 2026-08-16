@@ -51,12 +51,14 @@ const DEMO_CONTACTS: ContactInfo[] = [
     company: '360 CORP',
     phone: '+84 944 111 222',
     isFavorite: false,
-  }
+  },
 ]
 
 interface PeopleViewProps {
   onSendEmailTo: (email: string, name: string) => void
 }
+
+const AVATAR_COLORS = ['#0078d4', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e']
 
 export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
   const [contacts, setContacts] = useState<ContactInfo[]>(DEMO_CONTACTS)
@@ -84,214 +86,303 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
     )
   }
 
+  const handleAddContact = () => {
+    const name = prompt('Nhập tên liên hệ mới:')
+    if (!name) return
+    const email = prompt('Nhập email liên hệ:')
+    if (!email) return
+
+    const newC: ContactInfo = {
+      id: `c_${Date.now()}`,
+      name,
+      email,
+      jobTitle: 'Cộng tác viên',
+      department: 'Phát triển kinh doanh',
+      company: '360 CORP',
+      phone: '+84 9xx xxx xxx',
+      isFavorite: false,
+    }
+    setContacts((prev) => [newC, ...prev])
+    setSelectedId(newC.id)
+  }
+
   return (
-    <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden', backgroundColor: 'var(--surface, #ffffff)' }}>
       {/* Contact Sidebar Categories */}
       <div
         style={{
-          width: '200px',
-          borderRight: '1px solid var(--border)',
-          backgroundColor: 'var(--surface-subtle)',
+          width: '230px',
+          borderRight: '1px solid var(--border, #e3e6ea)',
+          backgroundColor: 'var(--surface-subtle, #f6f7f9)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '12px 8px',
-          gap: '4px',
+          padding: '16px 10px',
+          gap: '6px',
+          flexShrink: 0,
         }}
       >
-        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', padding: '4px 8px', textTransform: 'uppercase' }}>
-          Danh bạ (Contacts)
+        <button
+          onClick={handleAddContact}
+          style={{
+            backgroundColor: '#0078d4',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '9px 12px',
+            fontWeight: 600,
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: '8px',
+            boxShadow: '0 2px 4px rgba(0,120,212,0.2)',
+          }}
+        >
+          ➕ Thêm liên hệ mới
+        </button>
+
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted, #878e96)', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Danh bạ (People & Contacts)
         </div>
         <div
           onClick={() => setFilterFav(false)}
-          className={`folder-item ${!filterFav ? 'active' : ''}`}
-          style={{ cursor: 'pointer', padding: '6px 12px', borderRadius: '4px', fontSize: '13px' }}
+          style={{
+            cursor: 'pointer',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: !filterFav ? 'var(--hover, #e8f2fc)' : 'transparent',
+            color: !filterFav ? '#0078d4' : 'var(--text-primary, #232425)',
+            fontWeight: !filterFav ? 600 : 400,
+          }}
         >
-          👥 Tất cả liên hệ ({contacts.length})
+          <span>👥 Tất cả liên hệ</span>
+          <span style={{ fontSize: '11px', opacity: 0.8 }}>{contacts.length}</span>
         </div>
         <div
           onClick={() => setFilterFav(true)}
-          className={`folder-item ${filterFav ? 'active' : ''}`}
-          style={{ cursor: 'pointer', padding: '6px 12px', borderRadius: '4px', fontSize: '13px' }}
+          style={{
+            cursor: 'pointer',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: filterFav ? 'var(--hover, #e8f2fc)' : 'transparent',
+            color: filterFav ? '#0078d4' : 'var(--text-primary, #232425)',
+            fontWeight: filterFav ? 600 : 400,
+          }}
         >
-          ⭐ Mục yêu thích ({contacts.filter((c) => c.isFavorite).length})
+          <span>⭐ Mục yêu thích</span>
+          <span style={{ fontSize: '11px', opacity: 0.8 }}>{contacts.filter((c) => c.isFavorite).length}</span>
         </div>
       </div>
 
       {/* Contact List */}
       <div
         style={{
-          width: '320px',
-          borderRight: '1px solid var(--border)',
-          backgroundColor: 'var(--surface)',
+          width: '340px',
+          minWidth: '280px',
+          borderRight: '1px solid var(--border, #e3e6ea)',
+          backgroundColor: 'var(--surface, #ffffff)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          flexShrink: 0,
         }}
       >
-        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '12px', borderBottom: '1px solid var(--border, #e3e6ea)', backgroundColor: 'var(--surface, #ffffff)' }}>
           <input
             type="text"
-            placeholder="Tìm kiếm danh bạ..."
+            placeholder="Tìm kiếm danh bạ, email, phòng ban..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              padding: '6px 10px',
+              padding: '8px 12px',
               borderRadius: '4px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface-subtle)',
-              color: 'var(--text)',
+              border: '1px solid var(--border, #e3e6ea)',
+              background: 'var(--surface-subtle, #f6f7f9)',
+              color: 'var(--text-primary, #232425)',
               fontSize: '12px',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {filtered.map((c) => (
-            <div
-              key={c.id}
-              onClick={() => setSelectedId(c.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                cursor: 'pointer',
-                borderBottom: '1px solid var(--border-subtle, rgba(0,0,0,0.05))',
-                backgroundColor: selectedId === c.id ? 'var(--hover)' : 'transparent',
-              }}
-            >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  backgroundColor: '#0078d4',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  flexShrink: 0,
-                }}
-              >
-                {c.name.charAt(0)}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {c.name}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {c.jobTitle ? `${c.jobTitle} • ${c.company}` : c.email}
-                </div>
-              </div>
-              {c.isFavorite && <span style={{ color: '#f59e0b', fontSize: '14px' }}>★</span>}
+          {filtered.length === 0 ? (
+            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted, #878e96)', fontSize: '13px' }}>
+              Không tìm thấy liên hệ nào
             </div>
-          ))}
+          ) : (
+            filtered.map((c, idx) => {
+              const avatarColor = AVATAR_COLORS[idx % AVATAR_COLORS.length]
+              const isSelected = selectedId === c.id
+
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => setSelectedId(c.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--border-subtle, #efefef)',
+                    backgroundColor: isSelected ? 'var(--hover, #e8f2fc)' : 'transparent',
+                    borderLeft: isSelected ? '3px solid #0078d4' : '3px solid transparent',
+                    transition: 'background 0.1s ease',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      backgroundColor: avatarColor,
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {c.name.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary, #232425)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                      {c.jobTitle ? `${c.jobTitle} • ${c.company}` : c.email}
+                    </div>
+                  </div>
+                  {c.isFavorite && <span style={{ color: '#f59e0b', fontSize: '15px' }}>★</span>}
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
 
-      {/* Contact Details Card */}
-      <div style={{ flex: 1, backgroundColor: 'var(--surface)', padding: '24px', overflowY: 'auto' }}>
+      {/* Contact Details Card (Responsive 100% Fluid Width) */}
+      <div style={{ flex: 1, backgroundColor: 'var(--surface, #ffffff)', padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {selectedContact ? (
-          <div style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  backgroundColor: '#0078d4',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
-                  fontWeight: 600,
-                }}
-              >
-                {selectedContact.name.charAt(0)}
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 600, color: 'var(--text)' }}>
-                  {selectedContact.name}
-                </h2>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  {selectedContact.jobTitle} — {selectedContact.company}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border, #e3e6ea)', paddingBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div
+                  style={{
+                    width: '68px',
+                    height: '68px',
+                    borderRadius: '50%',
+                    backgroundColor: '#0078d4',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '26px',
+                    fontWeight: 700,
+                    boxShadow: '0 4px 10px rgba(0,120,212,0.25)',
+                  }}
+                >
+                  {selectedContact.name.charAt(0)}
+                </div>
+                <div>
+                  <h2 style={{ margin: '0 0 6px 0', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
+                    {selectedContact.name}
+                  </h2>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted, #878e96)' }}>
+                    {selectedContact.jobTitle} — <span style={{ fontWeight: 500, color: 'var(--text-primary, #232425)' }}>{selectedContact.company}</span>
+                  </div>
                 </div>
               </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => onSendEmailTo(selectedContact.email, selectedContact.name)}
+                  style={{
+                    backgroundColor: '#0078d4',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 2px 4px rgba(0,120,212,0.2)',
+                  }}
+                >
+                  ✉️ Gửi Email (Compose)
+                </button>
+
+                <button
+                  onClick={() => toggleFavorite(selectedContact.id)}
+                  style={{
+                    backgroundColor: selectedContact.isFavorite ? 'rgba(245,158,11,0.1)' : 'transparent',
+                    color: selectedContact.isFavorite ? '#b45309' : 'var(--text-primary, #232425)',
+                    border: '1px solid var(--border, #e3e6ea)',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  {selectedContact.isFavorite ? '★ Đã yêu thích' : '☆ Thêm vào yêu thích'}
+                </button>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => onSendEmailTo(selectedContact.email, selectedContact.name)}
-                style={{
-                  backgroundColor: '#0078d4',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '6px 14px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                ✉️ Gửi Email
-              </button>
-
-              <button
-                onClick={() => toggleFavorite(selectedContact.id)}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '4px',
-                  padding: '6px 14px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                }}
-              >
-                {selectedContact.isFavorite ? '★ Bỏ yêu thích' : '☆ Thêm vào yêu thích'}
-              </button>
-            </div>
-
+            {/* Profile Information Table Fluid */}
             <div
               style={{
-                backgroundColor: 'var(--surface-subtle)',
+                backgroundColor: 'var(--surface-subtle, #f6f7f9)',
                 borderRadius: '8px',
-                padding: '16px',
-                border: '1px solid var(--border)',
+                padding: '20px 24px',
+                border: '1px solid var(--border, #e3e6ea)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: '16px',
+                width: '100%',
+                boxSizing: 'border-box',
               }}
             >
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
                 Thông tin liên hệ & Công tác
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Email:</span>
-                <span style={{ color: '#0078d4', fontWeight: 500 }}>{selectedContact.email}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px', fontSize: '13px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Email công việc:</span>
+                <span style={{ color: '#0078d4', fontWeight: 600 }}>{selectedContact.email}</span>
 
-                <span style={{ color: 'var(--text-muted)' }}>Số điện thoại:</span>
-                <span>{selectedContact.phone || 'Chưa cập nhật'}</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Số điện thoại:</span>
+                <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.phone || 'Chưa cập nhật'}</span>
 
-                <span style={{ color: 'var(--text-muted)' }}>Phòng ban:</span>
-                <span>{selectedContact.department || 'Ban Giám đốc'}</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Phòng ban:</span>
+                <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.department || 'Ban Kỹ Thuật'}</span>
 
-                <span style={{ color: 'var(--text-muted)' }}>Công ty:</span>
-                <span>{selectedContact.company || '360 CORP'}</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Doanh nghiệp / Tổ chức:</span>
+                <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.company || '360 CORP'}</span>
               </div>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #878e96)' }}>
             Chọn liên hệ từ danh sách bên trái để xem chi tiết
           </div>
         )}

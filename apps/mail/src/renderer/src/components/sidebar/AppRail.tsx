@@ -1,6 +1,6 @@
 import React from 'react'
 
-export type AppRailTab = 'mail' | 'calendar' | 'people' | 'todo'
+export type AppRailTab = 'brain' | 'mail' | 'calendar' | 'people' | 'todo'
 
 interface AppRailProps {
   activeTab: AppRailTab
@@ -10,6 +10,33 @@ interface AppRailProps {
 export const AppRail: React.FC<AppRailProps> = ({ activeTab, onTabChange }) => {
   return (
     <div className="vuamail-apprail">
+      {/* Profile / Avatar top */}
+      <div
+        className="apprail-avatar-box"
+        onClick={() => onTabChange('brain')}
+        style={{ cursor: 'pointer' }}
+        title="Hồ sơ cá nhân & Cài đặt tài khoản"
+      >
+        <div className={`apprail-avatar ${activeTab === 'brain' ? 'active-avatar' : ''}`}>
+          LC
+        </div>
+      </div>
+
+      {/* 1. Email Brain & Profile */}
+      <button
+        className={`apprail-btn ${activeTab === 'brain' ? 'active' : ''}`}
+        title="Hồ sơ, Brain & Cài đặt tài khoản"
+        onClick={() => onTabChange('brain')}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 3a9 9 0 0 0 0 18" />
+          <path d="M12 7a5 5 0 0 0 0 10" />
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      </button>
+
+      {/* 2. Mail (Inbox) */}
       <button
         className={`apprail-btn ${activeTab === 'mail' ? 'active' : ''}`}
         title="Mail"
@@ -21,6 +48,7 @@ export const AppRail: React.FC<AppRailProps> = ({ activeTab, onTabChange }) => {
         </svg>
       </button>
 
+      {/* 3. Calendar */}
       <button
         className={`apprail-btn ${activeTab === 'calendar' ? 'active' : ''}`}
         title="Calendar"
@@ -34,6 +62,7 @@ export const AppRail: React.FC<AppRailProps> = ({ activeTab, onTabChange }) => {
         </svg>
       </button>
 
+      {/* 4. People */}
       <button
         className={`apprail-btn ${activeTab === 'people' ? 'active' : ''}`}
         title="People"
@@ -47,6 +76,7 @@ export const AppRail: React.FC<AppRailProps> = ({ activeTab, onTabChange }) => {
         </svg>
       </button>
 
+      {/* 5. To-Do */}
       <button
         className={`apprail-btn ${activeTab === 'todo' ? 'active' : ''}`}
         title="To Do"

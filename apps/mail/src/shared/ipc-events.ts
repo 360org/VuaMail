@@ -1,5 +1,8 @@
 export const VUA_MAIL_IPC = {
   GET_ACCOUNTS: 'vua-mail:get-accounts',
+  ADD_ACCOUNT: 'vua-mail:add-account',
+  REMOVE_ACCOUNT: 'vua-mail:remove-account',
+  SET_PRIMARY_ACCOUNT: 'vua-mail:set-primary-account',
   GET_FOLDERS: 'vua-mail:get-folders',
   GET_EMAILS: 'vua-mail:get-emails',
   GET_EMAIL_BODY: 'vua-mail:get-email-body',
@@ -8,6 +11,7 @@ export const VUA_MAIL_IPC = {
   DELETE_EMAIL: 'vua-mail:delete-email',
   ARCHIVE_EMAIL: 'vua-mail:archive-email',
   SEND_EMAIL: 'vua-mail:send-email',
+  OPEN_ATTACHMENT: 'vua-mail:open-attachment',
   SYNC_NOW: 'vua-mail:sync-now',
   GET_SYNC_STATUS: 'vua-mail:get-sync-status',
 } as const

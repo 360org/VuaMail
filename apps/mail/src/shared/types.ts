@@ -103,6 +103,18 @@ export interface SyncStatus {
 
 export interface VuaMailApi {
   getAccounts: () => Promise<EmailAccount[]>
+  addAccount: (account: {
+    email: string
+    name: string
+    provider: 'google' | 'microsoft' | 'custom_imap'
+    imapHost?: string
+    imapPort?: number
+    smtpHost?: string
+    smtpPort?: number
+    password?: string
+  }) => Promise<EmailAccount>
+  removeAccount: (accountId: string) => Promise<boolean>
+  setPrimaryAccount: (accountId: string) => Promise<boolean>
   getFolders: (accountId: string) => Promise<MailFolder[]>
   getEmails: (folderId: string, category?: 'focused' | 'other') => Promise<EmailMessage[]>
   getEmailBody: (emailId: string) => Promise<EmailBody | null>
@@ -118,6 +130,7 @@ export interface VuaMailApi {
     bodyHtml: string
     attachments?: EmailAttachment[]
   }) => Promise<{ success: boolean; emailId?: string }>
+  openAttachment: (attachment: EmailAttachment) => Promise<boolean>
   syncNow: () => Promise<SyncStatus>
   getSyncStatus: () => Promise<SyncStatus>
 }

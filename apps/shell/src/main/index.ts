@@ -1,4 +1,16 @@
 import { execSync, spawn } from 'node:child_process'
+
+// Ignore EPIPE errors on stdout/stderr when running detached GUI app on macOS/Windows
+process.stdout?.on?.('error', (err: any) => {
+  if (err?.code === 'EPIPE') return
+})
+process.stderr?.on?.('error', (err: any) => {
+  if (err?.code === 'EPIPE') return
+})
+process.on('uncaughtException', (err: any) => {
+  if (err?.code === 'EPIPE') return
+  console.error('[UNCAUGHT EXCEPTION]:', err)
+})
 import {
   copyFileSync,
   cpSync,
@@ -259,6 +271,7 @@ configureMailRuntime({
   preloadPath: join(MAIL_OUT, 'preload', 'index.js'),
   rendererUrl: process.env.MAIL_RENDERER_URL,
   rendererFile: join(MAIL_OUT, 'renderer', 'index.html'),
+  openDocumentPath: (path) => openDocumentPath(path),
 })
 
 // ---- UI language ----

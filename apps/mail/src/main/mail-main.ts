@@ -1,4 +1,4 @@
-import { WebContentsView, app } from 'electron'
+import { BrowserWindow, WebContentsView, app } from 'electron'
 import { join } from 'node:path'
 import { AsyncMailStorage } from './db/async-storage'
 import { SQLiteMailStorage } from './db/sqlite-storage'
@@ -12,6 +12,7 @@ export interface MailRuntimeConfig {
   preloadPath: string
   rendererUrl?: string | undefined
   rendererFile: string
+  openDocumentPath?: (filePath: string) => boolean
 }
 
 let runtime: MailRuntimeConfig = {
@@ -30,7 +31,12 @@ export function initMailBackend(): AsyncMailStorage {
     const syncStorage = new SQLiteMailStorage()
     syncOrchestrator = new MailSyncOrchestrator(syncStorage)
     syncOrchestrator.startSyncLoop(60000)
-    registerMailIpc(asyncMailStorage, syncOrchestrator)
+    registerMailIpc(asyncMailStorage, syncOrchestrator, (filePath) => {
+      if (runtime.openDocumentPath) {
+        return runtime.openDocumentPath(filePath)
+      }
+      return false
+    })
   }
   return asyncMailStorage
 }
@@ -57,4 +63,33 @@ export function createMailView(): WebContentsView {
   }
 
   return view
+}
+
+export function startMailStandalone(): void {
+  void app.whenReady().then(() => {
+    initMailBackend()
+    const win = new BrowserWindow({
+      width: 1200,
+      height: 800,
+      minWidth: 900,
+      minHeight: 600,
+      title: 'VuaOffice Mail',
+      webPreferences: {
+        preload: runtime.preloadPath,
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false,
+      },
+    })
+
+    if (runtime.rendererUrl) {
+      void win.loadURL(runtime.rendererUrl)
+    } else if (runtime.rendererFile) {
+      void win.loadFile(runtime.rendererFile)
+    }
+  })
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 }

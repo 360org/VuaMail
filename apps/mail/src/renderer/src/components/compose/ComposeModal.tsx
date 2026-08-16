@@ -87,7 +87,8 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'var(--color-bg-overlay, rgba(0,0,0,0.4))',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(2px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -96,15 +97,16 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
     >
       <div
         style={{
-          width: '720px',
-          height: '600px',
-          backgroundColor: 'var(--surface)',
+          width: '760px',
+          height: '620px',
+          backgroundColor: 'var(--surface, #ffffff)',
+          color: 'var(--text-primary, #232425)',
           borderRadius: '8px',
-          boxShadow: 'var(--shadow-modal-strong, 0 10px 25px rgba(0,0,0,0.2))',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          border: '1px solid var(--border)',
+          border: '1px solid var(--border, #e3e6ea)',
         }}
       >
         {/* Header */}
@@ -113,15 +115,15 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '10px 16px',
-            backgroundColor: 'var(--surface-subtle)',
-            borderBottom: '1px solid var(--border)',
+            padding: '12px 18px',
+            backgroundColor: 'var(--surface-subtle, #f6f7f9)',
+            borderBottom: '1px solid var(--border, #e3e6ea)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 600, fontSize: '13px' }}>Soạn thư mới (Outlook Rich-text Message)</span>
+            <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary, #232425)' }}>Soạn thư mới (Outlook Rich-text Message)</span>
             {lastAutoSaved && (
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>
                 • Đã tự động lưu nháp lúc {lastAutoSaved}
               </span>
             )}
@@ -133,7 +135,9 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               border: 'none',
               cursor: 'pointer',
               fontSize: '16px',
-              color: 'var(--text-muted)',
+              color: 'var(--text-muted, #878e96)',
+              padding: '4px 8px',
+              borderRadius: '4px',
             }}
           >
             ✕
@@ -141,16 +145,16 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
         </div>
 
         {/* Modal Form Body */}
-        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'hidden', backgroundColor: 'var(--surface, #ffffff)' }}>
           {/* AI Drafting Prompt */}
           <div
             style={{
               display: 'flex',
               gap: '8px',
-              backgroundColor: 'var(--surface-subtle)',
-              padding: '6px 10px',
+              backgroundColor: 'var(--surface-subtle, #f6f7f9)',
+              padding: '8px 12px',
               borderRadius: '6px',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border, #e3e6ea)',
             }}
           >
             <input
@@ -164,8 +168,8 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                 border: 'none',
                 background: 'transparent',
                 outline: 'none',
-                fontSize: '12px',
-                color: 'var(--text-primary)',
+                fontSize: '13px',
+                color: 'var(--text-primary, #232425)',
               }}
             />
             <button
@@ -176,8 +180,8 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                 color: '#fff',
                 border: 'none',
                 borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '11px',
+                padding: '6px 12px',
+                fontSize: '12px',
                 cursor: 'pointer',
                 fontWeight: 600,
               }}
@@ -186,8 +190,8 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '50px', fontSize: '12px', color: 'var(--text-secondary)' }}>Đến:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ width: '60px', fontSize: '13px', color: 'var(--text-secondary, #606366)', fontWeight: 500 }}>Đến:</span>
             <input
               type="text"
               value={to}
@@ -195,19 +199,19 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               placeholder="nguoinhan@company.com"
               style={{
                 flex: 1,
-                padding: '5px 8px',
+                padding: '8px 12px',
                 borderRadius: '4px',
-                border: '1px solid var(--border)',
-                background: 'var(--surface)',
-                color: 'var(--text-primary)',
+                border: '1px solid var(--border, #e3e6ea)',
+                background: 'var(--surface, #ffffff)',
+                color: 'var(--text-primary, #232425)',
                 outline: 'none',
-                fontSize: '12px',
+                fontSize: '13px',
               }}
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '50px', fontSize: '12px', color: 'var(--text-secondary)' }}>Tiêu đề:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ width: '60px', fontSize: '13px', color: 'var(--text-secondary, #606366)', fontWeight: 500 }}>Tiêu đề:</span>
             <input
               type="text"
               value={subject}
@@ -215,13 +219,13 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               placeholder="Chủ đề thư..."
               style={{
                 flex: 1,
-                padding: '5px 8px',
+                padding: '8px 12px',
                 borderRadius: '4px',
-                border: '1px solid var(--border)',
-                background: 'var(--surface)',
-                color: 'var(--text-primary)',
+                border: '1px solid var(--border, #e3e6ea)',
+                background: 'var(--surface, #ffffff)',
+                color: 'var(--text-primary, #232425)',
                 outline: 'none',
-                fontSize: '12px',
+                fontSize: '13px',
               }}
             />
           </div>
@@ -230,54 +234,54 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
           <div
             style={{
               display: 'flex',
-              gap: '4px',
-              padding: '4px 8px',
-              backgroundColor: 'var(--surface-subtle)',
+              gap: '6px',
+              padding: '6px 10px',
+              backgroundColor: 'var(--surface-subtle, #f6f7f9)',
               borderRadius: '4px',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border, #e3e6ea)',
               alignItems: 'center',
             }}
           >
             <button
               onClick={() => execCmd('bold')}
               title="Đậm (Bold)"
-              style={{ padding: '2px 8px', fontWeight: 'bold', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px' }}
+              style={{ padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
             >
               B
             </button>
             <button
               onClick={() => execCmd('italic')}
               title="Nghiêng (Italic)"
-              style={{ padding: '2px 8px', fontStyle: 'italic', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px' }}
+              style={{ padding: '4px 10px', fontStyle: 'italic', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
             >
               I
             </button>
             <button
               onClick={() => execCmd('underline')}
               title="Gạch chân (Underline)"
-              style={{ padding: '2px 8px', textDecoration: 'underline', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px' }}
+              style={{ padding: '4px 10px', textDecoration: 'underline', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
             >
               U
             </button>
             <button
               onClick={() => execCmd('strikeThrough')}
               title="Gạch ngang (Strikethrough)"
-              style={{ padding: '2px 8px', textDecoration: 'line-through', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px' }}
+              style={{ padding: '4px 10px', textDecoration: 'line-through', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
             >
               S
             </button>
-            <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border)', margin: '0 4px' }} />
+            <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--border, #e3e6ea)', margin: '0 4px' }} />
             <button
               onClick={() => execCmd('insertUnorderedList')}
               title="Danh sách dấu chấm"
-              style={{ padding: '2px 6px', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px', fontSize: '11px' }}
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
             >
               • List
             </button>
             <button
               onClick={() => execCmd('insertOrderedList')}
               title="Danh sách số"
-              style={{ padding: '2px 6px', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px', fontSize: '11px' }}
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
             >
               1. List
             </button>
@@ -287,7 +291,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                 if (url) execCmd('createLink', url)
               }}
               title="Thêm link"
-              style={{ padding: '2px 6px', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', borderRadius: '3px', fontSize: '11px' }}
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
             >
               🔗 Link
             </button>
@@ -304,11 +308,11 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             }}
             style={{
               flex: 1,
-              padding: '10px',
+              padding: '12px',
               borderRadius: '4px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--text-primary)',
+              border: '1px solid var(--border, #e3e6ea)',
+              background: 'var(--surface, #ffffff)',
+              color: 'var(--text-primary, #232425)',
               outline: 'none',
               overflowY: 'auto',
               fontSize: '13px',
@@ -323,22 +327,23 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: '8px',
-            padding: '10px 16px',
-            backgroundColor: 'var(--surface-subtle)',
-            borderTop: '1px solid var(--border)',
+            gap: '10px',
+            padding: '12px 18px',
+            backgroundColor: 'var(--surface-subtle, #f6f7f9)',
+            borderTop: '1px solid var(--border, #e3e6ea)',
           }}
         >
           <button
             onClick={onClose}
             style={{
-              padding: '6px 14px',
+              padding: '8px 16px',
               borderRadius: '4px',
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--text-primary)',
+              border: '1px solid var(--border, #e3e6ea)',
+              background: 'var(--surface, #ffffff)',
+              color: 'var(--text-primary, #232425)',
               cursor: 'pointer',
               fontSize: '12px',
+              fontWeight: 500,
             }}
           >
             Hủy
@@ -346,7 +351,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
           <button
             onClick={handleSend}
             style={{
-              padding: '6px 16px',
+              padding: '8px 20px',
               borderRadius: '4px',
               border: 'none',
               backgroundColor: '#0078d4',
