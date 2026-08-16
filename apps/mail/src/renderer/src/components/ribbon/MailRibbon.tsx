@@ -10,6 +10,8 @@ interface MailRibbonProps {
   onForward: () => void
   onAiAssist: () => void
   onSyncNow?: () => void
+  onImportExport?: () => void
+  onManageRules?: () => void
   isSyncing?: boolean
   hasSelectedEmail: boolean
 }
@@ -23,6 +25,8 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
   onForward,
   onAiAssist,
   onSyncNow,
+  onImportExport,
+  onManageRules,
   isSyncing,
   hasSelectedEmail,
 }) => {
@@ -37,6 +41,26 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
           </svg>
         }
         onClick={onNewEmail}
+      />
+      <RibbonButton
+        label="Import / Export (.pst)"
+        icon={
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        }
+        onClick={onImportExport}
+      />
+      <RibbonButton
+        label="Rules & Filters"
+        icon={
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+        }
+        onClick={onManageRules}
       />
       <div className="ribbon-divider" />
       <RibbonButton

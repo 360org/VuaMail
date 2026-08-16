@@ -18,16 +18,16 @@
 
 ---
 
-## 3. Giai đoạn 3: Tối ưu hoá DB Worker Thread & Background Sync (Đang tiến hành)
-- [ ] **DB Worker Threading**: Đưa tác vụ I/O SQLite nặng vào `Worker` (`node:worker_threads`) giống kiến trúc GenMail để chống block UI thread.
-- [ ] **Metadata Overlay Ops**: Áp dụng cơ chế Optimistic UI (đánh dấu đã đọc, gắn cờ, xoá mail ngay lập tức trên UI trước khi commit vào DB).
-- [ ] **Background Sync Orchestrator**: Polling định kỳ IMAP/SMTP và quản lý retry hàng đợi `OpQueue`.
-- [ ] **Attachment Cache Manager**: Quản lý lưu trữ file đính kèm cục bộ an toàn, preview nhanh ảnh/PDF/Office.
+## 3. Giai đoạn 3: Tối ưu hoá DB Worker Thread & Background Sync (Đã hoàn thành)
+- [x] **DB Worker Threading**: Đưa tác vụ I/O SQLite nặng vào `Worker` (`node:worker_threads`) giống kiến trúc GenMail để chống block UI thread.
+- [x] **Metadata Overlay Ops**: Áp dụng cơ chế Optimistic UI (đánh dấu đã đọc, gắn cờ, xoá mail ngay lập tức trên UI trước khi commit vào DB).
+- [x] **Background Sync Orchestrator**: Polling định kỳ IMAP/SMTP và quản lý retry hàng đợi `OpQueue`.
+- [x] **Attachment Cache Manager**: Quản lý lưu trữ file đính kèm cục bộ an toàn, preview nhanh ảnh/PDF/Office.
 
 ---
 
-## 4. Giai đoạn 4: Tính năng Trải nghiệm Người dùng Outlook-Grade
-- [ ] **PST / EML Import & Export Wizard**: Hỗ trợ mở và import trực tiếp file `.pst` hoặc `.eml` từ máy tính.
-- [ ] **Rules & Filter Manager UI**: Giao diện cấu hình quy tắc lọc mail tự động.
-- [ ] **Rich-text Composer & Draft Auto-save**: Trình soạn thảo văn bản phong phú với tính năng lưu nháp tự động định kỳ.
-- [ ] **Calendar & People Deep-Integration**: Mở rộng giao diện danh bạ và lịch đồng bộ với VuaOffice Project Store.
+## 4. Giai đoạn 4: Tính năng Trải nghiệm Người dùng Outlook-Grade (Đã hoàn thành)
+- [x] **PST / EML Import & Export Wizard**: Hỗ trợ mở và import trực tiếp file `.pst` hoặc `.eml` từ máy tính với `@genoffice/mail-engine`.
+- [x] **Rules & Filter Manager UI**: Giao diện cấu hình quy tắc lọc mail tự động với RulesModal.
+- [x] **Rich-text Composer & Draft Auto-save**: Trình soạn thảo văn bản phong phú, AI Assist drafting với tính năng lưu nháp tự động định kỳ 15s.
+- [x] **Calendar & People Deep-Integration**: Giao diện danh bạ People và lịch biểu Calendar đồng bộ với hệ sinh thái VuaOffice.

@@ -7,6 +7,9 @@ import { ReadingPane } from './components/detail/ReadingPane'
 import { ComposeModal } from './components/compose/ComposeModal'
 import { PeopleView } from './components/people/PeopleView'
 import { CalendarView } from './components/calendar/CalendarView'
+import { ImportExportModal } from './components/wizard/ImportExportModal'
+import { RulesModal } from './components/rules/RulesModal'
+import type { MailFilterRule } from '@genoffice/mail-engine'
 import type { EmailAccount, EmailBody, EmailMessage, MailFolder } from '../../shared/types'
 import './styles/mail-theme.css'
 
@@ -23,6 +26,21 @@ export const App: React.FC = () => {
   const [isLoadingBody, setIsLoadingBody] = useState(false)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [isComposeOpen, setIsComposeOpen] = useState(false)
+  const [isImportExportOpen, setIsImportExportOpen] = useState(false)
+  const [isRulesOpen, setIsRulesOpen] = useState(false)
+  const [rules, setRules] = useState<MailFilterRule[]>([
+    {
+      id: 'r_vip',
+      name: 'Thư quan trọng từ Sếp & Ban Giám Đốc',
+      enabled: true,
+      matchAllConditions: false,
+      conditions: [
+        { field: 'from', operator: 'contains', value: '360.org.vn' },
+        { field: 'subject', operator: 'contains', value: 'Khẩn' },
+      ],
+      actions: [{ type: 'markAsStarred' }],
+    },
+  ])
   const [searchQuery, setSearchQuery] = useState('')
   const [composeInitial, setComposeInitial] = useState<{ to?: string; subject?: string; body?: string }>({})
   const [isSyncing, setIsSyncing] = useState(false)
@@ -218,6 +236,8 @@ export const App: React.FC = () => {
       {/* Top Ribbon Toolbar */}
       <MailRibbon
         onNewEmail={handleOpenComposeNew}
+        onImportExport={() => setIsImportExportOpen(true)}
+        onManageRules={() => setIsRulesOpen(true)}
         onDelete={handleDelete}
         onArchive={handleArchive}
         onReply={handleReplySelected}
@@ -287,6 +307,33 @@ export const App: React.FC = () => {
         initialBody={composeInitial.body}
         onClose={() => setIsComposeOpen(false)}
         onSend={handleSendDraft}
+      />
+
+      {/* Import & Export Wizard Modal (.eml / .pst) */}
+      <ImportExportModal
+        isOpen={isImportExportOpen}
+        onClose={() => setIsImportExportOpen(false)}
+        onImportEml={async (parsed) => {
+          if (!window.vuaMail || !activeAccount) return
+          await window.vuaMail.sendEmail({
+            accountId: activeAccount.id,
+            to: [parsed.from?.address || 'imported@local'],
+            subject: `[Imported] ${parsed.subject || '(No subject)'}`,
+            bodyHtml: parsed.htmlBody || `<pre>${parsed.textBody || ''}</pre>`,
+          })
+          const list = await window.vuaMail.getEmails(activeFolderId, categoryTab)
+          setEmails(list)
+        }}
+      />
+
+      {/* Outlook Rules & Filters Manager Modal */}
+      <RulesModal
+        isOpen={isRulesOpen}
+        rules={rules}
+        onClose={() => setIsRulesOpen(false)}
+        onSaveRules={(newRules) => {
+          setRules(newRules)
+        }}
       />
     </div>
   )

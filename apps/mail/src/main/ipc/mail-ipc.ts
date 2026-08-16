@@ -1,42 +1,42 @@
 import { ipcMain } from 'electron'
 import { VUA_MAIL_IPC } from '../../shared/ipc-events'
-import { SQLiteMailStorage } from '../db/sqlite-storage'
+import { AsyncMailStorage } from '../db/async-storage'
 import { MailSyncOrchestrator } from '../network/mail-sync-orchestrator'
 
-export function registerMailIpc(storage: SQLiteMailStorage, syncOrchestrator: MailSyncOrchestrator): void {
-  ipcMain.handle(VUA_MAIL_IPC.GET_ACCOUNTS, () => {
+export function registerMailIpc(storage: AsyncMailStorage, syncOrchestrator: MailSyncOrchestrator): void {
+  ipcMain.handle(VUA_MAIL_IPC.GET_ACCOUNTS, async () => {
     return storage.getAccounts()
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.GET_FOLDERS, (_evt, accountId: string) => {
+  ipcMain.handle(VUA_MAIL_IPC.GET_FOLDERS, async (_evt, accountId: string) => {
     return storage.getFolders(accountId)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.GET_EMAILS, (_evt, folderId: string, category?: 'focused' | 'other') => {
+  ipcMain.handle(VUA_MAIL_IPC.GET_EMAILS, async (_evt, folderId: string, category?: 'focused' | 'other') => {
     return storage.getEmails(folderId, category)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.GET_EMAIL_BODY, (_evt, emailId: string) => {
+  ipcMain.handle(VUA_MAIL_IPC.GET_EMAIL_BODY, async (_evt, emailId: string) => {
     return storage.getEmailBody(emailId)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.MARK_READ, (_evt, emailId: string, isRead: boolean) => {
-    storage.markRead(emailId, isRead)
+  ipcMain.handle(VUA_MAIL_IPC.MARK_READ, async (_evt, emailId: string, isRead: boolean) => {
+    await storage.markRead(emailId, isRead)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.TOGGLE_STARRED, (_evt, emailId: string) => {
+  ipcMain.handle(VUA_MAIL_IPC.TOGGLE_STARRED, async (_evt, emailId: string) => {
     return storage.toggleStarred(emailId)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.DELETE_EMAIL, (_evt, emailId: string) => {
-    storage.deleteEmail(emailId)
+  ipcMain.handle(VUA_MAIL_IPC.DELETE_EMAIL, async (_evt, emailId: string) => {
+    await storage.deleteEmail(emailId)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.ARCHIVE_EMAIL, (_evt, emailId: string) => {
-    storage.archiveEmail(emailId)
+  ipcMain.handle(VUA_MAIL_IPC.ARCHIVE_EMAIL, async (_evt, emailId: string) => {
+    await storage.archiveEmail(emailId)
   })
 
-  ipcMain.handle(VUA_MAIL_IPC.SEND_EMAIL, (_evt, draft) => {
+  ipcMain.handle(VUA_MAIL_IPC.SEND_EMAIL, async (_evt, draft) => {
     return storage.sendEmail(draft)
   })
 

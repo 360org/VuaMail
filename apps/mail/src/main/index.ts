@@ -1,17 +1,19 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'node:path'
+import { AsyncMailStorage } from './db/async-storage'
 import { SQLiteMailStorage } from './db/sqlite-storage'
 import { registerMailIpc } from './ipc/mail-ipc'
 import { MailSyncOrchestrator } from './network/mail-sync-orchestrator'
 
 let mainWindow: BrowserWindow | null = null
-let storage: SQLiteMailStorage | null = null
+let storage: AsyncMailStorage | null = null
 let syncOrchestrator: MailSyncOrchestrator | null = null
 
-export function initMailMain(): SQLiteMailStorage {
+export function initMailMain(): AsyncMailStorage {
   if (!storage) {
-    storage = new SQLiteMailStorage()
-    syncOrchestrator = new MailSyncOrchestrator(storage)
+    storage = new AsyncMailStorage()
+    const syncStorage = new SQLiteMailStorage()
+    syncOrchestrator = new MailSyncOrchestrator(syncStorage)
     syncOrchestrator.startSyncLoop(60000)
     registerMailIpc(storage, syncOrchestrator)
   }
