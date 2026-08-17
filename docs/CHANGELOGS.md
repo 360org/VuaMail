@@ -5,6 +5,15 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 
 ## [Unreleased] - 2026-08-17
 
+### Fixed
+- **Khắc phục Triệt để Lỗi Microsoft Identity AADSTS65002 & Cơ chế Hủy Luồng Treo (OAuth Cancellation)**:
+  - **Sửa Phân quyền Azure AD Scope (`apps/mail/src/main/auth/oauth-client.ts`)**:
+    - Thay thế toàn bộ Exchange legacy scopes (`https://outlook.office.com/IMAP.AccessAsUser.All`, `https://outlook.office.com/SMTP.Send`) bằng chuẩn Microsoft Graph API scopes (`https://graph.microsoft.com/Mail.ReadWrite`, `https://graph.microsoft.com/Mail.Send`, `https://graph.microsoft.com/User.Read`, `offline_access`, `openid`, `profile`, `email`).
+    - Giải quyết dứt điểm thông báo lỗi `AADSTS65002: Consent between first party application and first party resource must be configured via preauthorization`.
+  - **Cơ chế Hủy Luồng & Giải phóng UI Treo (`apps/mail/src/main/ipc/mail-ipc.ts`, `ProfileView.tsx`, `SettingsModal.tsx`)**:
+    - Bổ sung IPC `CANCEL_OAUTH_FLOW` và phương thức `OAuthClient.cancelActiveFlow()` đóng ngay Loopback HTTP Server và giải phóng Promise.
+    - Thêm nút "Hủy / Thử lại" trực tiếp trên thông báo tiến trình và tích hợp vào nút "Đóng", ngăn ngừa 100% hiện tượng UI bị khoá ở trạng thái `⏳ Đang mở cửa sổ đăng nhập...` hoặc `Đang mở...`.
+
 ### Added
 - **Đại tu Toàn diện Kiến trúc Xác thực OAuth 2.0 PKCE, TokenStore Native & IMAP/SMTP SASL XOAUTH2**:
   - **TokenStore Native Vault (`apps/mail/src/main/auth/token-store.ts`)**:

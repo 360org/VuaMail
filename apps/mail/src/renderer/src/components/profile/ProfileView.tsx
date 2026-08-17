@@ -136,6 +136,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     }
   }
 
+  const handleCancelOAuth = async () => {
+    if (window.vuaMail) {
+      await window.vuaMail.cancelOAuthFlow()
+    }
+    setIsAuthenticating(false)
+    setAuthStatusMessage(null)
+  }
+
   const handleEmailContinue = () => {
     const raw = accEmail.trim().toLowerCase()
     if (!raw) return
@@ -515,15 +523,36 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     </div>
 
                     {authStatusMessage && (
-                      <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--outlook-blue-soft)', color: 'var(--outlook-blue)', fontSize: '12px', fontWeight: 500 }}>
-                        ⏳ {authStatusMessage}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--outlook-blue-soft)', color: 'var(--outlook-blue)', fontSize: '12px', fontWeight: 500 }}>
+                        <span>⏳ {authStatusMessage}</span>
+                        {isAuthenticating && (
+                          <button
+                            type="button"
+                            onClick={handleCancelOAuth}
+                            style={{
+                              border: '1px solid var(--outlook-blue)',
+                              background: '#fff',
+                              color: 'var(--outlook-blue)',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Hủy / Thử lại
+                          </button>
+                        )}
                       </div>
                     )}
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
                       <button
                         type="button"
-                        onClick={() => setIsAddingAccount(false)}
+                        onClick={() => {
+                          if (isAuthenticating) handleCancelOAuth()
+                          setIsAddingAccount(false)
+                        }}
                         style={{
                           backgroundColor: 'transparent',
                           border: '1px solid var(--border)',
@@ -717,8 +746,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     </div>
 
                     {authStatusMessage && (
-                      <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--outlook-blue-soft)', color: 'var(--outlook-blue)', fontSize: '12px', fontWeight: 500 }}>
-                        ⏳ {authStatusMessage}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--outlook-blue-soft)', color: 'var(--outlook-blue)', fontSize: '12px', fontWeight: 500 }}>
+                        <span>⏳ {authStatusMessage}</span>
+                        {isAuthenticating && (
+                          <button
+                            type="button"
+                            onClick={handleCancelOAuth}
+                            style={{
+                              border: '1px solid var(--outlook-blue)',
+                              background: '#fff',
+                              color: 'var(--outlook-blue)',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Hủy / Thử lại
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

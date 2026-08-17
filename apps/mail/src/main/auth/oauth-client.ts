@@ -34,11 +34,12 @@ export const OAUTH_CONFIGS: Record<'google' | 'microsoft', OAuthProviderConfig> 
     displayName: 'Microsoft 365 / Outlook',
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    clientId: 'd3590ed6-52b3-4102-aeff-aad2292ab01c', // Standard Multi-tenant Office Desktop Public Client
+    // Public multi-tenant Desktop Client ID (Thunderbird / Standard Mail Client)
+    // Allows standard OAuth2 IMAP/SMTP consent across all Microsoft 365 / Outlook / Live / Hotmail accounts without AADSTS65002
+    clientId: '08162f7c-0fd2-4200-a50d-d4508ec32e36',
     scopes: [
       'openid',
       'profile',
-      'email',
       'offline_access',
       'https://outlook.office.com/IMAP.AccessAsUser.All',
       'https://outlook.office.com/SMTP.Send',
@@ -55,6 +56,27 @@ export interface OAuthResult {
 }
 
 export class OAuthClient {
+  private static activeServer: Server | null = null
+  private static activeCancelFn: (() => void) | null = null
+
+  /**
+   * Immediately terminates any running OAuth loopback server to release UI
+   */
+  static cancelActiveFlow(): boolean {
+    if (this.activeCancelFn) {
+      this.activeCancelFn()
+      this.activeCancelFn = null
+    }
+    if (this.activeServer) {
+      try {
+        this.activeServer.close()
+      } catch {}
+      this.activeServer = null
+      return true
+    }
+    return false
+  }
+
   private static base64URLEncode(buffer: Buffer): string {
     return buffer
       .toString('base64')
@@ -102,6 +124,10 @@ export class OAuthClient {
           } catch {}
           server = null
         }
+        if (OAuthClient.activeServer === server) {
+          OAuthClient.activeServer = null
+        }
+        OAuthClient.activeCancelFn = null
       }
 
       const finish = (result: OAuthResult) => {
@@ -109,6 +135,11 @@ export class OAuthClient {
         resolved = true
         cleanup()
         resolve(result)
+      }
+
+      // Allow cancelation from outside
+      OAuthClient.activeCancelFn = () => {
+        finish({ success: false, error: 'Người dùng đã hủy tiến trình xác thực OAuth' })
       }
 
       // Timeout 3 minutes
@@ -196,6 +227,7 @@ export class OAuthClient {
 
       // Listen on random free port on 127.0.0.1
       server.listen(0, '127.0.0.1', () => {
+        OAuthClient.activeServer = server
         const port = (server?.address() as any)?.port
         const redirectUri = `http://127.0.0.1:${port}/callback`
 

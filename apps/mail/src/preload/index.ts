@@ -23,6 +23,8 @@ const api: VuaMailApi = {
   getSyncStatus: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_SYNC_STATUS),
   startOAuthFlow: (provider, emailHint): Promise<any> =>
     ipcRenderer.invoke(VUA_MAIL_IPC.START_OAUTH_FLOW, provider, emailHint),
+  cancelOAuthFlow: (): Promise<boolean> =>
+    ipcRenderer.invoke(VUA_MAIL_IPC.CANCEL_OAUTH_FLOW),
 }
 
 if (process.contextIsolated) {

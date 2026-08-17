@@ -85,6 +85,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   }
 
+  const handleCancelOAuth = async () => {
+    if (window.vuaMail) {
+      await window.vuaMail.cancelOAuthFlow()
+    }
+    setIsSaving(false)
+    setAuthStatus(null)
+  }
+
   const handleEmailContinue = () => {
     const raw = accEmail.trim().toLowerCase()
     if (!raw) return
@@ -517,15 +525,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
 
                         {authStatus && (
-                          <div style={{ padding: '8px 12px', borderRadius: '4px', backgroundColor: 'var(--vuamail-primary-blue-soft, #e5f3fc)', color: 'var(--vuamail-primary-blue, #0077cd)', fontSize: '12px', fontWeight: 500 }}>
-                            {authStatus}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '4px', backgroundColor: 'var(--vuamail-primary-blue-soft, #e5f3fc)', color: 'var(--vuamail-primary-blue, #0077cd)', fontSize: '12px', fontWeight: 500 }}>
+                            <span>⏳ {authStatus}</span>
+                            {isSaving && (
+                              <button
+                                type="button"
+                                onClick={handleCancelOAuth}
+                                style={{
+                                  border: '1px solid var(--vuamail-primary-blue, #0077cd)',
+                                  background: '#fff',
+                                  color: 'var(--vuamail-primary-blue, #0077cd)',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Hủy / Thử lại
+                              </button>
+                            )}
                           </div>
                         )}
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
                           <button
                             type="button"
-                            onClick={() => setIsAddingAccount(false)}
+                            onClick={() => {
+                              if (isSaving) handleCancelOAuth()
+                              setIsAddingAccount(false)
+                            }}
                             style={{
                               backgroundColor: 'transparent',
                               border: '1px solid var(--border)',

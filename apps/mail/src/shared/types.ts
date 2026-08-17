@@ -141,6 +141,7 @@ export interface VuaMailApi {
     account?: EmailAccount
     error?: string
   }>
+  cancelOAuthFlow: () => Promise<boolean>
 }
 
 declare global {
