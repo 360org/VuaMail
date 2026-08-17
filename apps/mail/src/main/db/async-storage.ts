@@ -1,12 +1,12 @@
 import type { EmailAccount, EmailBody, EmailMessage, MailFolder } from '../../shared/types'
 import { SQLiteMailStorage } from './sqlite-storage'
 
-// ponytail: synchronous SQLite in WAL mode is sub-millisecond and avoids Worker file resolution issues across packaged bundles
+// ponytail: shared storage singleton avoids file overwrite races across IPC and Orchestrator
 export class AsyncMailStorage {
-  private storage: SQLiteMailStorage
+  public storage: SQLiteMailStorage
 
-  constructor(customPath?: string) {
-    this.storage = new SQLiteMailStorage(customPath)
+  constructor(storageInstance?: SQLiteMailStorage, customPath?: string) {
+    this.storage = storageInstance || new SQLiteMailStorage(customPath)
   }
 
   async getAccounts(): Promise<EmailAccount[]> {

@@ -6,6 +6,23 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-17
 
 ### Added
+- **Đại tu Toàn diện Kiến trúc Xác thực OAuth 2.0 PKCE, TokenStore Native & IMAP/SMTP SASL XOAUTH2**:
+  - **TokenStore Native Vault (`apps/mail/src/main/auth/token-store.ts`)**:
+    - Tích hợp `Electron safeStorage` mã hoá an toàn chuẩn hệ điều hành macOS Keychain / Windows DPAPI cho `access_token`, `refresh_token` và `app-password`.
+    - Xoá bỏ hoàn toàn việc lưu trữ mật khẩu thô trong file JSON plain text.
+  - **OAuth 2.0 PKCE Client & Token Exchange Engine (`apps/mail/src/main/auth/oauth-client.ts`)**:
+    - Triển khai chuẩn OAuth 2.0 Desktop RFC 8252 và RFC 7636 PKCE (S256 verifier & challenge).
+    - Tạo Loopback HTTP Server động trên `127.0.0.1:0` để bắt Authorization Code và thực hiện trao đổi Token thật (`exchangeCodeForToken`) với Google/Microsoft Token Endpoints.
+    - Hỗ trợ cơ chế tự động làm mới Token (`refreshAccessToken`) trước khi hết hạn cho các kết nối IMAP/SMTP ngầm.
+  - **Native IMAP/SMTP Socket SASL XOAUTH2 (`apps/mail/src/main/network/mail-protocol-client.ts`)**:
+    - Triển khai chuẩn xác thực SASL XOAUTH2 (RFC 6161) và AUTH LOGIN trên socket TLS/TCP.
+    - Loại bỏ hoàn toàn mock fallback data (`getFallbackMails()`) nhằm đảm bảo phản ánh chính xác 100% trạng thái kết nối mạng và hộp thư thực tế.
+  - **Hợp nhất Storage Singleton & Bảo đảm Toàn vẹn Dữ liệu (`apps/mail/src/main/mail-main.ts`)**:
+    - Đồng bộ một instance `SQLiteMailStorage` duy nhất giữa IPC Main Process và `MailSyncOrchestrator`, khắc phục lỗi ghi đè dữ liệu.
+    - Bỏ cơ chế tự động seed demo data khi ứng dụng đã có tài khoản thực tế.
+  - **Tài liệu Báo cáo Audit & Kế hoạch Khắc phục (`docs/mail/AUDIT-2026-08-17.md`)**:
+    - Phân tích 11 nguyên nhân gốc (Root Causes) và lộ trình khắc phục 4 giai đoạn chuẩn hoá hệ thống.
+
 - **Triển khai Luồng Xác thực & Lựa chọn Nhà cung cấp Chuẩn 100% Microsoft Outlook**:
   - **Màn hình Lưới 8 Nhà cung cấp Dịch vụ (Provider Grid Selection)**:
     - Bổ sung màn hình chọn nhà cung cấp chuẩn Microsoft Outlook bao gồm: *Microsoft 365, Outlook.com, Exchange, Google Workspace, Apple iCloud, Yahoo Mail, 360 CORP SSO, và IMAP / POP*.

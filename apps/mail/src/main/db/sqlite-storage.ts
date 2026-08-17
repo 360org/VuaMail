@@ -32,7 +32,8 @@ export class SQLiteMailStorage {
     }
     this.filePath = path.join(dbDir, 'vuamail-local-store.json')
     this.data = this.loadData()
-    if (this.data.accounts.length === 0 || this.data.emails.length < 5) {
+    // Only seed initial default account/folders if storage is completely pristine and empty
+    if (this.data.accounts.length === 0 && this.data.folders.length === 0) {
       this.seedDemoData()
     }
   }

@@ -1,22 +1,25 @@
 import * as tls from 'node:tls'
 import * as net from 'node:net'
 import { parseEml, buildEml } from '@genoffice/mail-engine/eml'
-import type { ParsedEmail } from '@genoffice/mail-engine'
 
-export interface ImapConfig {
+export interface ImapAuthOptions {
   host: string
   port?: number
   tls?: boolean
   user: string
-  pass: string
+  pass?: string
+  accessToken?: string
+  authType: 'oauth2' | 'app_password' | 'password'
 }
 
-export interface SmtpConfig {
+export interface SmtpAuthOptions {
   host: string
   port?: number
   tls?: boolean
   user: string
-  pass: string
+  pass?: string
+  accessToken?: string
+  authType: 'oauth2' | 'app_password' | 'password'
 }
 
 export interface FetchedMailItem {
@@ -39,41 +42,50 @@ export interface FetchedMailItem {
 }
 
 /**
+ * Builds RFC 6161 / SASL XOAUTH2 token buffer string
+ * Format: base64("user=" + userName + "^Aauth=Bearer " + accessToken + "^A^A")
+ */
+export function buildXOAuth2Token(user: string, accessToken: string): string {
+  const authString = `user=${user}\x01auth=Bearer ${accessToken}\x01\x01`
+  return Buffer.from(authString).toString('base64')
+}
+
+/**
  * Native IMAP Client Engine using Node.js TLS/TCP sockets
- * Implements standard IMAP RFC3501 state machine:
- * CAPABILITY -> LOGIN -> SELECT -> SEARCH/FETCH -> LOGOUT
+ * Implements standard IMAP RFC3501 & RFC6161 XOAUTH2 state machine:
+ * CAPABILITY -> AUTHENTICATE XOAUTH2 / LOGIN -> SELECT -> SEARCH/FETCH -> LOGOUT
  */
 export class NativeImapClient {
   private socket: tls.TLSSocket | net.Socket | null = null
   private tagCounter = 1
   private buffer = ''
 
-  constructor(private config: ImapConfig) {}
+  constructor(private config: ImapAuthOptions) {}
 
   private nextTag(): string {
     return `A${this.tagCounter++}`
   }
 
   async connectAndFetchRecent(folderName = 'INBOX', limit = 10): Promise<FetchedMailItem[]> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const port = this.config.port || (this.config.tls !== false ? 993 : 143)
       const useTls = this.config.tls !== false
 
       const timeoutTimer = setTimeout(() => {
         this.close()
-        resolve(this.getFallbackMails(folderName, limit))
-      }, 4000)
+        reject(new Error(`IMAP connection timeout tới ${this.config.host}:${port}`))
+      }, 10000)
 
       try {
         const options: tls.ConnectionOptions = {
           host: this.config.host,
           port,
           rejectUnauthorized: false,
-          timeout: 3500,
+          timeout: 8000,
         }
 
         const onConnect = () => {
-          // Socket connected, wait for greeting then login
+          // Socket connected, wait for IMAP greeting
         }
 
         if (useTls) {
@@ -86,48 +98,66 @@ export class NativeImapClient {
 
         this.socket.on('data', (chunk: string) => {
           this.buffer += chunk
-          // Check for IMAP greeting
+
+          // 1. Initial Greeting -> Initiate Authentication
           if (this.buffer.includes('* OK')) {
             const loginTag = this.nextTag()
-            this.sendCommand(`${loginTag} LOGIN "${this.config.user}" "${this.config.pass}"\r\n`)
-          } else if (this.buffer.includes('OK LOGIN') || this.buffer.includes('OK [CAPABILITY')) {
+            if (this.config.authType === 'oauth2' && this.config.accessToken) {
+              const xoauth2Str = buildXOAuth2Token(this.config.user, this.config.accessToken)
+              this.sendCommand(`${loginTag} AUTHENTICATE XOAUTH2 ${xoauth2Str}\r\n`)
+            } else if (this.config.pass) {
+              this.sendCommand(`${loginTag} LOGIN "${this.config.user}" "${this.config.pass}"\r\n`)
+            } else {
+              clearTimeout(timeoutTimer)
+              this.close()
+              reject(new Error('Không có thông tin xác thực IMAP (Password hoặc Token)'))
+              return
+            }
+          }
+
+          // 2. Authentication Success -> SELECT folder
+          if (this.buffer.includes('OK Success') || this.buffer.includes('OK LOGIN') || this.buffer.includes('OK [CAPABILITY')) {
             const selectTag = this.nextTag()
             this.sendCommand(`${selectTag} SELECT "${folderName}"\r\n`)
-          } else if (this.buffer.includes('OK [READ-WRITE]') || this.buffer.includes('OK [READ-ONLY]')) {
+          }
+
+          // 3. Folder Selected -> FETCH recent emails
+          if (this.buffer.includes('OK [READ-WRITE]') || this.buffer.includes('OK [READ-ONLY]') || this.buffer.includes('OK [SELECT')) {
             const fetchTag = this.nextTag()
             this.sendCommand(`${fetchTag} FETCH 1:${limit} (BODY.PEEK[])\r\n`)
-          } else if (this.buffer.includes('FETCH') && this.buffer.includes('OK FETCH')) {
+          }
+
+          // 4. Parse FETCH Response
+          if (this.buffer.includes('FETCH') && this.buffer.includes('OK FETCH')) {
             clearTimeout(timeoutTimer)
             const parsedItems = this.parseImapFetchResponse(this.buffer)
             this.close()
-            if (parsedItems.length > 0) {
-              resolve(parsedItems)
-            } else {
-              resolve(this.getFallbackMails(folderName, limit))
-            }
-          } else if (this.buffer.includes('NO') || this.buffer.includes('BAD')) {
-            // Authentication or command failure -> Fallback to simulated offline items
+            resolve(parsedItems)
+          }
+
+          // 5. Authentication or Protocol Error
+          if (this.buffer.includes('NO [AUTHENTICATIONFAILED]') || this.buffer.includes('NO Login failed') || this.buffer.includes('BAD Invalid command')) {
             clearTimeout(timeoutTimer)
             this.close()
-            resolve(this.getFallbackMails(folderName, limit))
+            reject(new Error(`IMAP Authentication Error: ${this.buffer.trim()}`))
           }
         })
 
-        this.socket.on('error', () => {
+        this.socket.on('error', (err) => {
           clearTimeout(timeoutTimer)
           this.close()
-          resolve(this.getFallbackMails(folderName, limit))
+          reject(err)
         })
 
         this.socket.on('timeout', () => {
           clearTimeout(timeoutTimer)
           this.close()
-          resolve(this.getFallbackMails(folderName, limit))
+          reject(new Error(`IMAP Socket timeout kết nối tới ${this.config.host}`))
         })
-      } catch {
+      } catch (err) {
         clearTimeout(timeoutTimer)
         this.close()
-        resolve(this.getFallbackMails(folderName, limit))
+        reject(err)
       }
     })
   }
@@ -158,7 +188,7 @@ export class NativeImapClient {
           const emlContent = chunk.slice(headerIndex)
           const parsed = parseEml(emlContent)
           items.push({
-            uid: `imap_${parsed.messageId.replace(/[^a-zA-Z0-9]/g, '_')}`,
+            uid: `imap_${parsed.messageId ? parsed.messageId.replace(/[^a-zA-Z0-9]/g, '_') : Date.now() + '_' + i}`,
             from: parsed.from.address || parsed.from.name || 'unknown@domain',
             to: parsed.to.map((t) => t.address).join(', ') || this.config.user,
             subject: parsed.subject,
@@ -180,65 +210,15 @@ export class NativeImapClient {
     }
     return items
   }
-
-  private getFallbackMails(folderName: string, _limit: number): FetchedMailItem[] {
-    const now = Date.now()
-    return [
-      {
-        uid: `imap_live_${now}_1`,
-        from: 'ceo@360.org.vn',
-        to: this.config.user,
-        subject: `[${folderName}] Xác nhận cập nhật tiến độ VuaOffice Suite`,
-        dateIso: new Date(now).toISOString(),
-        snippet: 'Giao thức kết nối IMAP/TLS đã hoàn tất quá trình handshake socket và kiểm tra hàng đợi OpQueue...',
-        bodyHtml: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #232425;">
-          <h3 style="color: #0077cd;">Báo cáo Tiến độ Đồng bộ VuaMail</h3>
-          <p>Chào Sếp,</p>
-          <p>Engine đồng bộ <b>Live Network Sync Engine (IMAP/SMTP Socket)</b> đã được thiết lập với khả năng tự động xử lý kết nối SSL/TLS socket theo thời gian thực.</p>
-          <ul>
-            <li><b>Giao thức IMAP</b>: Port 993 SSL / 143 STARTTLS, auto parse RFC822 EML.</li>
-            <li><b>Giao thức SMTP</b>: Port 465 SSL / 587 STARTTLS, auto flush OpQueue khi khôi phục mạng.</li>
-            <li><b>Độ tương thích</b>: Google Workspace, Microsoft 365 Outlook, và Máy chủ Mail Doanh nghiệp 360 CORP.</li>
-          </ul>
-          <p>Trân trọng,<br><b>Ban Công Nghệ 360 CORP</b></p>
-        </div>`,
-        plainText: 'Báo cáo Tiến độ Đồng bộ VuaMail. Engine IMAP/SMTP Socket đã sẵn sàng.',
-        hasAttachments: true,
-        attachments: [
-          {
-            id: `att_${now}_1`,
-            filename: 'BaoCaoTienDo_VuaMail.docx',
-            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            sizeBytes: 28420,
-          },
-        ],
-      },
-      {
-        uid: `imap_live_${now}_2`,
-        from: 'security@vuahethong.com',
-        to: this.config.user,
-        subject: `[${folderName}] Cảnh báo an toàn đăng nhập & Xác thực 2 bước`,
-        dateIso: new Date(now - 1000 * 60 * 10).toISOString(),
-        snippet: 'Hệ thống bảo mật ghi nhận phiên đăng nhập SSO an toàn từ ứng dụng VuaOffice Desktop Client...',
-        bodyHtml: `<div style="font-family: sans-serif; line-height: 1.6; color: #232425;">
-          <p>Kính gửi Quý khách hàng,</p>
-          <p>Phiên đăng nhập ứng dụng VuaMail đã được xác thực an toàn qua chuẩn <b>OAuth 2.0 / SSO Gateway</b>.</p>
-          <p>Thời gian ghi nhận: ${new Date(now - 1000 * 60 * 10).toLocaleString('vi-VN')}</p>
-        </div>`,
-        plainText: 'Phiên đăng nhập ứng dụng VuaMail đã được xác thực an toàn qua chuẩn OAuth 2.0 / SSO.',
-        hasAttachments: false,
-      },
-    ]
-  }
 }
 
 /**
  * Native SMTP Client Engine using Node.js Sockets
- * Implements core SMTP RFC5321 flow:
- * EHLO -> AUTH LOGIN -> MAIL FROM -> RCPT TO -> DATA -> QUIT
+ * Implements complete RFC5321 & RFC6161 SASL XOAUTH2 state machine:
+ * EHLO -> AUTH LOGIN / AUTH XOAUTH2 -> MAIL FROM -> RCPT TO -> DATA -> QUIT
  */
 export class NativeSmtpClient {
-  constructor(private config: SmtpConfig) {}
+  constructor(private config: SmtpAuthOptions) {}
 
   async sendMail(mail: {
     from: string
@@ -248,7 +228,7 @@ export class NativeSmtpClient {
     bodyText?: string
     attachments?: Array<{ filename: string; contentBase64?: string; mimeType?: string }>
   }): Promise<{ success: boolean; messageId: string; response?: string }> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const messageId = `<vua-${Date.now()}@${this.config.host || '360.org.vn'}>`
       const port = this.config.port || (this.config.tls !== false ? 465 : 587)
       const useTls = this.config.tls !== false
@@ -269,35 +249,67 @@ export class NativeSmtpClient {
       })
 
       const timeoutTimer = setTimeout(() => {
-        // Fallback or offline queued
-        resolve({
-          success: true,
-          messageId,
-          response: '250 2.0.0 OK Message queued for delivery (Offline/Simulated)',
-        })
-      }, 2500)
+        reject(new Error(`SMTP Connection Timeout tới ${this.config.host}:${port}`))
+      }, 12000)
 
       try {
         let socket: tls.TLSSocket | net.Socket
         let step = 0
 
         const handleData = (chunk: string) => {
+          // 1. Initial Greeting (220) -> EHLO
           if (step === 0 && chunk.startsWith('220')) {
             step++
             socket.write(`EHLO ${this.config.host || 'localhost'}\r\n`)
-          } else if (step === 1 && chunk.startsWith('250')) {
+          }
+          // 2. EHLO response (250) -> AUTH XOAUTH2 / AUTH LOGIN
+          else if (step === 1 && chunk.startsWith('250')) {
             step++
+            if (this.config.authType === 'oauth2' && this.config.accessToken) {
+              const xoauth2Str = buildXOAuth2Token(this.config.user, this.config.accessToken)
+              socket.write(`AUTH XOAUTH2 ${xoauth2Str}\r\n`)
+            } else if (this.config.pass) {
+              socket.write(`AUTH LOGIN\r\n`)
+            } else {
+              // No Auth (internal relay) -> Proceed to MAIL FROM
+              step = 4
+              socket.write(`MAIL FROM:<${mail.from}>\r\n`)
+            }
+          }
+          // 3a. AUTH LOGIN user prompt (334)
+          else if (step === 2 && chunk.startsWith('334')) {
+            step++
+            const userBase64 = Buffer.from(this.config.user).toString('base64')
+            socket.write(`${userBase64}\r\n`)
+          }
+          // 3b. AUTH LOGIN pass prompt (334)
+          else if (step === 3 && chunk.startsWith('334')) {
+            step++
+            const passBase64 = Buffer.from(this.config.pass || '').toString('base64')
+            socket.write(`${passBase64}\r\n`)
+          }
+          // 4. Auth Success (235) / MAIL FROM OK (250) -> MAIL FROM / RCPT TO
+          else if ((step === 2 || step === 4) && (chunk.startsWith('235') || chunk.startsWith('250'))) {
+            step = 5
             socket.write(`MAIL FROM:<${mail.from}>\r\n`)
-          } else if (step === 2 && chunk.startsWith('250')) {
+          }
+          // 5. MAIL FROM OK -> RCPT TO
+          else if (step === 5 && chunk.startsWith('250')) {
             step++
             socket.write(`RCPT TO:<${mail.to[0]}>\r\n`)
-          } else if (step === 3 && chunk.startsWith('250')) {
+          }
+          // 6. RCPT TO OK -> DATA
+          else if (step === 6 && chunk.startsWith('250')) {
             step++
             socket.write(`DATA\r\n`)
-          } else if (step === 4 && chunk.startsWith('354')) {
+          }
+          // 7. Ready for Data (354) -> Send EML Content
+          else if (step === 7 && chunk.startsWith('354')) {
             step++
             socket.write(`${rawEml}\r\n.\r\n`)
-          } else if (step === 5 && chunk.startsWith('250')) {
+          }
+          // 8. Completed (250) -> QUIT
+          else if (step === 8 && chunk.startsWith('250')) {
             step++
             socket.write(`QUIT\r\n`)
             clearTimeout(timeoutTimer)
@@ -307,6 +319,12 @@ export class NativeSmtpClient {
               messageId,
               response: '250 2.0.0 OK Sent via Live SMTP Socket',
             })
+          }
+          // Errors (5xx, 4xx)
+          else if (chunk.startsWith('5') || chunk.startsWith('4')) {
+            clearTimeout(timeoutTimer)
+            socket.destroy()
+            reject(new Error(`SMTP Protocol Error: ${chunk.trim()}`))
           }
         }
 
@@ -318,22 +336,14 @@ export class NativeSmtpClient {
 
         socket.setEncoding('utf8')
         socket.on('data', handleData)
-        socket.on('error', () => {
+        socket.on('error', (err) => {
           clearTimeout(timeoutTimer)
           socket.destroy()
-          resolve({
-            success: true,
-            messageId,
-            response: '250 2.0.0 OK Queued in OpQueue',
-          })
+          reject(err)
         })
-      } catch {
+      } catch (err) {
         clearTimeout(timeoutTimer)
-        resolve({
-          success: true,
-          messageId,
-          response: '250 2.0.0 OK Queued in OpQueue',
-        })
+        reject(err)
       }
     })
   }

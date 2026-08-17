@@ -4,9 +4,11 @@ import { AsyncMailStorage } from './db/async-storage'
 import { SQLiteMailStorage } from './db/sqlite-storage'
 import { registerMailIpc } from './ipc/mail-ipc'
 import { MailSyncOrchestrator } from './network/mail-sync-orchestrator'
+import { TokenStore } from './auth/token-store'
 
 let asyncMailStorage: AsyncMailStorage | null = null
 let syncOrchestrator: MailSyncOrchestrator | null = null
+let tokenStore: TokenStore | null = null
 
 export interface MailRuntimeConfig {
   preloadPath: string
@@ -27,16 +29,26 @@ export function configureMailRuntime(config: MailRuntimeConfig): void {
 
 export function initMailBackend(): AsyncMailStorage {
   if (!asyncMailStorage) {
-    asyncMailStorage = new AsyncMailStorage()
-    const syncStorage = new SQLiteMailStorage()
-    syncOrchestrator = new MailSyncOrchestrator(syncStorage)
+    // 1. Single unified SQLite storage instance (Single Source of Truth)
+    const unifiedStorage = new SQLiteMailStorage()
+    asyncMailStorage = new AsyncMailStorage(unifiedStorage)
+    tokenStore = new TokenStore()
+
+    // 2. Orchestrator and IPC share the EXACT same storage and token store
+    syncOrchestrator = new MailSyncOrchestrator(unifiedStorage, tokenStore)
     syncOrchestrator.startSyncLoop(60000)
-    registerMailIpc(asyncMailStorage, syncOrchestrator, (filePath) => {
-      if (runtime.openDocumentPath) {
-        return runtime.openDocumentPath(filePath)
+
+    registerMailIpc(
+      asyncMailStorage,
+      syncOrchestrator,
+      tokenStore,
+      (filePath) => {
+        if (runtime.openDocumentPath) {
+          return runtime.openDocumentPath(filePath)
+        }
+        return false
       }
-      return false
-    })
+    )
   }
   return asyncMailStorage
 }
