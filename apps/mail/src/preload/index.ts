@@ -21,6 +21,8 @@ const api: VuaMailApi = {
     ipcRenderer.invoke(VUA_MAIL_IPC.OPEN_ATTACHMENT, attachment),
   syncNow: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.SYNC_NOW),
   getSyncStatus: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_SYNC_STATUS),
+  startOAuthFlow: (provider, emailHint): Promise<any> =>
+    ipcRenderer.invoke(VUA_MAIL_IPC.START_OAUTH_FLOW, provider, emailHint),
 }
 
 if (process.contextIsolated) {

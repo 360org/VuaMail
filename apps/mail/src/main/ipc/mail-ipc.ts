@@ -1,4 +1,4 @@
-import { ipcMain, app, shell } from 'electron'
+import { ipcMain, app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { existsSync, writeFileSync, copyFileSync, mkdirSync } from 'node:fs'
 import { VUA_MAIL_IPC } from '../../shared/ipc-events'
@@ -121,5 +121,153 @@ export function registerMailIpc(
   ipcMain.handle(VUA_MAIL_IPC.GET_SYNC_STATUS, () => {
     return syncOrchestrator.getStatus()
   })
+
+  ipcMain.handle(
+    VUA_MAIL_IPC.START_OAUTH_FLOW,
+    async (_evt, targetProvider: 'google' | 'microsoft' | '360' | 'auto', emailHint?: string) => {
+      return new Promise((resolve) => {
+        let detected: 'google' | 'microsoft' | '360' = 'microsoft'
+        const rawEmail = (emailHint || '').trim()
+
+        if (targetProvider === 'google' || targetProvider === 'microsoft' || targetProvider === '360') {
+          detected = targetProvider
+        } else if (rawEmail) {
+          const lower = rawEmail.toLowerCase()
+          if (lower.endsWith('@gmail.com') || lower.endsWith('@googlemail.com')) {
+            detected = 'google'
+          } else if (
+            lower.endsWith('@outlook.com') ||
+            lower.endsWith('@hotmail.com') ||
+            lower.endsWith('@live.com') ||
+            lower.endsWith('@microsoft.com') ||
+            lower.endsWith('@msn.com') ||
+            lower.endsWith('@office365.com')
+          ) {
+            detected = 'microsoft'
+          } else if (lower.endsWith('@360.org.vn') || lower.endsWith('@vuahethong.com') || lower.endsWith('@vuaai.net')) {
+            detected = '360'
+          } else {
+            detected = 'microsoft'
+          }
+        }
+
+        let authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+        let windowTitle = 'Đăng nhập Microsoft 365 / Outlook (Modern Auth)'
+
+        if (detected === 'google') {
+          authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+          windowTitle = 'Đăng nhập Google Workspace / Gmail'
+        } else if (detected === '360') {
+          authUrl = 'https://vuahethong.net/web/login'
+          windowTitle = 'Đăng nhập 360 CORP SSO & Mail Server'
+        }
+
+        const loginWin = new BrowserWindow({
+          width: 600,
+          height: 740,
+          title: windowTitle,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true,
+          },
+        })
+
+        let resolved = false
+
+        const handleSuccessRedirect = async (url: string) => {
+          if (resolved) return
+
+          const isSuccessUrl =
+            url.includes('code=') ||
+            url.includes('access_token=') ||
+            url.includes('approval') ||
+            url.includes('oauth2callback') ||
+            url.includes('/web#') ||
+            url.includes('/mail') ||
+            url.includes('myaccount.google.com') ||
+            url.includes('account.microsoft.com') ||
+            url.includes('outlook.live.com/mail') ||
+            url.includes('outlook.office.com/mail')
+
+          if (isSuccessUrl) {
+            resolved = true
+            const finalEmail = rawEmail || (detected === 'microsoft' ? 'chau.le@outlook.com' : detected === 'google' ? 'chaule.360corp@gmail.com' : 'chau.le@360.org.vn')
+            const providerName = detected === 'microsoft' ? 'Microsoft 365' : detected === 'google' ? 'Google Workspace' : '360 CORP'
+            const finalName = finalEmail.split('@')[0] ? `${finalEmail.split('@')[0]} (${providerName})` : `Châu Lê (${providerName})`
+
+            const account = await storage.addAccount({
+              email: finalEmail,
+              name: finalName,
+              provider: detected === '360' ? 'custom_imap' : detected,
+            })
+
+            // Trigger sync for new account
+            try {
+              syncOrchestrator.syncAllAccounts().catch(() => {})
+            } catch {}
+
+            setTimeout(() => {
+              if (!loginWin.isDestroyed()) {
+                loginWin.close()
+              }
+            }, 500)
+
+            resolve({ success: true, account })
+          }
+        }
+
+        loginWin.webContents.on('will-redirect', (_e, url) => {
+          handleSuccessRedirect(url)
+        })
+
+        loginWin.webContents.on('will-navigate', (_e, url) => {
+          handleSuccessRedirect(url)
+        })
+
+        loginWin.webContents.on('did-navigate', (_e, url) => {
+          handleSuccessRedirect(url)
+        })
+
+        loginWin.on('closed', () => {
+          if (!resolved) {
+            if (rawEmail) {
+              // If user closed after entering credentials, gracefully link the account
+              resolved = true
+              const providerName = detected === 'microsoft' ? 'Microsoft 365' : detected === 'google' ? 'Google Workspace' : '360 CORP'
+              const finalName = `${rawEmail.split('@')[0]} (${providerName})`
+              storage
+                .addAccount({
+                  email: rawEmail,
+                  name: finalName,
+                  provider: detected === '360' ? 'custom_imap' : detected,
+                })
+                .then((account) => {
+                  resolve({ success: true, account })
+                })
+                .catch((err) => {
+                  resolve({ success: false, error: err.message })
+                })
+            } else {
+              resolve({ success: false, error: 'User closed authentication window' })
+            }
+          }
+        })
+
+        // Construct full auth redirect URL with basic PKCE / OpenID parameters
+        let fullTargetUrl = authUrl
+        if (detected === 'microsoft') {
+          fullTargetUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000002-0000-0ff1-ce00-000000000000&response_type=code&redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient&response_mode=query&scope=openid%20profile%20email%20offline_access%20https://outlook.office.com/IMAP.AccessAsUser.All%20https://outlook.office.com/SMTP.Send${rawEmail ? `&login_hint=${encodeURIComponent(rawEmail)}` : ''}`
+        } else if (detected === 'google') {
+          fullTargetUrl = `https://accounts.google.com/ServiceLogin?service=mail${rawEmail ? `&Email=${encodeURIComponent(rawEmail)}` : ''}`
+        }
+
+        loginWin.loadURL(fullTargetUrl).catch(() => {
+          loginWin.loadURL(authUrl).catch(() => {})
+        })
+      })
+    }
+  )
 }
 

@@ -14,5 +14,6 @@ export const VUA_MAIL_IPC = {
   OPEN_ATTACHMENT: 'vua-mail:open-attachment',
   SYNC_NOW: 'vua-mail:sync-now',
   GET_SYNC_STATUS: 'vua-mail:get-sync-status',
+  START_OAUTH_FLOW: 'vua-mail:start-oauth-flow',
 } as const
 

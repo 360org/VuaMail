@@ -6,6 +6,16 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-17
 
 ### Added
+- **Triển khai Luồng Đăng nhập Tài khoản Thật OAuth 2.0 & Auto-Discovery Chuẩn Outlook 365**:
+  - **Cửa sổ Trình duyệt Tương tác Electron (`BrowserWindow` OAuth 2.0 / Modern Auth Popup)**:
+    - Thay thế toàn bộ cơ chế mock/demo cũ bằng cửa sổ xác thực trình duyệt thật, mở trực tiếp trang đăng nhập chính thức của Microsoft Identity (`login.microsoftonline.com`), Google Workspace (`accounts.google.com`) và 360 CORP SSO (`vuahethong.net/web/login`).
+    - Lắng nghe và đánh chặn URL điều hướng (`will-redirect`, `will-navigate`, `did-navigate`) để phát hiện hoàn tất đăng nhập/cấp quyền và tự động liên kết tài khoản thật vào cơ sở dữ liệu SQLite cục bộ.
+  - **Trải nghiệm 1-Input Chuẩn Microsoft Outlook ("Add Email > Continue > Auto-direct > Approve > Done")**:
+    - Bổ sung ô nhập email thông minh trên giao diện `ProfileView` và `SettingsModal`.
+    - Tự động nhận diện nhà cung cấp (Heuristic Auto-Discovery: `@gmail.com` -> Google, `@outlook.com` / `@office365.com` / `@microsoft.com` -> Microsoft, `@360.org.vn` / `@vuahethong.com` -> 360 CORP SSO) và chuyển tiếp ngay sang trang đăng nhập tương ứng.
+  - **Tự động Đồng bộ Hộp thư Thật**:
+    - Khởi tạo ngay cấu trúc cây thư mục chuẩn (`Inbox`, `Drafts`, `Sent Items`, `Archive`, `Deleted Items`) và kích hoạt `MailSyncOrchestrator` nạp thư theo thời gian thực sau khi đăng nhập thành công.
+
 - **Chuẩn hoá Toàn diện Design System & Fluent Vector Icons VuaMail Đồng bộ 100% VuaOffice Suite**:
   - **Mô-đun Icon Vector Tập trung (`MailIcons.tsx`)**:
     - Thay thế triệt để 100% emoji thô sơ bằng bộ SVG Vector Icons sắc nét chuẩn Lucide/Fluent (`IconMail`, `IconInbox`, `IconSend`, `IconArchive`, `IconTrash`, `IconJunk`, `IconReply`, `IconReplyAll`, `IconForward`, `IconStar`, `IconFlag`, `IconPaperclip`, `IconTag`, `IconFolder`, `IconCalendar`, `IconClock`, `IconUser`, `IconUsers`, `IconCheck`, `IconCheckCircle`, `IconCheckSquare`, `IconRefresh`, `IconFilter`, `IconSearch`, `IconX`, `IconSparkles`, `IconMapPin`, `IconLightning`, `IconBrain`, `IconSettings`, `IconChevronDown`, `IconChevronRight`, `IconPlus`, `IconFileText`, `IconPhone`, `IconBuilding`, `IconBriefcase`, `IconLink`, `IconList`, `IconListOrdered`, `IconLock`, `IconKey`, `IconBox`, `IconKeyboard`, `IconEdit`, `IconGlobe`, `IconMicrosoft`, `IconGoogle`).

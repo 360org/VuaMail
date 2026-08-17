@@ -50,49 +50,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!isOpen) return null
 
-  const handleStartOAuthLogin = async (selectedService: 'google' | 'microsoft' | '360') => {
+  const handleStartOAuthLogin = async (selectedService: 'google' | 'microsoft' | '360' | 'auto', emailHintInput?: string) => {
     setIsSaving(true)
-    setAuthStatus(`Đang kết nối xác thực OAuth 2.0 với ${selectedService.toUpperCase()}...`)
+    const emailToUse = emailHintInput || accEmail
+    setAuthStatus(`Đang mở cửa sổ trình duyệt đăng nhập ${selectedService.toUpperCase()}...`)
 
     try {
-      if (selectedService === 'microsoft') {
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: 'chau.le@outlook.com',
-            name: 'Châu Lê (Microsoft 365)',
-            provider: 'microsoft',
-          })
+      if (window.vuaMail) {
+        const result = await window.vuaMail.startOAuthFlow(selectedService, emailToUse)
+        if (result && result.success) {
+          setAuthStatus('Xác thực và cấp quyền thành công!')
           onAccountsUpdated()
-        }
-      } else if (selectedService === 'google') {
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: 'chaule.360corp@gmail.com',
-            name: 'Châu Lê (Google Workspace)',
-            provider: 'google',
-          })
-          onAccountsUpdated()
-        }
-      } else {
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: 'chau.le@360.org.vn',
-            name: 'Châu Lê (360 CORP SSO)',
-            provider: 'custom_imap',
-            imapHost: 'imap.360.org.vn',
-            imapPort: 993,
-            smtpHost: 'smtp.360.org.vn',
-            smtpPort: 587,
-          })
-          onAccountsUpdated()
+          setTimeout(() => {
+            setIsAddingAccount(false)
+            setIsSaving(false)
+            setAuthStatus(null)
+          }, 600)
+        } else {
+          setAuthStatus(result?.error || 'Xác thực không thành công')
+          setIsSaving(false)
         }
       }
-      setAuthStatus('Xác thực và cấp quyền thành công!')
-      setTimeout(() => {
-        setIsAddingAccount(false)
-        setIsSaving(false)
-        setAuthStatus(null)
-      }, 700)
     } catch (err: any) {
       setAuthStatus(`Lỗi xác thực: ${err.message || 'Không thể đăng nhập'}`)
       setIsSaving(false)
@@ -385,9 +363,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
 
                     {authMethod === 'oauth' ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          Chọn dịch vụ để mở trang đăng nhập xác thực nhanh (1-Click OAuth 2.0):
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {/* 1-Input Flow */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', backgroundColor: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            Nhập địa chỉ Email để kết nối tự động:
+                          </label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                              type="email"
+                              placeholder="Nhập email của Sếp (VD: chau.le@outlook.com, sếp@gmail.com)..."
+                              value={accEmail}
+                              onChange={(e) => setAccEmail(e.target.value)}
+                              style={{
+                                flex: 1,
+                                padding: '6px 10px',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border)',
+                                fontSize: '12px',
+                                outline: 'none',
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && accEmail.trim()) {
+                                  handleStartOAuthLogin('auto', accEmail.trim())
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={!accEmail.trim() || isSaving}
+                              onClick={() => handleStartOAuthLogin('auto', accEmail.trim())}
+                              style={{
+                                backgroundColor: 'var(--outlook-blue, #0078d4)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '6px 14px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: accEmail.trim() ? 'pointer' : 'not-allowed',
+                                opacity: accEmail.trim() && !isSaving ? 1 : 0.6,
+                              }}
+                            >
+                              {isSaving ? 'Đang mở...' : 'Tiếp tục →'}
+                            </button>
+                          </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>

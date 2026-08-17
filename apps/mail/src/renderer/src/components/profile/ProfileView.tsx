@@ -99,56 +99,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   )
 
   // Trigger OAuth 2.0 / SSO Login Flow
-  const handleStartOAuthLogin = async (selectedService: 'google' | 'microsoft' | '360') => {
+  const handleStartOAuthLogin = async (selectedService: 'google' | 'microsoft' | '360' | 'auto', emailHintInput?: string) => {
     setIsAuthenticating(true)
-    setAuthStatusMessage(`Đang kết nối xác thực OAuth 2.0 với ${selectedService.toUpperCase()}...`)
+    const emailToUse = emailHintInput || accEmail
+    setAuthStatusMessage(`Đang mở cửa sổ đăng nhập trình duyệt với ${selectedService.toUpperCase()}...`)
 
     try {
-      if (selectedService === 'microsoft') {
-        const dummyEmail = 'chau.le@outlook.com'
-        const dummyName = 'Châu Lê (Microsoft 365)'
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: dummyEmail,
-            name: dummyName,
-            provider: 'microsoft',
-          })
+      if (window.vuaMail) {
+        const result = await window.vuaMail.startOAuthFlow(selectedService, emailToUse)
+        if (result && result.success) {
+          setAuthStatusMessage('Đăng nhập và cấp quyền thành công!')
           onAccountsUpdated()
-          onSelectAccount('acc_primary')
-        }
-      } else if (selectedService === 'google') {
-        const dummyEmail = 'chaule.360corp@gmail.com'
-        const dummyName = 'Châu Lê (Google Workspace)'
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: dummyEmail,
-            name: dummyName,
-            provider: 'google',
-          })
-          onAccountsUpdated()
-        }
-      } else {
-        const dummyEmail = 'chau.le@360.org.vn'
-        const dummyName = 'Châu Lê (360 CORP Direct SSO)'
-        if (window.vuaMail) {
-          await window.vuaMail.addAccount({
-            email: dummyEmail,
-            name: dummyName,
-            provider: 'custom_imap',
-            imapHost: 'imap.360.org.vn',
-            imapPort: 993,
-            smtpHost: 'smtp.360.org.vn',
-            smtpPort: 587,
-          })
-          onAccountsUpdated()
+          if (result.account) {
+            onSelectAccount(result.account.id)
+          }
+          setTimeout(() => {
+            setIsAddingAccount(false)
+            setIsAuthenticating(false)
+            setAuthStatusMessage(null)
+          }, 600)
+        } else {
+          setAuthStatusMessage(result?.error || 'Xác thực không thành công')
+          setIsAuthenticating(false)
         }
       }
-      setAuthStatusMessage('Đăng nhập và cấp quyền thành công!')
-      setTimeout(() => {
-        setIsAddingAccount(false)
-        setIsAuthenticating(false)
-        setAuthStatusMessage(null)
-      }, 800)
     } catch (err: any) {
       setAuthStatusMessage(`Lỗi xác thực: ${err.message || 'Không thể hoàn tất đăng nhập'}`)
       setIsAuthenticating(false)
@@ -378,9 +352,60 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 </div>
 
                 {authMethod === 'oauth' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      Chọn nhà cung cấp để mở trang đăng nhập xác thực tài khoản (OAuth 2.0 / Modern Auth):
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {/* Outlook 1-input flow: Email -> Continue -> Auto-direct */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '14px', backgroundColor: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        Nhập địa chỉ Email để kết nối tự động (Outlook Auto-Discovery):
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="email"
+                          placeholder="Nhập email của Sếp (VD: chau.le@outlook.com, sếp@gmail.com, ceo@360.org.vn)..."
+                          value={accEmail}
+                          onChange={(e) => setAccEmail(e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border)',
+                            fontSize: '13px',
+                            outline: 'none',
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && accEmail.trim()) {
+                              handleStartOAuthLogin('auto', accEmail.trim())
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          disabled={!accEmail.trim() || isAuthenticating}
+                          onClick={() => handleStartOAuthLogin('auto', accEmail.trim())}
+                          style={{
+                            backgroundColor: 'var(--outlook-blue, #0078d4)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '8px 18px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: accEmail.trim() ? 'pointer' : 'not-allowed',
+                            opacity: accEmail.trim() && !isAuthenticating ? 1 : 0.6,
+                          }}
+                        >
+                          {isAuthenticating ? 'Đang mở...' : 'Tiếp tục / Continue →'}
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Hệ thống tự động phát hiện Microsoft 365, Google Workspace hoặc 360 CORP SSO và mở cửa sổ đăng nhập trình duyệt.
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Hoặc chọn trực tiếp nhà cung cấp</span>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>

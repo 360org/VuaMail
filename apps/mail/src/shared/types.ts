@@ -133,6 +133,11 @@ export interface VuaMailApi {
   openAttachment: (attachment: EmailAttachment) => Promise<boolean>
   syncNow: () => Promise<SyncStatus>
   getSyncStatus: () => Promise<SyncStatus>
+  startOAuthFlow: (provider: 'google' | 'microsoft' | '360' | 'auto', emailHint?: string) => Promise<{
+    success: boolean
+    account?: EmailAccount
+    error?: string
+  }>
 }
 
 declare global {
