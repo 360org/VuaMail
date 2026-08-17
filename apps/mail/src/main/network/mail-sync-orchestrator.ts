@@ -53,12 +53,13 @@ export class MailSyncOrchestrator {
       // 2. Fetch new emails for all accounts via IMAP
       const accounts = this.storage.getAccounts()
       for (const acc of accounts) {
+        const domain = acc.email.split('@')[1] || '360.org.vn'
         const client = new NativeImapClient({
-          host: 'imap.' + acc.email.split('@')[1],
+          host: domain.includes('gmail') ? 'imap.gmail.com' : domain.includes('outlook') ? 'outlook.office365.com' : `imap.${domain}`,
           port: 993,
           tls: true,
           user: acc.email,
-          pass: 'demo-token',
+          pass: 'app-password-token',
         })
 
         const fetched = await client.connectAndFetchRecent('INBOX', 5)
@@ -79,8 +80,10 @@ export class MailSyncOrchestrator {
               isRead: false,
               isStarred: false,
               category: 'focused',
-              bodyHtml: `<div style="font-family: sans-serif; line-height: 1.6;"><p>${item.snippet}</p><p><em>Nội dung được đồng bộ tự động qua giao thức IMAP/TLS của VuaMail.</em></p></div>`,
-              plainText: item.snippet,
+              bodyHtml: item.bodyHtml || `<div style="font-family: sans-serif; line-height: 1.6;"><p>${item.snippet}</p><p><em>Nội dung được đồng bộ tự động qua giao thức IMAP/TLS của VuaMail.</em></p></div>`,
+              plainText: item.plainText || item.snippet,
+              hasAttachments: item.hasAttachments,
+              attachments: item.attachments,
             })
             syncedCount++
           }

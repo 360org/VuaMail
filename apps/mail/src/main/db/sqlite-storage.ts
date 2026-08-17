@@ -546,6 +546,14 @@ export class SQLiteMailStorage {
     category: 'focused' | 'other'
     bodyHtml: string
     plainText: string
+    hasAttachments?: boolean
+    attachments?: Array<{
+      id: string
+      filename: string
+      mimeType: string
+      sizeBytes: number
+      contentBase64?: string
+    }>
   }): void {
     const existingIndex = this.data.emails.findIndex((e) => e.id === email.id)
     const msg: EmailMessage = {
@@ -561,7 +569,8 @@ export class SQLiteMailStorage {
       isRead: email.isRead,
       isStarred: email.isStarred,
       category: email.category,
-      hasAttachments: false,
+      hasAttachments: Boolean(email.hasAttachments),
+      attachments: email.attachments,
     }
 
     if (existingIndex >= 0) {

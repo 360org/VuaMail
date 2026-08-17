@@ -249,7 +249,7 @@ export const App: React.FC = () => {
           if (!selectedEmail) return
           const updatedRead = !selectedEmail.isRead
           if (window.vuaMail) {
-            await window.vuaMail.markAsRead(selectedEmail.id, updatedRead)
+            await window.vuaMail.markRead(selectedEmail.id, updatedRead)
           }
           setEmails((prev) =>
             prev.map((e) => (e.id === selectedEmail.id ? { ...e, isRead: updatedRead } : e))
@@ -259,7 +259,7 @@ export const App: React.FC = () => {
           if (!selectedEmail) return
           const updatedStarred = !selectedEmail.isStarred
           if (window.vuaMail) {
-            await window.vuaMail.toggleStar(selectedEmail.id, updatedStarred)
+            await window.vuaMail.toggleStarred(selectedEmail.id)
           }
           setEmails((prev) =>
             prev.map((e) => (e.id === selectedEmail.id ? { ...e, isStarred: updatedStarred } : e))

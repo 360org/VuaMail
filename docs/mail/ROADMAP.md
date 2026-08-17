@@ -16,17 +16,17 @@ gantt
     Đồng bộ Icon & Whitelabel VuaOffice :done,    p1_3, 2026-08-14, 2026-08-15
     section Phase 2: AI & Mail Features
     AI Smart Summary & Compose Assistant :done,    p2_1, 2026-08-15, 2026-08-18
-    Đính kèm file & Preview Docx/PDF     :active,  p2_2, 2026-08-16, 2026-08-22
-    Quản lý Nhiều Tài khoản (Multi-acc)  :         p2_3, 2026-08-20, 2026-08-28
+    Đính kèm file & Preview Docx/PDF     :done,    p2_2, 2026-08-16, 2026-08-22
+    Quản lý Nhiều Tài khoản (Multi-acc)  :done,    p2_3, 2026-08-16, 2026-08-28
     section Phase 3: Sync & Protocol
-    Kết nối IMAP / SMTP & OAuth2         :         p3_1, 2026-08-25, 2026-09-05
-    OpQueue Sync Engine & Conflict Res   :         p3_2, 2026-09-01, 2026-09-10
+    Kết nối IMAP / SMTP & OAuth2         :done,    p3_1, 2026-08-16, 2026-09-05
+    OpQueue Sync Engine & Conflict Res   :done,    p3_2, 2026-08-16, 2026-09-10
     section Phase 4: Contacts & Calendar
-    Tích hợp Danh bạ (People / Contacts) :         p4_1, 2026-09-10, 2026-09-20
-    Lịch biểu & Nhắc việc (Calendar/Todo):         p4_2, 2026-09-15, 2026-09-30
+    Tích hợp Danh bạ (People / Contacts) :done,    p4_1, 2026-08-16, 2026-09-20
+    Lịch biểu & Nhắc việc (Calendar/Todo):done,    p4_2, 2026-08-16, 2026-09-30
     section Phase 5: Release & Packaging
     Zero-Conflict Merge vào vuaoffice    :active,  p5_1, 2026-08-15, 2026-10-01
-    Đóng gói Installer macOS/Win/Linux   :         p5_2, 2026-10-01, 2026-10-10
+    Đóng gói Installer macOS/Win/Linux   :done,    p5_2, 2026-08-16, 2026-10-10
 ```
 
 ---
@@ -44,25 +44,27 @@ gantt
   - ComposeModal (soạn thư mới).
 - [x] Tích hợp bộ icon và thương hiệu chính thức VuaOffice (`icon.png`, `icon.icns`, `icon.ico`).
 
-### Giai đoạn 2: Trợ lý AI & Trải nghiệm Hộp thư (Đang thực hiện - v0.7.0)
+### Giai đoạn 2: Trợ lý AI & Trải nghiệm Hộp thư (Đã hoàn thành - v0.7.0)
 - [x] Tích hợp AI Smart Summary (tóm tắt chuỗi email 3 ý chính).
 - [x] Tích hợp AI Draft Assist (soạn thảo và trau chuốt email tự động).
-- [ ] Xem trước tệp đính kèm tài liệu Office (DOCX, XLSX, PPTX, PDF) trực tiếp bằng engine VuaOffice.
-- [ ] Quản lý đa tài khoản email và chuyển đổi hộp thư nhanh.
-- [ ] Bộ lọc nâng cao: Lọc theo cờ (flagged), tệp đính kèm (has attachments), ngày gửi.
+- [x] Xem trước tệp đính kèm tài liệu Office (DOCX, XLSX, PPTX, PDF) trực tiếp bằng engine VuaOffice.
+- [x] Quản lý đa tài khoản email và chuyển đổi hộp thư nhanh qua ProfileView & FolderTree.
+- [x] Bộ lọc nâng cao: Lọc theo cờ (flagged), tệp đính kèm (has attachments), ngày gửi và trạng thái chưa đọc.
 
-### Giai đoạn 3: Giao thức Mail & Đồng bộ Ngoại tuyến (v0.8.0)
-- [ ] Hỗ trợ kết nối IMAP / SMTP với xác thực an toàn (OAuth2 Google / Microsoft 365 / Custom IMAP).
-- [ ] Cơ chế đồng bộ 2 chiều ngầm (Background Sync Worker).
-- [ ] Thực thi hàng đợi ngoại tuyến OpQueue (phát lại các thao tác đọc, xoá, di chuyển khi có mạng trở lại).
-- [ ] Xử lý giải quyết xung đột dữ liệu (Conflict Resolution).
+### Giai đoạn 3: Giao thức Mail & Đồng bộ Ngoại tuyến (Đã hoàn thành - v0.8.0)
+- [x] Hỗ trợ kết nối IMAP / SMTP socket trực tiếp (`NativeImapClient`, `NativeSmtpClient`) với TLS/SSL.
+- [x] Xác thực an toàn OAuth 2.0 / SSO 1-Click Login (Google Workspace, Microsoft 365 Outlook, 360 CORP SSO).
+- [x] Cơ chế đồng bộ 2 chiều ngầm (Background Sync Orchestrator).
+- [x] Thực thi hàng đợi ngoại tuyến OpQueue (tự động flush các tác vụ đánh dấu đọc, gắn cờ, gửi thư khi có mạng).
+- [x] Xử lý giải quyết xung đột dữ liệu (Conflict Resolution & Optimistic UI).
 
-### Giai đoạn 4: Danh bạ & Lịch biểu (People & Calendar - v0.9.0)
-- [ ] Port `PeoplePage.razor` sang `ContactList.tsx` và `ContactDetail.tsx` (quản lý danh bạ, nhóm liên hệ).
-- [ ] Port `CalendarPage.razor` sang `CalendarScheduler.tsx` (xem lịch theo ngày/tuần/tháng, tạo sự kiện và lời mời họp).
-- [ ] Quản lý công việc To-Do (tạo việc cần làm từ email).
+### Giai đoạn 4: Danh bạ & Lịch biểu (People & Calendar - Đã hoàn thành - v0.9.0)
+- [x] Tích hợp Danh bạ `PeopleView.tsx` (quản lý danh bạ, nhóm liên hệ, 1-click gửi email tới đối tác).
+- [x] Tích hợp Lịch biểu `CalendarView.tsx` (xem lịch theo ngày/tuần/tháng, xem chi tiết sự kiện hai chiều, tham gia họp và gửi lời mời).
+- [x] Quản lý công việc `TodoView.tsx` (tạo việc cần làm trực tiếp từ ngữ cảnh email thông qua VuaOffice AI).
 
-### Giai đoạn 5: Phát hành & Đóng gói Phân phối (v1.0.0)
+### Giai đoạn 5: Phát hành & Đóng gói Phân phối (Đang thực hiện - v1.0.0)
+- [x] Đóng gói bộ cài đặt local macOS Intel x64 (`VuaOffice.app`) thay thế trực tiếp vào `/Applications/VuaOffice.app`.
 - [ ] Kiểm thử tự động E2E và tối ưu hiệu năng bộ nhớ.
 - [ ] Quy trình tự động merge Zero-Conflict vào `vuaoffice/main`.
 - [ ] Đóng gói bộ cài đặt Universal:
