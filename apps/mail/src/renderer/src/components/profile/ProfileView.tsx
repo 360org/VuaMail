@@ -103,7 +103,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   // Trigger OAuth 2.0 / SSO Login Flow
   const handleStartOAuthLogin = async (
-    selectedService: 'google' | 'microsoft' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
+    selectedService: 'google' | 'microsoft' | 'microsoft_personal' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
     emailHintInput?: string
   ) => {
     setIsAuthenticating(true)
@@ -594,13 +594,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       >
                         <IconMicrosoft size={26} />
                         <span style={{ fontSize: '12px', fontWeight: 600 }}>Microsoft 365</span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Modern Auth</span>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Doanh nghiệp / Work</span>
                       </button>
 
                       {/* 2. Outlook.com */}
                       <button
                         type="button"
-                        onClick={() => handleStartOAuthLogin('microsoft', accEmail)}
+                        onClick={() => handleStartOAuthLogin('microsoft_personal', accEmail)}
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -615,7 +615,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       >
                         <IconMicrosoft size={26} />
                         <span style={{ fontSize: '12px', fontWeight: 600 }}>Outlook.com</span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Hotmail / Live</span>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Cá nhân / Hotmail / Live</span>
                       </button>
 
                       {/* 3. Exchange */}

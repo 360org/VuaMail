@@ -134,11 +134,11 @@ export function registerMailIpc(
     VUA_MAIL_IPC.START_OAUTH_FLOW,
     async (
       _evt,
-      targetProvider: 'google' | 'microsoft' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
+      targetProvider: 'google' | 'microsoft' | 'microsoft_personal' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
       emailHint?: string
     ) => {
       const rawEmail = (emailHint || '').trim()
-      let provider: 'google' | 'microsoft' | '360' | 'icloud' | 'yahoo' | 'exchange' = 'google'
+      let provider: 'google' | 'microsoft' | 'microsoft_personal' | '360' | 'icloud' | 'yahoo' | 'exchange' = 'google'
 
       if (targetProvider === 'auto' && rawEmail) {
         const lower = rawEmail.toLowerCase()
@@ -148,8 +148,11 @@ export function registerMailIpc(
           lower.endsWith('@outlook.com') ||
           lower.endsWith('@hotmail.com') ||
           lower.endsWith('@live.com') ||
+          lower.endsWith('@msn.com')
+        ) {
+          provider = 'microsoft_personal'
+        } else if (
           lower.endsWith('@microsoft.com') ||
-          lower.endsWith('@msn.com') ||
           lower.endsWith('@office365.com')
         ) {
           provider = 'microsoft'
@@ -167,17 +170,23 @@ export function registerMailIpc(
       }
 
       // 1. Google & Microsoft: Standard OAuth 2.0 PKCE Loopback Flow
-      if (provider === 'google' || provider === 'microsoft') {
+      if (provider === 'google' || provider === 'microsoft' || provider === 'microsoft_personal') {
         const oauthRes = await OAuthClient.startAuthorization(provider, rawEmail)
         if (!oauthRes.success || !oauthRes.email || !oauthRes.credentials) {
           return { success: false, error: oauthRes.error || 'Đăng nhập OAuth thất bại' }
         }
 
-        const providerName = provider === 'google' ? 'Google Workspace' : 'Microsoft 365'
+        const providerName =
+          provider === 'google'
+            ? 'Google Workspace'
+            : provider === 'microsoft_personal'
+            ? 'Outlook Personal'
+            : 'Microsoft 365'
+
         const account = await storage.addAccount({
           email: oauthRes.email,
           name: oauthRes.name ? `${oauthRes.name} (${providerName})` : oauthRes.email,
-          provider,
+          provider: provider === 'google' ? 'google' : 'microsoft',
           imapHost: provider === 'google' ? 'imap.gmail.com' : 'outlook.office365.com',
           imapPort: 993,
           smtpHost: provider === 'google' ? 'smtp.gmail.com' : 'smtp.office365.com',

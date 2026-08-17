@@ -4,7 +4,7 @@ import { shell } from 'electron'
 import type { StoredCredentials } from './token-store'
 
 export interface OAuthProviderConfig {
-  id: 'google' | 'microsoft'
+  id: 'google' | 'microsoft' | 'microsoft_personal'
   displayName: string
   authEndpoint: string
   tokenEndpoint: string
@@ -15,7 +15,7 @@ export interface OAuthProviderConfig {
 
 // OAuth Client Configurations
 // Uses standard desktop Public Client credentials with PKCE (RFC 7636)
-export const OAUTH_CONFIGS: Record<'google' | 'microsoft', OAuthProviderConfig> = {
+export const OAUTH_CONFIGS: Record<'google' | 'microsoft' | 'microsoft_personal', OAuthProviderConfig> = {
   google: {
     id: 'google',
     displayName: 'Google Workspace / Gmail',
@@ -29,13 +29,26 @@ export const OAUTH_CONFIGS: Record<'google' | 'microsoft', OAuthProviderConfig> 
       'https://mail.google.com/',
     ],
   },
+  microsoft_personal: {
+    id: 'microsoft_personal',
+    displayName: 'Outlook.com / Hotmail / Live (Personal)',
+    authEndpoint: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize',
+    tokenEndpoint: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token',
+    clientId: '08162f7c-0fd2-4200-a50d-d4508ec32e36',
+    scopes: [
+      'openid',
+      'profile',
+      'offline_access',
+      'https://outlook.office.com/IMAP.AccessAsUser.All',
+      'https://outlook.office.com/SMTP.Send',
+    ],
+  },
   microsoft: {
     id: 'microsoft',
-    displayName: 'Microsoft 365 / Outlook',
+    displayName: 'Microsoft 365 / Work or School Account',
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     // Public multi-tenant Desktop Client ID (Thunderbird / Standard Mail Client)
-    // Allows standard OAuth2 IMAP/SMTP consent across all Microsoft 365 / Outlook / Live / Hotmail accounts without AADSTS65002
     clientId: '08162f7c-0fd2-4200-a50d-d4508ec32e36',
     scopes: [
       'openid',
@@ -102,7 +115,7 @@ export class OAuthClient {
    * Starts RFC 8252 Authorization Code Flow with PKCE via dynamic Loopback Server
    */
   static async startAuthorization(
-    providerKey: 'google' | 'microsoft',
+    providerKey: 'google' | 'microsoft' | 'microsoft_personal',
     loginHint?: string
   ): Promise<OAuthResult> {
     const config = OAUTH_CONFIGS[providerKey]
@@ -326,7 +339,7 @@ export class OAuthClient {
    * Refreshes an expired access token using the stored refresh_token
    */
   static async refreshAccessToken(
-    providerKey: 'google' | 'microsoft',
+    providerKey: 'google' | 'microsoft' | 'microsoft_personal',
     refreshToken: string
   ): Promise<{ success: boolean; accessToken?: string; expiresIn?: number; error?: string }> {
     const config = OAUTH_CONFIGS[providerKey]

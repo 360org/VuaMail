@@ -6,6 +6,13 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-17
 
 ### Fixed
+- **Khắc phục Lỗi Microsoft Azure AD Tenant AADSTS700016 & Phân tách Endpoint Cá nhân / Doanh nghiệp**:
+  - **Tách Biệt Endpoint Xác thực (`apps/mail/src/main/auth/oauth-client.ts`)**:
+    - Bổ sung cấu hình `microsoft_personal` trỏ trực tiếp đến `https://login.microsoftonline.com/consumers/` dành cho các tài khoản cá nhân (`@outlook.com`, `@hotmail.com`, `@live.com`, `@msn.com`), ngăn ngừa triệt để lỗi xung đột Tenant Azure AD doanh nghiệp.
+    - Cấu hình `microsoft` dành riêng cho tài khoản tổ chức/doanh nghiệp (`Microsoft 365 Work or School Account`).
+  - **Tối ưu Luồng Đăng nhập Giao diện Profile & Auto Discovery (`ProfileView.tsx`, `mail-ipc.ts`)**:
+    - Tự động định tuyến địa chỉ email cá nhân và tổ chức đến đúng endpoint tương ứng.
+    - Bổ sung tuỳ chọn phân tách rõ ràng trên bảng chọn nhà cung cấp dịch vụ: `Microsoft 365 (Doanh nghiệp)` và `Outlook.com (Cá nhân / Hotmail / Live)`.
 - **Khắc phục Triệt để Lỗi Microsoft Identity AADSTS65002 & Cơ chế Hủy Luồng Treo (OAuth Cancellation)**:
   - **Sửa Phân quyền Azure AD Scope (`apps/mail/src/main/auth/oauth-client.ts`)**:
     - Thay thế toàn bộ Exchange legacy scopes (`https://outlook.office.com/IMAP.AccessAsUser.All`, `https://outlook.office.com/SMTP.Send`) bằng chuẩn Microsoft Graph API scopes (`https://graph.microsoft.com/Mail.ReadWrite`, `https://graph.microsoft.com/Mail.Send`, `https://graph.microsoft.com/User.Read`, `offline_access`, `openid`, `profile`, `email`).
