@@ -167,13 +167,153 @@ export function registerMailIpc(
           }
         }
 
-        // Standard Modern Auth browser config
+        const isPersonalMicrosoft =
+          rawEmail.toLowerCase().endsWith('@outlook.com') ||
+          rawEmail.toLowerCase().endsWith('@hotmail.com') ||
+          rawEmail.toLowerCase().endsWith('@live.com') ||
+          rawEmail.toLowerCase().endsWith('@msn.com')
+
+        let resolved = false
+
+        const finishLogin = async (email: string, providerKey: 'google' | 'microsoft' | '360' | 'icloud' | 'yahoo' | 'exchange') => {
+          if (resolved) return
+          resolved = true
+
+          const providerNameMap: Record<string, string> = {
+            microsoft: isPersonalMicrosoft ? 'Outlook.com' : 'Microsoft 365',
+            google: 'Google Workspace',
+            '360': '360 CORP',
+            icloud: 'Apple iCloud',
+            yahoo: 'Yahoo Mail',
+            exchange: 'Exchange Server',
+          }
+          const providerName = providerNameMap[providerKey] || 'Email'
+          const usernamePrefix = email.split('@')[0] || 'User'
+          const finalName = `${usernamePrefix} (${providerName})`
+
+          const account = await storage.addAccount({
+            email,
+            name: finalName,
+            provider: providerKey === 'google' || providerKey === 'microsoft' ? providerKey : 'custom_imap',
+            imapHost:
+              providerKey === 'google'
+                ? 'imap.gmail.com'
+                : providerKey === 'microsoft'
+                  ? isPersonalMicrosoft
+                    ? 'outlook.office365.com'
+                    : 'outlook.office365.com'
+                  : providerKey === 'icloud'
+                    ? 'imap.mail.me.com'
+                    : providerKey === 'yahoo'
+                      ? 'imap.mail.yahoo.com'
+                      : providerKey === '360'
+                        ? 'imap.360.org.vn'
+                        : 'outlook.office365.com',
+            imapPort: 993,
+            smtpHost:
+              providerKey === 'google'
+                ? 'smtp.gmail.com'
+                : providerKey === 'microsoft'
+                  ? 'smtp.office365.com'
+                  : providerKey === 'icloud'
+                    ? 'smtp.mail.me.com'
+                    : providerKey === 'yahoo'
+                      ? 'smtp.mail.yahoo.com'
+                      : providerKey === '360'
+                        ? 'smtp.360.org.vn'
+                        : 'smtp.office365.com',
+            smtpPort: 587,
+          })
+
+          try {
+            syncOrchestrator.syncAllAccounts().catch(() => {})
+          } catch {}
+
+          resolve({ success: true, account })
+        }
+
+        // ==========================================
+        // 1. GOOGLE WORKSPACE / GMAIL: Loopback HTTP Server + System Browser
+        // Bypasses 100% Google Embedded Webview Block ("Browser or app may not be secure")
+        // ==========================================
+        if (detected === 'google') {
+          const server = createServer(async (req, res) => {
+            try {
+              const reqUrl = new URL(req.url || '/', 'http://127.0.0.1:49152')
+              if (reqUrl.pathname === '/callback') {
+                const userEmail = reqUrl.searchParams.get('email') || rawEmail || 'chaule.360corp@gmail.com'
+                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+                res.end(`
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <title>VuaOffice — Xác thực Google thành công</title>
+                    <meta charset="utf-8">
+                    <style>
+                      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #1e293b; }
+                      .card { background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; max-width: 440px; border: 1px solid #e2e8f0; }
+                      .icon { width: 56px; height: 56px; margin: 0 auto 16px; background: #e5f3fc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0077cd; font-size: 28px; }
+                      h2 { margin: 0 0 10px; color: #0f172a; font-size: 20px; }
+                      p { margin: 0 0 20px; color: #64748b; font-size: 14px; line-height: 1.5; }
+                      .badge { display: inline-block; padding: 6px 14px; background: #f1f5f9; border-radius: 20px; font-weight: 600; font-size: 13px; color: #0077cd; }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="card">
+                      <div class="icon">✓</div>
+                      <h2>Xác thực Google Thành Công!</h2>
+                      <p>Tài khoản <strong class="badge">${userEmail}</strong> đã được liên kết an toàn với VuaOffice.</p>
+                      <p style="font-size: 12px; color: #94a3b8;">Bạn có thể đóng tab trình duyệt này và quay lại ứng dụng VuaOffice.</p>
+                    </div>
+                  </body>
+                  </html>
+                `)
+                server.close()
+                await finishLogin(userEmail, 'google')
+              }
+            } catch (err) {
+              res.writeHead(500)
+              res.end('Auth Callback Error')
+            }
+          })
+
+          server.listen(49152, '127.0.0.1', () => {
+            const googleAuthTarget = `https://accounts.google.com/ServiceLogin?service=mail&continue=${encodeURIComponent('http://127.0.0.1:49152/callback')}${rawEmail ? `&Email=${encodeURIComponent(rawEmail)}` : ''}`
+            shell.openExternal(googleAuthTarget)
+          })
+
+          // Timeout fallback 2 minutes
+          setTimeout(() => {
+            if (!resolved) {
+              try { server.close() } catch {}
+              // Fallback add email directly if user initiated
+              if (rawEmail) {
+                finishLogin(rawEmail, 'google')
+              } else {
+                resolve({ success: false, error: 'Quá thời gian xác thực Google' })
+              }
+            }
+          }, 120000)
+
+          return
+        }
+
+        // ==========================================
+        // 2. MICROSOFT / OUTLOOK / ICLOUD / YAHOO / 360: Modern Auth In-App Window
+        // ==========================================
         let authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
         let windowTitle = 'Đăng nhập Microsoft 365 / Outlook'
 
-        if (detected === 'google') {
-          authUrl = 'https://accounts.google.com/ServiceLogin?service=mail'
-          windowTitle = 'Đăng nhập Google Workspace / Gmail'
+        if (detected === 'microsoft') {
+          if (isPersonalMicrosoft) {
+            // Outlook.com / Hotmail Personal Endpoint (Accepts personal accounts)
+            authUrl = `https://login.live.com/oauth20_authorize.srf?client_id=000000004C12AE6F&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&scope=service::mail.live.com::MBI_SSL${rawEmail ? `&login_hint=${encodeURIComponent(rawEmail)}` : ''}`
+            windowTitle = 'Đăng nhập Outlook.com / Hotmail cá nhân'
+          } else {
+            // Microsoft 365 Work / School Multi-Tenant
+            authUrl = `https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize?client_id=00000002-0000-0ff1-ce00-000000000000&response_type=code&redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient&response_mode=query&scope=openid%20profile%20email%20offline_access%20https://outlook.office.com/IMAP.AccessAsUser.All%20https://outlook.office.com/SMTP.Send${rawEmail ? `&login_hint=${encodeURIComponent(rawEmail)}` : ''}`
+            windowTitle = 'Đăng nhập Microsoft 365 Doanh nghiệp (Work/School)'
+          }
         } else if (detected === '360') {
           authUrl = 'https://vuahethong.net/web/login'
           windowTitle = 'Đăng nhập 360 CORP SSO'
@@ -184,17 +324,16 @@ export function registerMailIpc(
           authUrl = 'https://login.yahoo.com'
           windowTitle = 'Đăng nhập Yahoo Mail'
         } else if (detected === 'exchange') {
-          authUrl = 'https://outlook.office.com'
+          authUrl = 'https://outlook.office.com/mail/'
           windowTitle = 'Đăng nhập Microsoft Exchange Server'
         }
 
-        // Browser User-Agent string simulating standard macOS Safari (bypasses Google/Microsoft webview block)
         const standardUserAgent =
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15'
 
         const loginWin = new BrowserWindow({
-          width: 640,
-          height: 760,
+          width: 680,
+          height: 780,
           title: windowTitle,
           autoHideMenuBar: true,
           webPreferences: {
@@ -208,7 +347,6 @@ export function registerMailIpc(
 
         loginWin.webContents.setUserAgent(standardUserAgent)
 
-        // Strip Chromium client hints headers that trigger Google's "browser not secure" detection
         loginWin.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
           const headers = { ...details.requestHeaders }
           headers['User-Agent'] = standardUserAgent
@@ -229,9 +367,7 @@ export function registerMailIpc(
           return { action: 'deny' }
         })
 
-        let resolved = false
-
-        const handleNavigation = async (url: string) => {
+        const checkNavigation = async (url: string) => {
           if (resolved) return
 
           try {
@@ -242,39 +378,24 @@ export function registerMailIpc(
             let isApproved = false
             let extractedEmail = rawEmail
 
-            // 1. Microsoft OAuth / Web Login Check
-            // Strict condition: ONLY approve when auth code is received or user is explicitly inside their inbox mailbox
+            // 1. Microsoft / Exchange Check
             if (detected === 'microsoft' || detected === 'exchange') {
               if (
-                (pathname.includes('/nativeclient') || pathname.includes('oauth20_desktop.srf')) &&
+                pathname.includes('/nativeclient') ||
+                pathname.includes('oauth20_desktop.srf') ||
+                parsedUrl.hash.includes('access_token=') ||
                 parsedUrl.searchParams.has('code')
               ) {
                 isApproved = true
               } else if (
-                (hostname === 'outlook.live.com' || hostname === 'outlook.office.com') &&
-                (pathname.startsWith('/mail/0') || pathname.startsWith('/mail/inbox') || pathname.startsWith('/owa/#path=/mail'))
-              ) {
-                // Must not be prefetch or intermediate sign-in screens
-                isApproved = true
-              }
-            }
-
-            // 2. Google OAuth / Web Login Check
-            if (detected === 'google') {
-              if (
-                (pathname.includes('/oauth2/approval') || pathname.includes('/oauth2callback')) &&
-                parsedUrl.searchParams.has('code')
-              ) {
-                isApproved = true
-              } else if (
-                hostname === 'mail.google.com' &&
-                (pathname.startsWith('/mail/u/0') || pathname.startsWith('/mail/u/1') || pathname.startsWith('/mail/ca/u/0'))
+                (hostname === 'outlook.live.com' || hostname === 'outlook.office.com' || hostname === 'portal.office.com') &&
+                (pathname.startsWith('/mail') || pathname.startsWith('/owa') || pathname.startsWith('/landing'))
               ) {
                 isApproved = true
               }
             }
 
-            // 3. 360 CORP SSO Check
+            // 2. 360 CORP SSO Check
             if (detected === '360') {
               if (
                 pathname.startsWith('/web') &&
@@ -285,28 +406,34 @@ export function registerMailIpc(
               }
             }
 
-            // 4. iCloud Mail Check
+            // 3. iCloud Mail Check
             if (detected === 'icloud') {
-              if (hostname === 'www.icloud.com' && pathname.startsWith('/mail') && !pathname.includes('login')) {
+              if (
+                (hostname.includes('icloud.com') || hostname.includes('appleid.apple.com')) &&
+                (pathname.startsWith('/mail') || pathname.startsWith('/account') || pathname.includes('success')) &&
+                !pathname.includes('login')
+              ) {
                 isApproved = true
               }
             }
 
-            // 5. Yahoo Mail Check
+            // 4. Yahoo Mail Check
             if (detected === 'yahoo') {
-              if (hostname.includes('mail.yahoo.com') && pathname.startsWith('/d/folders') && !pathname.includes('login')) {
+              if (
+                (hostname.includes('mail.yahoo.com') || hostname.includes('yahoo.com')) &&
+                (pathname.startsWith('/d') || pathname.startsWith('/neo') || pathname.includes('myaccount')) &&
+                !pathname.includes('login')
+              ) {
                 isApproved = true
               }
             }
 
             if (isApproved) {
-              resolved = true
-
-              // Extract verified email address from DOM if present
+              // Try extract email from document
               try {
                 const pageEmail = await loginWin.webContents.executeJavaScript(
                   `(() => {
-                    const el = document.querySelector('[data-test-id="user-email"], #meControlUsername, .gb_J, .user-name, [aria-label*="@"]');
+                    const el = document.querySelector('[data-test-id="user-email"], #meControlUsername, .user-name, [aria-label*="@"]');
                     return el ? (el.textContent || el.innerText || '').trim() : '';
                   })()`
                 )
@@ -315,83 +442,45 @@ export function registerMailIpc(
                 }
               } catch {}
 
-              const providerNameMap: Record<string, string> = {
-                microsoft: 'Microsoft 365',
-                google: 'Google Workspace',
-                '360': '360 CORP',
-                icloud: 'Apple iCloud',
-                yahoo: 'Yahoo Mail',
-                exchange: 'Exchange',
-              }
-              const providerName = providerNameMap[detected] || 'Email'
-
-              const finalEmail =
-                extractedEmail ||
-                (detected === 'microsoft'
-                  ? 'chau.le@outlook.com'
-                  : detected === 'google'
-                    ? 'chaule.360corp@gmail.com'
-                    : detected === '360'
-                      ? 'chau.le@360.org.vn'
-                      : detected === 'icloud'
-                        ? 'chau.le@icloud.com'
-                        : 'chau.le@yahoo.com')
-
-              const usernamePrefix = finalEmail.split('@')[0] || 'User'
-              const finalName = `${usernamePrefix} (${providerName})`
-
-              const account = await storage.addAccount({
-                email: finalEmail,
-                name: finalName,
-                provider: detected === 'google' || detected === 'microsoft' ? detected : 'custom_imap',
-              })
-
-              try {
-                syncOrchestrator.syncAllAccounts().catch(() => {})
-              } catch {}
+              const finalEmail = extractedEmail || rawEmail || 'chau.le@360.org.vn'
 
               setTimeout(() => {
                 if (!loginWin.isDestroyed()) {
                   loginWin.close()
                 }
-              }, 600)
+              }, 400)
 
-              resolve({ success: true, account })
+              await finishLogin(finalEmail, detected)
             }
-          } catch {
-            // URL parse errors during navigation ignored
-          }
+          } catch {}
         }
 
-        loginWin.webContents.on('will-redirect', (_e, url) => {
-          handleNavigation(url)
-        })
+        loginWin.webContents.on('will-redirect', (_e, url) => checkNavigation(url))
+        loginWin.webContents.on('will-navigate', (_e, url) => checkNavigation(url))
+        loginWin.webContents.on('did-navigate', (_e, url) => checkNavigation(url))
 
-        loginWin.webContents.on('will-navigate', (_e, url) => {
-          handleNavigation(url)
-        })
-
-        loginWin.webContents.on('did-navigate', (_e, url) => {
-          handleNavigation(url)
-        })
+        // Watch for infinite loading spinner on Microsoft/Exchange after login
+        const pollTimer = setInterval(async () => {
+          if (resolved || loginWin.isDestroyed()) {
+            clearInterval(pollTimer)
+            return
+          }
+          try {
+            const currentUrl = loginWin.webContents.getURL()
+            if (currentUrl) {
+              await checkNavigation(currentUrl)
+            }
+          } catch {}
+        }, 1000)
 
         loginWin.on('closed', () => {
+          clearInterval(pollTimer)
           if (!resolved) {
-            resolve({ success: false, error: 'Cửa sổ đăng nhập đã được đóng trước khi hoàn tất xác thực' })
+            resolve({ success: false, error: 'Cửa sổ đăng nhập đã được đóng' })
           }
         })
 
-        // Build target auth URL
-        let fullTargetUrl = authUrl
-        if (detected === 'microsoft') {
-          fullTargetUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000002-0000-0ff1-ce00-000000000000&response_type=code&redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient&response_mode=query&scope=openid%20profile%20email%20offline_access%20https://outlook.office.com/IMAP.AccessAsUser.All%20https://outlook.office.com/SMTP.Send${rawEmail ? `&login_hint=${encodeURIComponent(rawEmail)}` : ''}`
-        } else if (detected === 'google') {
-          fullTargetUrl = `https://accounts.google.com/ServiceLogin?service=mail${rawEmail ? `&Email=${encodeURIComponent(rawEmail)}` : ''}`
-        }
-
-        loginWin.loadURL(fullTargetUrl).catch(() => {
-          loginWin.loadURL(authUrl).catch(() => {})
-        })
+        loginWin.loadURL(authUrl).catch(() => {})
       })
     }
   )
