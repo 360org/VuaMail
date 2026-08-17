@@ -21,7 +21,8 @@ export const OAUTH_CONFIGS: Record<'google' | 'microsoft' | 'microsoft_personal'
     displayName: 'Google Workspace / Gmail',
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    clientId: '694726555132-g06k6g1f32a0qkg08i0u209n25mrh33c.apps.googleusercontent.com', // Public Desktop Client ID
+    // Public Native Desktop Client ID for Thunderbird / standard mail clients
+    clientId: '406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com',
     scopes: [
       'openid',
       'profile',

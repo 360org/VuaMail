@@ -6,6 +6,10 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-17
 
 ### Fixed
+- **Khắc phục Lỗi Google OAuth 401 `invalid_client`**:
+  - **Cập nhật Google Public Native Desktop Client ID (`apps/mail/src/main/auth/oauth-client.ts`)**:
+    - Thay thế Client ID cũ bằng Client ID Desktop hợp lệ (`406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com`) chuẩn RFC 8252 Loopback Native Apps.
+    - Giải quyết dứt điểm lỗi `The OAuth client was not found - 401: invalid_client` khi đăng nhập tài khoản Gmail / Google Workspace.
 - **Khắc phục Lỗi Microsoft Azure AD Tenant AADSTS700016 & Phân tách Endpoint Cá nhân / Doanh nghiệp**:
   - **Tách Biệt Endpoint Xác thực (`apps/mail/src/main/auth/oauth-client.ts`)**:
     - Bổ sung cấu hình `microsoft_personal` trỏ trực tiếp đến `https://login.microsoftonline.com/consumers/` dành cho các tài khoản cá nhân (`@outlook.com`, `@hotmail.com`, `@live.com`, `@msn.com`), ngăn ngừa triệt để lỗi xung đột Tenant Azure AD doanh nghiệp.
