@@ -1,5 +1,12 @@
 import React, { useState } from 'react'
 import type { EmailMessage } from '../../../../shared/types'
+import {
+  IconRefresh,
+  IconStar,
+  IconPaperclip,
+  IconMail,
+  IconCheck,
+} from '../common/MailIcons'
 
 interface MailListProps {
   emails: EmailMessage[]
@@ -20,7 +27,7 @@ const CATEGORY_TABS = [
 
 type FilterType = 'all' | 'unread' | 'flagged' | 'attachments'
 
-const AVATAR_COLORS = ['#0078d4', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e', '#d83b01']
+const AVATAR_COLORS = ['#0077cd', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e', '#d83b01']
 
 export const MailList: React.FC<MailListProps> = ({
   emails,
@@ -99,10 +106,10 @@ export const MailList: React.FC<MailListProps> = ({
           padding: '10px 14px',
           cursor: 'pointer',
           borderBottom: '1px solid var(--border-subtle, #efefef)',
-          backgroundColor: isSelected ? 'var(--hover, #e8f2fc)' : 'transparent',
-          borderLeft: isSelected ? '3px solid #0078d4' : '3px solid transparent',
+          backgroundColor: isSelected ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+          borderLeft: isSelected ? '3px solid var(--vuamail-primary-blue, #0077cd)' : '3px solid transparent',
           position: 'relative',
-          transition: 'background 0.1s ease',
+          transition: 'background 0.12s ease',
         }}
       >
         {/* Unread indicator dot */}
@@ -115,7 +122,7 @@ export const MailList: React.FC<MailListProps> = ({
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: '#0078d4',
+              backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
             }}
           />
         )}
@@ -144,7 +151,7 @@ export const MailList: React.FC<MailListProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
             <span
               style={{
-                fontSize: '12px',
+                fontSize: '12.5px',
                 fontWeight: !msg.isRead ? 700 : 600,
                 color: 'var(--text-primary, #232425)',
                 whiteSpace: 'nowrap',
@@ -154,16 +161,24 @@ export const MailList: React.FC<MailListProps> = ({
             >
               {msg.senderName || msg.senderEmail}
             </span>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted, #878e96)', flexShrink: 0, marginLeft: '6px' }}>
-              {dateStr}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: '6px' }}>
+              {msg.hasAttachments && (
+                <IconPaperclip size={12} color="var(--text-muted, #878e96)" />
+              )}
+              {msg.isStarred && (
+                <IconStar size={12} active />
+              )}
+              <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>
+                {dateStr}
+              </span>
+            </div>
           </div>
 
           <div
             style={{
               fontSize: '12px',
               fontWeight: !msg.isRead ? 600 : 500,
-              color: isSelected ? '#0078d4' : 'var(--text-primary, #232425)',
+              color: isSelected ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -175,12 +190,12 @@ export const MailList: React.FC<MailListProps> = ({
 
           <div
             style={{
-              fontSize: '11px',
+              fontSize: '11.5px',
               color: 'var(--text-muted, #878e96)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              lineHeight: '1.3',
+              lineHeight: '1.35',
             }}
           >
             {msg.snippet}
@@ -213,11 +228,12 @@ export const MailList: React.FC<MailListProps> = ({
           borderBottom: '1px solid var(--border-subtle, #efefef)',
         }}
       >
-        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary, #232425)' }}>
+        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary, #232425)' }}>
           Hộp thư đến (Inbox)
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
+            type="button"
             onClick={onRefresh}
             title="Đồng bộ / Làm mới danh sách"
             style={{
@@ -225,12 +241,14 @@ export const MailList: React.FC<MailListProps> = ({
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-secondary, #606366)',
-              fontSize: '13px',
               padding: '4px',
               borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            🔄
+            <IconRefresh size={14} />
           </button>
         </div>
       </div>
@@ -243,32 +261,36 @@ export const MailList: React.FC<MailListProps> = ({
           gap: '4px',
           padding: '6px 12px',
           borderBottom: '1px solid var(--border-subtle, #f0f0f0)',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--surface, #ffffff)',
         }}
       >
         {[
-          { id: 'all', label: 'Tất cả' },
-          { id: 'unread', label: 'Chưa đọc' },
-          { id: 'flagged', label: '⭐ Gắn cờ' },
-          { id: 'attachments', label: '📎 Đính kèm' },
+          { id: 'all', label: 'Tất cả', icon: null },
+          { id: 'unread', label: 'Chưa đọc', icon: null },
+          { id: 'flagged', label: 'Gắn cờ', icon: <IconStar size={11} active={activeFilter === 'flagged'} style={{ marginRight: '3px' }} /> },
+          { id: 'attachments', label: 'Đính kèm', icon: <IconPaperclip size={11} style={{ marginRight: '3px' }} /> },
         ].map((f) => {
           const isActive = activeFilter === f.id
           return (
             <button
+              type="button"
               key={f.id}
               onClick={() => setActiveFilter(f.id as FilterType)}
               style={{
-                background: isActive ? 'var(--hover, #eef3fc)' : 'transparent',
+                background: isActive ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
                 border: 'none',
-                color: isActive ? '#0078d4' : 'var(--text-secondary, #606366)',
+                color: isActive ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)',
                 fontWeight: isActive ? 700 : 500,
-                fontSize: '11px',
-                padding: '3px 8px',
+                fontSize: '11.5px',
+                padding: '4px 8px',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                transition: 'all 0.1s ease',
+                transition: 'all 0.12s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
               }}
             >
+              {f.icon}
               {f.label}
             </button>
           )
@@ -292,19 +314,20 @@ export const MailList: React.FC<MailListProps> = ({
           const isActive = categoryTab === tab.id
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => onCategoryChange(tab.id)}
               style={{
                 padding: '4px 10px',
                 borderRadius: '14px',
-                border: isActive ? '1px solid #0078d4' : '1px solid var(--border, #e3e6ea)',
-                backgroundColor: isActive ? '#0078d4' : 'var(--surface, #ffffff)',
+                border: isActive ? '1px solid var(--vuamail-primary-blue, #0077cd)' : '1px solid var(--border, #e3e6ea)',
+                backgroundColor: isActive ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--surface, #ffffff)',
                 color: isActive ? '#ffffff' : 'var(--text-primary, #232425)',
                 fontSize: '11px',
                 fontWeight: isActive ? 600 : 500,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.1s ease',
+                transition: 'all 0.12s ease',
               }}
             >
               {tab.label}
@@ -353,3 +376,4 @@ export const MailList: React.FC<MailListProps> = ({
     </div>
   )
 }
+

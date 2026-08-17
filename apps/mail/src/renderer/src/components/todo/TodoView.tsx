@@ -1,4 +1,14 @@
 import React, { useState } from 'react'
+import {
+  IconCheckSquare,
+  IconStar,
+  IconClock,
+  IconCheckCircle,
+  IconTrash,
+  IconCalendar,
+  IconFileText,
+  IconPlus,
+} from '../common/MailIcons'
 
 export interface MailTask {
   id: string
@@ -152,16 +162,19 @@ export const TodoView: React.FC = () => {
             cursor: 'pointer',
             padding: '8px 12px',
             borderRadius: '6px',
-            fontSize: '13px',
+            fontSize: '12.5px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: filter === 'all' ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: filter === 'all' ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: filter === 'all' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: filter === 'all' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: filter === 'all' ? 600 : 400,
           }}
         >
-          <span>📋 Tất cả công việc</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconCheckSquare size={15} color="var(--vuamail-primary-blue, #0077cd)" />
+            <span>Tất cả công việc</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>{tasks.length}</span>
         </div>
 
@@ -171,16 +184,19 @@ export const TodoView: React.FC = () => {
             cursor: 'pointer',
             padding: '8px 12px',
             borderRadius: '6px',
-            fontSize: '13px',
+            fontSize: '12.5px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: filter === 'important' ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: filter === 'important' ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: filter === 'important' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: filter === 'important' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: filter === 'important' ? 600 : 400,
           }}
         >
-          <span>⭐ Quan trọng & Khẩn</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconStar size={15} active />
+            <span>Quan trọng & Khẩn</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>
             {tasks.filter((t) => t.priority === 'high' || t.category === 'important').length}
           </span>
@@ -192,16 +208,19 @@ export const TodoView: React.FC = () => {
             cursor: 'pointer',
             padding: '8px 12px',
             borderRadius: '6px',
-            fontSize: '13px',
+            fontSize: '12.5px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: filter === 'pending' ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: filter === 'pending' ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: filter === 'pending' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: filter === 'pending' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: filter === 'pending' ? 600 : 400,
           }}
         >
-          <span>⏳ Đang thực hiện</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconClock size={15} color="var(--text-secondary, #606366)" />
+            <span>Đang thực hiện</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>
             {tasks.filter((t) => !t.isCompleted).length}
           </span>
@@ -213,16 +232,19 @@ export const TodoView: React.FC = () => {
             cursor: 'pointer',
             padding: '8px 12px',
             borderRadius: '6px',
-            fontSize: '13px',
+            fontSize: '12.5px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: filter === 'completed' ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: filter === 'completed' ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: filter === 'completed' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: filter === 'completed' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: filter === 'completed' ? 600 : 400,
           }}
         >
-          <span>✅ Đã hoàn thành</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconCheckCircle size={15} color="var(--vuamail-brand-green, #00ce2c)" />
+            <span>Đã hoàn thành</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>
             {tasks.filter((t) => t.isCompleted).length}
           </span>
@@ -265,7 +287,7 @@ export const TodoView: React.FC = () => {
               type="submit"
               disabled={!newTitle.trim()}
               style={{
-                backgroundColor: newTitle.trim() ? '#0078d4' : 'var(--surface-subtle, #f6f7f9)',
+                backgroundColor: newTitle.trim() ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--surface-subtle, #f6f7f9)',
                 color: newTitle.trim() ? '#fff' : 'var(--text-muted, #878e96)',
                 border: 'none',
                 borderRadius: '4px',
@@ -273,9 +295,13 @@ export const TodoView: React.FC = () => {
                 fontSize: '12px',
                 fontWeight: 600,
                 cursor: newTitle.trim() ? 'pointer' : 'default',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              Thêm
+              <IconPlus size={13} />
+              <span>Thêm</span>
             </button>
           </form>
         </div>
@@ -296,6 +322,7 @@ export const TodoView: React.FC = () => {
               color: 'var(--text-primary, #232425)',
               fontSize: '11px',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
         </div>
@@ -318,9 +345,9 @@ export const TodoView: React.FC = () => {
                   padding: '12px 14px',
                   cursor: 'pointer',
                   borderBottom: '1px solid var(--border-subtle, #efefef)',
-                  backgroundColor: selectedTaskId === t.id ? 'var(--hover, #e8f2fc)' : 'transparent',
-                  borderLeft: selectedTaskId === t.id ? '3px solid #0078d4' : '3px solid transparent',
-                  transition: 'background 0.1s ease',
+                  backgroundColor: selectedTaskId === t.id ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+                  borderLeft: selectedTaskId === t.id ? '3px solid var(--vuamail-primary-blue, #0077cd)' : '3px solid transparent',
+                  transition: 'background 0.12s ease',
                 }}
               >
                 <input
@@ -346,11 +373,21 @@ export const TodoView: React.FC = () => {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>
-                    {t.dueDate && <span>📅 {t.dueDate}</span>}
-                    {t.priority === 'high' && (
-                      <span style={{ color: '#d13438', fontWeight: 600 }}>🔥 Khẩn cấp</span>
+                    {t.dueDate && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <IconCalendar size={11} /> {t.dueDate}
+                      </span>
                     )}
-                    {t.notes && <span>📝 Có ghi chú</span>}
+                    {t.priority === 'high' && (
+                      <span style={{ color: 'var(--danger, #d13438)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                        <IconStar size={11} active /> Khẩn cấp
+                      </span>
+                    )}
+                    {t.notes && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <IconFileText size={11} /> Có ghi chú
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -387,7 +424,7 @@ export const TodoView: React.FC = () => {
                   </h2>
                   <div style={{ fontSize: '13px', color: 'var(--text-muted, #878e96)' }}>
                     Hạn chót: <span style={{ fontWeight: 500, color: 'var(--text-primary, #232425)' }}>{selectedTask.dueDate || 'Chưa đặt ngày'}</span> • Trạng thái:{' '}
-                    <span style={{ fontWeight: 600, color: selectedTask.isCompleted ? '#107c41' : '#0078d4' }}>
+                    <span style={{ fontWeight: 600, color: selectedTask.isCompleted ? 'var(--vuamail-brand-green, #00ce2c)' : 'var(--vuamail-primary-blue, #0077cd)' }}>
                       {selectedTask.isCompleted ? 'Đã hoàn tất' : 'Đang xử lý'}
                     </span>
                   </div>
@@ -396,6 +433,7 @@ export const TodoView: React.FC = () => {
 
               <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                 <button
+                  type="button"
                   onClick={handleTogglePriority}
                   style={{
                     background: selectedTask.priority === 'high' ? 'rgba(209,52,56,0.1)' : 'transparent',
@@ -404,13 +442,18 @@ export const TodoView: React.FC = () => {
                     padding: '6px 12px',
                     fontSize: '12px',
                     cursor: 'pointer',
-                    color: selectedTask.priority === 'high' ? '#d13438' : 'var(--text-primary, #232425)',
+                    color: selectedTask.priority === 'high' ? 'var(--danger, #d13438)' : 'var(--text-primary, #232425)',
                     fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
                   }}
                 >
-                  {selectedTask.priority === 'high' ? '★ Khẩn cấp' : '☆ Đánh dấu khẩn'}
+                  <IconStar size={13} active={selectedTask.priority === 'high'} />
+                  <span>{selectedTask.priority === 'high' ? 'Khẩn cấp' : 'Đánh dấu khẩn'}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDeleteTask(selectedTask.id)}
                   style={{
                     background: 'transparent',
@@ -419,11 +462,15 @@ export const TodoView: React.FC = () => {
                     padding: '6px 12px',
                     fontSize: '12px',
                     cursor: 'pointer',
-                    color: '#d13438',
+                    color: 'var(--danger, #d13438)',
                     fontWeight: 500,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
                   }}
                 >
-                  Xóa
+                  <IconTrash size={13} />
+                  <span>Xóa</span>
                 </button>
               </div>
             </div>
@@ -442,8 +489,9 @@ export const TodoView: React.FC = () => {
                 boxSizing: 'border-box',
               }}
             >
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
-                Chi tiết & Ghi chú công việc:
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <IconFileText size={14} color="var(--vuamail-primary-blue, #0077cd)" />
+                <span>Chi tiết & Ghi chú công việc:</span>
               </div>
               <textarea
                 rows={10}
@@ -467,11 +515,13 @@ export const TodoView: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #878e96)' }}>
-            Chọn một công việc từ danh sách để xem chi tiết
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #878e96)' }}>
+            <IconCheckSquare size={48} color="var(--border-strong, #d0d4d9)" />
+            <div style={{ marginTop: '12px', fontSize: '14px' }}>Chọn một công việc từ danh sách để xem chi tiết</div>
           </div>
         )}
       </div>
     </div>
   )
 }
+

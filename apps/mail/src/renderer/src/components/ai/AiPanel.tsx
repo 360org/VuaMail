@@ -1,6 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
 import type { EmailMessage } from '../../../../shared/types'
 import { GensparkMark } from '../ribbon/GensparkMark'
+import {
+  IconMail,
+  IconSparkles,
+  IconReply,
+  IconCheckSquare,
+  IconSend,
+  IconRefresh,
+  IconX,
+} from '../common/MailIcons'
 
 interface AiPanelProps {
   isOpen: boolean
@@ -93,15 +102,15 @@ export const AiPanel: React.FC<AiPanelProps> = ({
 
       if (q.includes('tóm tắt') || q.includes('summary')) {
         responseContent = selectedEmail
-          ? `📌 **Tóm tắt nội dung email "${selectedEmail.subject}":**\n\n• **Người gửi:** ${selectedEmail.senderName} (${selectedEmail.senderEmail})\n• **Nội dung chính:** ${selectedEmail.snippet}\n• **Hành động đề xuất:** Cần xác nhận phản hồi và kiểm tra tệp đính kèm liên quan.`
+          ? `Tóm tắt nội dung email "${selectedEmail.subject}":\n\n• Người gửi: ${selectedEmail.senderName} (${selectedEmail.senderEmail})\n• Nội dung chính: ${selectedEmail.snippet}\n• Hành động đề xuất: Cần xác nhận phản hồi và kiểm tra tệp đính kèm liên quan.`
           : 'Sếp vui lòng chọn một email từ danh sách để em phân tích và tóm tắt chi tiết.'
       } else if (q.includes('trả lời') || q.includes('soạn') || q.includes('reply')) {
         const replyDraft =
           'Kính gửi đối tác / Sếp,\n\nEm đã nhận được thông tin và kiểm tra tài liệu. Chúng em sẽ triển khai theo đúng tiến độ kế hoạch đã đề ra.\n\nTrân trọng,\nChâu Lê - 360 CORP'
-        responseContent = `✍️ **Bản thảo gợi ý phản hồi:**\n\n${replyDraft}\n\n👉 *Bấm nút "Áp dụng vào thư" bên dưới để đưa vào hộp soạn thư.*`
+        responseContent = `Bản thảo gợi ý phản hồi:\n\n${replyDraft}\n\n• Bấm nút "Áp dụng vào thư" để đưa vào hộp soạn thư.`
       } else if (q.includes('task') || q.includes('việc') || q.includes('todo')) {
         responseContent =
-          '✅ Em đã trích xuất 02 đầu việc từ email này:\n1. Rà soát tài liệu đính kèm VuaOffice Suite.\n2. Phản hồi xác nhận trước 17:00 hôm nay.'
+          'Em đã trích xuất 02 đầu việc từ email này:\n1. Rà soát tài liệu đính kèm VuaOffice Suite.\n2. Phản hồi xác nhận trước 17:00 hôm nay.'
       } else {
         responseContent = `Dạ em đã hiểu yêu cầu "${query}". Em đang kết nối với VuaOffice AI Gateway và Hermes LLM để xử lý cho Sếp.`
       }
@@ -160,9 +169,7 @@ export const AiPanel: React.FC<AiPanelProps> = ({
                 onClick={() => setMessages([messages[0]])}
                 title="Làm mới đoạn chat"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                </svg>
+                <IconRefresh size={13} />
               </button>
               <button
                 type="button"
@@ -170,10 +177,7 @@ export const AiPanel: React.FC<AiPanelProps> = ({
                 onClick={onClose}
                 title="Thu gọn bảng AI"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <IconX size={14} />
               </button>
             </div>
           </div>
@@ -181,7 +185,9 @@ export const AiPanel: React.FC<AiPanelProps> = ({
           {/* Selected Email Context Tag */}
           {selectedEmail && (
             <div className="ai-context-banner">
-              <span className="context-icon">✉️</span>
+              <span className="context-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                <IconMail size={13} color="var(--vuamail-primary-blue, #0077cd)" />
+              </span>
               <span className="context-subject">{selectedEmail.subject || '(Không có tiêu đề)'}</span>
               <span className="context-badge">Context</span>
             </div>
@@ -215,22 +221,28 @@ export const AiPanel: React.FC<AiPanelProps> = ({
               type="button"
               className="ai-chip"
               onClick={() => handleSend('Tóm tắt email này cho anh')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              📌 Tóm tắt
+              <IconSparkles size={12} color="var(--vuamail-primary-blue, #0077cd)" />
+              <span>Tóm tắt</span>
             </button>
             <button
               type="button"
               className="ai-chip"
               onClick={() => handleSend('Soạn thư trả lời đồng ý và cảm ơn')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              ✍️ Soạn trả lời
+              <IconReply size={12} color="var(--vuamail-primary-blue, #0077cd)" />
+              <span>Soạn trả lời</span>
             </button>
             <button
               type="button"
               className="ai-chip"
               onClick={() => handleSend('Trích xuất việc cần làm vào To-Do')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              📋 Tạo To-Do
+              <IconCheckSquare size={12} color="var(--vuamail-brand-green, #00ce2c)" />
+              <span>Tạo To-Do</span>
             </button>
           </div>
 
@@ -254,8 +266,9 @@ export const AiPanel: React.FC<AiPanelProps> = ({
                 disabled={!inputQuery.trim() || isProcessing}
                 className="ai-send-btn"
                 title="Gửi câu hỏi"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ➤
+                <IconSend size={13} color="#ffffff" />
               </button>
             </form>
           </div>

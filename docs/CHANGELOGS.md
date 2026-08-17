@@ -3,9 +3,18 @@
 Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaOffice sẽ được ghi lại trong tài liệu này.
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/) và dự án này tuân thủ [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-08-16
+## [Unreleased] - 2026-08-17
 
 ### Added
+- **Chuẩn hoá Toàn diện Design System & Fluent Vector Icons VuaMail Đồng bộ 100% VuaOffice Suite**:
+  - **Mô-đun Icon Vector Tập trung (`MailIcons.tsx`)**:
+    - Thay thế triệt để 100% emoji thô sơ bằng bộ SVG Vector Icons sắc nét chuẩn Lucide/Fluent (`IconMail`, `IconInbox`, `IconSend`, `IconArchive`, `IconTrash`, `IconJunk`, `IconReply`, `IconReplyAll`, `IconForward`, `IconStar`, `IconFlag`, `IconPaperclip`, `IconTag`, `IconFolder`, `IconCalendar`, `IconClock`, `IconUser`, `IconUsers`, `IconCheck`, `IconCheckCircle`, `IconCheckSquare`, `IconRefresh`, `IconFilter`, `IconSearch`, `IconX`, `IconSparkles`, `IconMapPin`, `IconLightning`, `IconBrain`, `IconSettings`, `IconChevronDown`, `IconChevronRight`, `IconPlus`, `IconFileText`, `IconPhone`, `IconBuilding`, `IconBriefcase`, `IconLink`, `IconList`, `IconListOrdered`, `IconLock`, `IconKey`, `IconBox`, `IconKeyboard`, `IconEdit`, `IconGlobe`, `IconMicrosoft`, `IconGoogle`).
+    - Tất cả icons được render với stroke chuẩn mực (`strokeWidth={1.75}`, `strokeLinecap="round"`, `strokeLinejoin="round"`), kế thừa biến màu linh hoạt và tối ưu hiệu năng không re-render dư thừa.
+  - **Áp dụng Triệt để Hệ thống Semantic CSS Design Tokens & Màu Thương hiệu 360 CORP**:
+    - Đồng bộ màu sắc nhận diện chuẩn 360 CORP: Xanh dương `--vuamail-primary-blue: #0077cd` / `--vuamail-primary-blue-soft: #e5f3fc` và Xanh lá `--vuamail-brand-green: #00ce2c` / `--vuamail-brand-green-soft: #e6faeb`.
+    - Sử dụng các biến Design Tokens ngữ cảnh (`var(--surface)`, `var(--surface-subtle)`, `var(--border)`, `var(--border-subtle)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--text-muted)`, `var(--hover)`).
+    - Chuẩn hoá toàn bộ 12 phân hệ và modal giao diện: `MailRibbon`, `AppRail`, `FolderTree`, `MailList`, `ReadingPane`, `AiPanel`, `ComposeModal`, `RulesModal`, `SettingsModal`, `ProfileView`, `CalendarView`, `PeopleView`, `TodoView`, `ImportExportModal`.
+
 - **Đại tu Toàn diện Layout VuaMail theo Chuẩn Ribbon 2 Tầng & Sliding AI Dock của VuaOffice Suite**:
   - **Thanh Ribbon 2 Tầng Cố Định (Mail Ribbon 80px - Chuẩn Microsoft Outlook 365)**:
     - Thay thế header tuỳ biến cũ bằng thanh Ribbon chuẩn mực VuaOffice & Outlook 365: tầng trên chứa Quick Access Toolbar (`.ribbon-qat`), Tabs (`.ribbon-tab-list`: *Trang chủ, Gửi / Nhận, Thư mục & Quy tắc, Xem & Bố cục*), Search Box trung tâm (`.ribbon-search-box`), Copilot badge (`.copilot-btn`), và Account status badge; tầng dưới là Ribbon Body cố định 80px chứa đầy đủ các nhóm nút công cụ chuẩn (*Mục mới / Soạn thư & Cuộc họp, Xử lý & Xoá / Lưu trữ / Thư rác, Phản hồi / Trả lời / Trả lời tất cả / Chuyển tiếp, Tags / Đã đọc - Chưa đọc / Theo dõi - Flag / Phân loại / Di chuyển, Danh bạ & Lọc thư, AI Suite*).

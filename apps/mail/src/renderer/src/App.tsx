@@ -157,7 +157,7 @@ export const App: React.FC = () => {
     if (!selectedEmail) return
     setIsAiPanelOpen(true)
     setAiSummary(
-      `📌 Tóm tắt nội dung chính:\n• Email thông báo tiến độ cập nhật và vận hành của hệ sinh thái VuaMail.\n• Đã kết nối thành công SQLite Engine và giao diện Fluent UI Outlook 365.\n• Đề xuất Sếp kiểm tra lại và duyệt release.`
+      `Tóm tắt nội dung chính:\n• Email thông báo tiến độ cập nhật và vận hành của hệ sinh thái VuaMail.\n• Đã kết nối thành công SQLite Engine và giao diện Fluent UI Outlook 365.\n• Đề xuất Sếp kiểm tra lại và duyệt release.`
     )
   }
 

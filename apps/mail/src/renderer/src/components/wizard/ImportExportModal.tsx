@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { parseEml, buildEml, PstContainerReader } from '@genoffice/mail-engine'
+import { IconX } from '../common/MailIcons'
 
 interface ImportExportModalProps {
   isOpen: boolean
@@ -104,11 +105,12 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '16px',
               color: 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            ✕
+            <IconX size={16} />
           </button>
         </div>
 

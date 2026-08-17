@@ -1,5 +1,15 @@
 import React, { useState } from 'react'
 import type { ContactInfo } from '../../../../shared/types'
+import {
+  IconPlus,
+  IconUsers,
+  IconStar,
+  IconMail,
+  IconSearch,
+  IconPhone,
+  IconBuilding,
+  IconBriefcase,
+} from '../common/MailIcons'
 
 const DEMO_CONTACTS: ContactInfo[] = [
   {
@@ -58,7 +68,7 @@ interface PeopleViewProps {
   onSendEmailTo: (email: string, name: string) => void
 }
 
-const AVATAR_COLORS = ['#0078d4', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e']
+const AVATAR_COLORS = ['#0077cd', '#107c41', '#8764b8', '#d13438', '#008272', '#b4009e', '#d83b01']
 
 export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
   const [contacts, setContacts] = useState<ContactInfo[]>(DEMO_CONTACTS)
@@ -122,12 +132,13 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
         }}
       >
         <button
+          type="button"
           onClick={handleAddContact}
           style={{
-            backgroundColor: '#0078d4',
-            color: '#fff',
+            backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+            color: '#ffffff',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '6px',
             padding: '9px 12px',
             fontWeight: 600,
             fontSize: '13px',
@@ -137,10 +148,11 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
             justifyContent: 'center',
             gap: '8px',
             marginBottom: '8px',
-            boxShadow: '0 2px 4px rgba(0,120,212,0.2)',
+            boxShadow: '0 2px 4px rgba(0,119,205,0.25)',
           }}
         >
-          ➕ Thêm liên hệ mới
+          <IconPlus size={15} />
+          <span>Thêm liên hệ mới</span>
         </button>
 
         <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted, #878e96)', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -156,12 +168,15 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: !filterFav ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: !filterFav ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: !filterFav ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: !filterFav ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: !filterFav ? 600 : 400,
           }}
         >
-          <span>👥 Tất cả liên hệ</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconUsers size={15} color={!filterFav ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
+            <span>Tất cả liên hệ</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>{contacts.length}</span>
         </div>
         <div
@@ -174,12 +189,15 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: filterFav ? 'var(--hover, #e8f2fc)' : 'transparent',
-            color: filterFav ? '#0078d4' : 'var(--text-primary, #232425)',
+            backgroundColor: filterFav ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+            color: filterFav ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
             fontWeight: filterFav ? 600 : 400,
           }}
         >
-          <span>⭐ Mục yêu thích</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconStar size={15} active={filterFav} color={filterFav ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
+            <span>Mục yêu thích</span>
+          </div>
           <span style={{ fontSize: '11px', opacity: 0.8 }}>{contacts.filter((c) => c.isFavorite).length}</span>
         </div>
       </div>
@@ -198,23 +216,28 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
         }}
       >
         <div style={{ padding: '12px', borderBottom: '1px solid var(--border, #e3e6ea)', backgroundColor: 'var(--surface, #ffffff)' }}>
-          <input
-            type="text"
-            placeholder="Tìm kiếm danh bạ, email, phòng ban..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              border: '1px solid var(--border, #e3e6ea)',
-              background: 'var(--surface-subtle, #f6f7f9)',
-              color: 'var(--text-primary, #232425)',
-              fontSize: '12px',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '10px', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+              <IconSearch size={14} color="var(--text-muted, #878e96)" />
+            </span>
+            <input
+              type="text"
+              placeholder="Tìm kiếm danh bạ, email, phòng ban..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 30px',
+                borderRadius: '5px',
+                border: '1px solid var(--border, #e3e6ea)',
+                background: 'var(--surface-subtle, #f6f7f9)',
+                color: 'var(--text-primary, #232425)',
+                fontSize: '12px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -238,8 +261,8 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
                     padding: '12px 14px',
                     cursor: 'pointer',
                     borderBottom: '1px solid var(--border-subtle, #efefef)',
-                    backgroundColor: isSelected ? 'var(--hover, #e8f2fc)' : 'transparent',
-                    borderLeft: isSelected ? '3px solid #0078d4' : '3px solid transparent',
+                    backgroundColor: isSelected ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+                    borderLeft: isSelected ? '3px solid var(--vuamail-primary-blue, #0077cd)' : '3px solid transparent',
                     transition: 'background 0.1s ease',
                   }}
                 >
@@ -268,7 +291,11 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
                       {c.jobTitle ? `${c.jobTitle} • ${c.company}` : c.email}
                     </div>
                   </div>
-                  {c.isFavorite && <span style={{ color: '#f59e0b', fontSize: '15px' }}>★</span>}
+                  {c.isFavorite && (
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <IconStar size={14} active />
+                    </span>
+                  )}
                 </div>
               )
             })
@@ -287,14 +314,14 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
                     width: '68px',
                     height: '68px',
                     borderRadius: '50%',
-                    backgroundColor: '#0078d4',
+                    backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
                     color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '26px',
                     fontWeight: 700,
-                    boxShadow: '0 4px 10px rgba(0,120,212,0.25)',
+                    boxShadow: '0 4px 10px rgba(0,119,205,0.25)',
                   }}
                 >
                   {selectedContact.name.charAt(0)}
@@ -311,12 +338,13 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
 
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
+                  type="button"
                   onClick={() => onSendEmailTo(selectedContact.email, selectedContact.name)}
                   style={{
-                    backgroundColor: '#0078d4',
+                    backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '4px',
+                    borderRadius: '5px',
                     padding: '8px 16px',
                     fontSize: '13px',
                     fontWeight: 600,
@@ -324,26 +352,32 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    boxShadow: '0 2px 4px rgba(0,120,212,0.2)',
+                    boxShadow: '0 2px 4px rgba(0,119,205,0.25)',
                   }}
                 >
-                  ✉️ Gửi Email (Compose)
+                  <IconMail size={14} color="#ffffff" />
+                  <span>Gửi Email (Compose)</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => toggleFavorite(selectedContact.id)}
                   style={{
                     backgroundColor: selectedContact.isFavorite ? 'rgba(245,158,11,0.1)' : 'transparent',
                     color: selectedContact.isFavorite ? '#b45309' : 'var(--text-primary, #232425)',
                     border: '1px solid var(--border, #e3e6ea)',
-                    borderRadius: '4px',
+                    borderRadius: '5px',
                     padding: '8px 16px',
                     fontSize: '13px',
                     cursor: 'pointer',
                     fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
                   }}
                 >
-                  {selectedContact.isFavorite ? '★ Đã yêu thích' : '☆ Thêm vào yêu thích'}
+                  <IconStar size={14} active={selectedContact.isFavorite} />
+                  <span>{selectedContact.isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích'}</span>
                 </button>
               </div>
             </div>
@@ -366,17 +400,29 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
                 Thông tin liên hệ & Công tác
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px', fontSize: '13px', alignItems: 'center' }}>
-                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Email công việc:</span>
-                <span style={{ color: '#0078d4', fontWeight: 600 }}>{selectedContact.email}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', fontSize: '13px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconMail size={13} color="var(--vuamail-primary-blue, #0077cd)" />
+                  <span>Email công việc:</span>
+                </span>
+                <span style={{ color: 'var(--vuamail-primary-blue, #0077cd)', fontWeight: 600 }}>{selectedContact.email}</span>
 
-                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Số điện thoại:</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconPhone size={13} color="var(--text-muted, #878e96)" />
+                  <span>Số điện thoại:</span>
+                </span>
                 <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.phone || 'Chưa cập nhật'}</span>
 
-                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Phòng ban:</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconBriefcase size={13} color="var(--text-muted, #878e96)" />
+                  <span>Phòng ban:</span>
+                </span>
                 <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.department || 'Ban Kỹ Thuật'}</span>
 
-                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500 }}>Doanh nghiệp / Tổ chức:</span>
+                <span style={{ color: 'var(--text-muted, #878e96)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconBuilding size={13} color="var(--text-muted, #878e96)" />
+                  <span>Doanh nghiệp:</span>
+                </span>
                 <span style={{ color: 'var(--text-primary, #232425)' }}>{selectedContact.company || '360 CORP'}</span>
               </div>
             </div>
@@ -390,3 +436,4 @@ export const PeopleView: React.FC<PeopleViewProps> = ({ onSendEmailTo }) => {
     </div>
   )
 }
+

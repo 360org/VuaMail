@@ -1,5 +1,11 @@
 import React, { useState } from 'react'
 import type { MailFilterRule, RuleCondition, RuleAction } from '@genoffice/mail-engine'
+import {
+  IconLightning,
+  IconPlus,
+  IconTrash,
+  IconX,
+} from '../common/MailIcons'
 
 interface RulesModalProps {
   isOpen: boolean
@@ -85,7 +91,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'var(--color-bg-overlay, rgba(0,0,0,0.45))',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(2px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -96,13 +103,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({
         style={{
           width: '720px',
           height: '520px',
-          backgroundColor: 'var(--surface)',
+          backgroundColor: 'var(--surface, #ffffff)',
           borderRadius: '8px',
           boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          border: '1px solid var(--border)',
+          border: '1px solid var(--border, #e3e6ea)',
         }}
       >
         {/* Header */}
@@ -112,27 +119,29 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '12px 16px',
-            backgroundColor: 'var(--surface-subtle)',
-            borderBottom: '1px solid var(--border)',
+            backgroundColor: 'var(--surface-subtle, #f6f7f9)',
+            borderBottom: '1px solid var(--border, #e3e6ea)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '15px' }}>⚡</span>
-            <span style={{ fontWeight: 600, fontSize: '14px' }}>
+            <IconLightning size={16} color="var(--vuamail-primary-blue, #0077cd)" />
+            <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary, #232425)' }}>
               Quản lý Quy tắc Lọc Thư (Outlook Mail Rules & Filters)
             </span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '16px',
-              color: 'var(--text-muted)',
+              color: 'var(--text-muted, #878e96)',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            ✕
+            <IconX size={16} />
           </button>
         </div>
 
@@ -142,28 +151,34 @@ export const RulesModal: React.FC<RulesModalProps> = ({
           <div
             style={{
               width: '240px',
-              borderRight: '1px solid var(--border)',
-              backgroundColor: 'var(--surface-subtle)',
+              borderRight: '1px solid var(--border, #e3e6ea)',
+              backgroundColor: 'var(--surface-subtle, #f6f7f9)',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <div style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ padding: '8px', borderBottom: '1px solid var(--border, #e3e6ea)' }}>
               <button
+                type="button"
                 onClick={handleAddRule}
                 style={{
                   width: '100%',
-                  padding: '6px',
-                  backgroundColor: '#0078d4',
-                  color: '#fff',
+                  padding: '7px 10px',
+                  backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+                  color: '#ffffff',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '5px',
                   cursor: 'pointer',
                   fontSize: '12px',
                   fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
                 }}
               >
-                + Tạo quy tắc mới
+                <IconPlus size={14} />
+                <span>Tạo quy tắc mới</span>
               </button>
             </div>
 
@@ -174,14 +189,15 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                   onClick={() => setSelectedRuleId(r.id)}
                   style={{
                     padding: '8px',
-                    borderRadius: '4px',
+                    borderRadius: '5px',
                     backgroundColor:
-                      selectedRule?.id === r.id ? 'var(--hover)' : 'transparent',
+                      selectedRule?.id === r.id ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     marginBottom: '4px',
+                    borderLeft: selectedRule?.id === r.id ? '3px solid var(--vuamail-primary-blue, #0077cd)' : '3px solid transparent',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -193,9 +209,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                         handleToggleRule(r.id)
                       }}
                     />
-                    <span style={{ fontSize: '12px', fontWeight: 500 }}>{r.name}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary, #232425)' }}>{r.name}</span>
                   </div>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDeleteRule(r.id)
@@ -203,17 +220,19 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: 'var(--text-muted)',
+                      color: 'var(--danger, #d13438)',
                       cursor: 'pointer',
-                      fontSize: '11px',
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
+                    title="Xóa quy tắc"
                   >
-                    🗑
+                    <IconTrash size={12} />
                   </button>
                 </div>
               ))}
               {rules.length === 0 && (
-                <div style={{ padding: '16px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                <div style={{ padding: '16px', fontSize: '12px', color: 'var(--text-muted, #878e96)', textAlign: 'center' }}>
                   Chưa có quy tắc lọc nào.
                 </div>
               )}
@@ -221,21 +240,21 @@ export const RulesModal: React.FC<RulesModalProps> = ({
           </div>
 
           {/* Rule Detail Form */}
-          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: 'var(--surface, #ffffff)' }}>
             {selectedRule ? (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Tên quy tắc:</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>Tên quy tắc:</label>
                   <input
                     type="text"
                     value={selectedRule.name}
                     onChange={(e) => handleUpdateRuleName(e.target.value)}
                     style={{
                       padding: '6px 8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border)',
-                      backgroundColor: 'var(--surface-subtle)',
-                      color: 'var(--text-primary)',
+                      borderRadius: '5px',
+                      border: '1px solid var(--border, #e3e6ea)',
+                      backgroundColor: 'var(--surface, #ffffff)',
+                      color: 'var(--text-primary, #232425)',
                       fontSize: '12px',
                       outline: 'none',
                     }}
@@ -245,13 +264,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                 {/* Conditions Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>Điều kiện kích hoạt (Conditions):</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>Điều kiện kích hoạt (Conditions):</span>
                     <button
+                      type="button"
                       onClick={handleAddCondition}
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#0078d4',
+                        color: 'var(--vuamail-primary-blue, #0077cd)',
                         cursor: 'pointer',
                         fontSize: '12px',
                         fontWeight: 600,
@@ -268,12 +288,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                         display: 'flex',
                         gap: '6px',
                         alignItems: 'center',
-                        backgroundColor: 'var(--surface-subtle)',
+                        backgroundColor: 'var(--surface-subtle, #f6f7f9)',
                         padding: '6px 8px',
-                        borderRadius: '4px',
+                        borderRadius: '5px',
+                        border: '1px solid var(--border, #e3e6ea)',
                       }}
                     >
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Nếu</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>Nếu</span>
                       <select
                         value={cond.field}
                         onChange={(e) => {
@@ -347,11 +368,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                         style={{
                           flex: 1,
                           fontSize: '11px',
-                          padding: '4px',
+                          padding: '4px 6px',
                           borderRadius: '3px',
-                          border: '1px solid var(--border)',
-                          backgroundColor: 'var(--surface)',
-                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border, #e3e6ea)',
+                          backgroundColor: 'var(--surface, #ffffff)',
+                          color: 'var(--text-primary, #232425)',
                         }}
                       />
                     </div>
@@ -361,13 +382,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                 {/* Actions Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>Hành động thực thi (Actions):</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>Hành động thực thi (Actions):</span>
                     <button
+                      type="button"
                       onClick={handleAddAction}
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#0078d4',
+                        color: 'var(--vuamail-primary-blue, #0077cd)',
                         cursor: 'pointer',
                         fontSize: '12px',
                         fontWeight: 600,
@@ -384,12 +406,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                         display: 'flex',
                         gap: '6px',
                         alignItems: 'center',
-                        backgroundColor: 'var(--surface-subtle)',
+                        backgroundColor: 'var(--surface-subtle, #f6f7f9)',
                         padding: '6px 8px',
-                        borderRadius: '4px',
+                        borderRadius: '5px',
+                        border: '1px solid var(--border, #e3e6ea)',
                       }}
                     >
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Thì</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>Thì</span>
                       <select
                         value={act.type}
                         onChange={(e) => {
@@ -419,7 +442,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '13px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #878e96)', fontSize: '13px' }}>
                 Chọn một quy tắc hoặc tạo quy tắc mới để thiết lập điều kiện lọc.
               </div>
             )}
@@ -433,18 +456,19 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             justifyContent: 'flex-end',
             gap: '8px',
             padding: '12px 16px',
-            backgroundColor: 'var(--surface-subtle)',
-            borderTop: '1px solid var(--border)',
+            backgroundColor: 'var(--surface-subtle, #f6f7f9)',
+            borderTop: '1px solid var(--border, #e3e6ea)',
           }}
         >
           <button
+            type="button"
             onClick={onClose}
             style={{
               padding: '6px 14px',
-              borderRadius: '4px',
-              border: '1px solid var(--border)',
-              backgroundColor: 'var(--surface)',
-              color: 'var(--text-primary)',
+              borderRadius: '5px',
+              border: '1px solid var(--border, #e3e6ea)',
+              backgroundColor: 'var(--surface, #ffffff)',
+              color: 'var(--text-primary, #232425)',
               cursor: 'pointer',
               fontSize: '12px',
             }}
@@ -452,16 +476,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             Hủy
           </button>
           <button
+            type="button"
             onClick={() => {
               onSaveRules(rules)
               onClose()
             }}
             style={{
-              padding: '6px 14px',
-              borderRadius: '4px',
+              padding: '6px 16px',
+              borderRadius: '5px',
               border: 'none',
-              backgroundColor: '#0078d4',
-              color: '#fff',
+              backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+              color: '#ffffff',
               cursor: 'pointer',
               fontSize: '12px',
               fontWeight: 600,
@@ -474,3 +499,4 @@ export const RulesModal: React.FC<RulesModalProps> = ({
     </div>
   )
 }
+

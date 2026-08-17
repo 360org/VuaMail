@@ -1,5 +1,16 @@
 import React, { useState } from 'react'
 import type { CalendarEvent } from '../../../../shared/types'
+import {
+  IconPlus,
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconTrash,
+  IconChevronDown,
+  IconChevronRight,
+  IconCheckSquare,
+  IconUsers,
+} from '../common/MailIcons'
 
 const DEMO_EVENTS: CalendarEvent[] = [
   {
@@ -127,9 +138,10 @@ export const CalendarView: React.FC = () => {
         }}
       >
         <button
+          type="button"
           style={{
-            backgroundColor: '#0077cd',
-            color: '#fff',
+            backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+            color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
             padding: '10px 14px',
@@ -144,10 +156,7 @@ export const CalendarView: React.FC = () => {
           }}
           onClick={handleAddEvent}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <IconPlus size={15} />
           <span>Sự kiện mới</span>
         </button>
 
@@ -174,7 +183,7 @@ export const CalendarView: React.FC = () => {
                   style={{
                     padding: '3px 0',
                     borderRadius: '4px',
-                    backgroundColor: isToday ? '#0077cd' : 'transparent',
+                    backgroundColor: isToday ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                     color: isToday ? '#ffffff' : 'var(--text-primary, #232425)',
                     fontWeight: isToday ? 700 : 400,
                     cursor: 'pointer',
@@ -211,15 +220,15 @@ export const CalendarView: React.FC = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-secondary, #606366)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#d13438' }} />
+              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'var(--danger, #d13438)' }} />
               <span>Khẩn cấp / Quan trọng</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#0077cd' }} />
+              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'var(--vuamail-primary-blue, #0077cd)' }} />
               <span>Công việc / Họp dự án</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#00ce2c' }} />
+              <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'var(--vuamail-brand-green, #00ce2c)' }} />
               <span>Cá nhân / Đối tác</span>
             </div>
           </div>
@@ -246,36 +255,40 @@ export const CalendarView: React.FC = () => {
             </h2>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button
+                type="button"
                 onClick={handlePrev}
-                style={{ padding: '5px 9px', border: '1px solid var(--border, #e3e6ea)', background: 'var(--surface, #ffffff)', color: 'var(--text-primary, #232425)', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ padding: '5px 9px', border: '1px solid var(--border, #e3e6ea)', background: 'var(--surface, #ffffff)', color: 'var(--text-primary, #232425)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 title="Thời gian trước"
               >
-                ◀
+                <span style={{ transform: 'rotate(90deg)', display: 'inline-block' }}><IconChevronDown size={12} /></span>
               </button>
               <button
+                type="button"
                 onClick={handleToday}
                 style={{ padding: '5px 12px', border: '1px solid var(--border, #e3e6ea)', background: 'var(--surface, #ffffff)', color: 'var(--text-primary, #232425)', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
               >
                 Hôm nay
               </button>
               <button
+                type="button"
                 onClick={handleNext}
-                style={{ padding: '5px 9px', border: '1px solid var(--border, #e3e6ea)', background: 'var(--surface, #ffffff)', color: 'var(--text-primary, #232425)', borderRadius: '4px', cursor: 'pointer' }}
+                style={{ padding: '5px 9px', border: '1px solid var(--border, #e3e6ea)', background: 'var(--surface, #ffffff)', color: 'var(--text-primary, #232425)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 title="Thời gian sau"
               >
-                ▶
+                <IconChevronRight size={12} />
               </button>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--surface-subtle, #f6f7f9)', padding: '3px', borderRadius: '6px', border: '1px solid var(--border, #e3e6ea)' }}>
             <button
+              type="button"
               onClick={() => setViewMode('month')}
               style={{
                 padding: '5px 14px',
                 borderRadius: '4px',
                 border: 'none',
-                background: viewMode === 'month' ? '#0077cd' : 'transparent',
+                background: viewMode === 'month' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                 color: viewMode === 'month' ? '#ffffff' : 'var(--text-primary, #232425)',
                 fontWeight: viewMode === 'month' ? 600 : 500,
                 fontSize: '12px',
@@ -285,12 +298,13 @@ export const CalendarView: React.FC = () => {
               Tháng
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('week')}
               style={{
                 padding: '5px 14px',
                 borderRadius: '4px',
                 border: 'none',
-                background: viewMode === 'week' ? '#0077cd' : 'transparent',
+                background: viewMode === 'week' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                 color: viewMode === 'week' ? '#ffffff' : 'var(--text-primary, #232425)',
                 fontWeight: viewMode === 'week' ? 600 : 500,
                 fontSize: '12px',
@@ -300,12 +314,13 @@ export const CalendarView: React.FC = () => {
               Tuần
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('day')}
               style={{
                 padding: '5px 14px',
                 borderRadius: '4px',
                 border: 'none',
-                background: viewMode === 'day' ? '#0077cd' : 'transparent',
+                background: viewMode === 'day' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                 color: viewMode === 'day' ? '#ffffff' : 'var(--text-primary, #232425)',
                 fontWeight: viewMode === 'day' ? 600 : 500,
                 fontSize: '12px',
@@ -330,8 +345,8 @@ export const CalendarView: React.FC = () => {
                   <div>Th 4</div>
                   <div>Th 5</div>
                   <div>Th 6</div>
-                  <div style={{ color: '#0077cd' }}>Th 7</div>
-                  <div style={{ color: '#e11d48' }}>CN</div>
+                  <div style={{ color: 'var(--vuamail-primary-blue, #0077cd)' }}>Th 7</div>
+                  <div style={{ color: 'var(--danger, #d13438)' }}>CN</div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: 'minmax(85px, 1fr)', gap: '6px', flex: 1 }}>
@@ -349,10 +364,10 @@ export const CalendarView: React.FC = () => {
                           }
                         }}
                         style={{
-                          border: isToday ? '2px solid #0077cd' : '1px solid var(--border, #e3e6ea)',
+                          border: isToday ? '2px solid var(--vuamail-primary-blue, #0077cd)' : '1px solid var(--border, #e3e6ea)',
                           borderRadius: '6px',
                           padding: '6px',
-                          backgroundColor: isToday ? 'var(--vuamail-primary-blue-soft, #f0f7ff)' : 'var(--surface, #ffffff)',
+                          backgroundColor: isToday ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'var(--surface, #ffffff)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '4px',
@@ -361,11 +376,11 @@ export const CalendarView: React.FC = () => {
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '12px', fontWeight: isToday ? 700 : 600, color: isToday ? '#0077cd' : 'var(--text-primary, #232425)' }}>
+                          <span style={{ fontSize: '12px', fontWeight: isToday ? 700 : 600, color: isToday ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)' }}>
                             {dayNum}
                           </span>
                           {isToday && (
-                            <span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: '#0077cd', color: '#fff', padding: '1px 5px', borderRadius: '3px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: 'var(--vuamail-primary-blue, #0077cd)', color: '#fff', padding: '1px 5px', borderRadius: '3px' }}>
                               Hôm nay
                             </span>
                           )}
@@ -380,7 +395,7 @@ export const CalendarView: React.FC = () => {
                                 setSelectedEventId(ev.id)
                               }}
                               style={{
-                                backgroundColor: ev.category === 'important' ? '#d13438' : ev.category === 'personal' ? '#00ce2c' : '#0077cd',
+                                backgroundColor: ev.category === 'important' ? 'var(--danger, #d13438)' : ev.category === 'personal' ? 'var(--vuamail-brand-green, #00ce2c)' : 'var(--vuamail-primary-blue, #0077cd)',
                                 color: '#fff',
                                 fontSize: '11px',
                                 padding: '3px 6px',
@@ -390,7 +405,7 @@ export const CalendarView: React.FC = () => {
                                 textOverflow: 'ellipsis',
                                 cursor: 'pointer',
                                 fontWeight: selectedEventId === ev.id ? 700 : 500,
-                                boxShadow: selectedEventId === ev.id ? '0 0 0 2px #fff, 0 0 0 3.5px #0077cd' : 'none',
+                                boxShadow: selectedEventId === ev.id ? '0 0 0 2px #fff, 0 0 0 3.5px var(--vuamail-primary-blue, #0077cd)' : 'none',
                               }}
                               title={`${ev.title} (${new Date(ev.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`}
                             >
@@ -415,7 +430,7 @@ export const CalendarView: React.FC = () => {
                     return (
                       <div key={idx} style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>Th {idx + 2 > 7 ? 'CN' : idx + 2}</div>
-                        <div style={{ fontSize: '13px', fontWeight: isToday ? 700 : 600, color: isToday ? '#0077cd' : 'var(--text-primary, #232425)' }}>
+                        <div style={{ fontSize: '13px', fontWeight: isToday ? 700 : 600, color: isToday ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)' }}>
                           {wDay.getDate()}/{wDay.getMonth() + 1} {isToday && '•'}
                         </div>
                       </div>
@@ -442,18 +457,20 @@ export const CalendarView: React.FC = () => {
                                 key={ev.id}
                                 onClick={() => setSelectedEventId(ev.id)}
                                 style={{
-                                  backgroundColor: ev.category === 'important' ? '#d13438' : ev.category === 'personal' ? '#00ce2c' : '#0077cd',
+                                  backgroundColor: ev.category === 'important' ? 'var(--danger, #d13438)' : ev.category === 'personal' ? 'var(--vuamail-brand-green, #00ce2c)' : 'var(--vuamail-primary-blue, #0077cd)',
                                   color: '#fff',
                                   borderRadius: '4px',
                                   padding: '4px 6px',
                                   fontSize: '11px',
                                   cursor: 'pointer',
                                   marginBottom: '2px',
-                                  boxShadow: selectedEventId === ev.id ? '0 0 0 2px #fff, 0 0 0 3px #0077cd' : 'none',
+                                  boxShadow: selectedEventId === ev.id ? '0 0 0 2px #fff, 0 0 0 3px var(--vuamail-primary-blue, #0077cd)' : 'none',
                                 }}
                               >
                                 <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.title}</div>
-                                <div style={{ fontSize: '9.5px', opacity: 0.9 }}>📍 {ev.location}</div>
+                                <div style={{ fontSize: '9.5px', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                  <IconMapPin size={10} /> {ev.location}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -469,7 +486,7 @@ export const CalendarView: React.FC = () => {
             {viewMode === 'day' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', minHeight: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', borderBottom: '1px solid var(--border, #e3e6ea)', paddingBottom: '8px' }}>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#0077cd' }}>
+                  <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--vuamail-primary-blue, #0077cd)' }}>
                     {currentDate.getDate()}
                   </div>
                   <div>
@@ -494,16 +511,16 @@ export const CalendarView: React.FC = () => {
                         <div style={{ width: '50px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #878e96)', textAlign: 'right' }}>
                           {hour.toString().padStart(2, '0')}:00
                         </div>
-                        <div style={{ flex: 1, borderLeft: '2px solid #0077cd', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ flex: 1, borderLeft: '2px solid var(--vuamail-primary-blue, #0077cd)', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           {hourEvents.length > 0 ? (
                             hourEvents.map((ev) => (
                               <div
                                 key={ev.id}
                                 onClick={() => setSelectedEventId(ev.id)}
                                 style={{
-                                  backgroundColor: selectedEventId === ev.id ? 'var(--hover, #f0f4f9)' : 'var(--surface-subtle, #f6f7f9)',
+                                  backgroundColor: selectedEventId === ev.id ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'var(--surface-subtle, #f6f7f9)',
                                   border: '1px solid var(--border, #e3e6ea)',
-                                  borderLeft: `4px solid ${ev.category === 'important' ? '#d13438' : ev.category === 'personal' ? '#00ce2c' : '#0077cd'}`,
+                                  borderLeft: `4px solid ${ev.category === 'important' ? 'var(--danger, #d13438)' : ev.category === 'personal' ? 'var(--vuamail-brand-green, #00ce2c)' : 'var(--vuamail-primary-blue, #0077cd)'}`,
                                   borderRadius: '6px',
                                   padding: '8px 12px',
                                   cursor: 'pointer',
@@ -511,11 +528,13 @@ export const CalendarView: React.FC = () => {
                               >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <span style={{ fontWeight: 700, fontSize: '12.5px', color: 'var(--text-primary, #232425)' }}>{ev.title}</span>
-                                  <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)' }}>
-                                    🕒 {new Date(ev.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(ev.endIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <span style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                    <IconClock size={11} /> {new Date(ev.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(ev.endIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
-                                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary, #606366)', marginTop: '3px' }}>📍 {ev.location}</div>
+                                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary, #606366)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <IconMapPin size={11} /> {ev.location}
+                                </div>
                               </div>
                             ))
                           ) : (
@@ -562,11 +581,12 @@ export const CalendarView: React.FC = () => {
                     {selectedEvent.category === 'important' ? 'Quan trọng' : selectedEvent.category === 'personal' ? 'Cá nhân' : 'Công việc'}
                   </span>
                   <button
+                    type="button"
                     onClick={() => handleDeleteEvent(selectedEvent.id)}
-                    style={{ background: 'none', border: 'none', color: '#878e96', cursor: 'pointer', fontSize: '12px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger, #d13438)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     title="Xoá sự kiện này"
                   >
-                    🗑️
+                    <IconTrash size={14} />
                   </button>
                 </div>
 
@@ -576,17 +596,17 @@ export const CalendarView: React.FC = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-secondary, #606366)', marginBottom: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>📅</span>
+                    <IconCalendar size={13} color="var(--vuamail-primary-blue, #0077cd)" />
                     <span>{new Date(selectedEvent.startIso).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🕒</span>
+                    <IconClock size={13} color="var(--vuamail-primary-blue, #0077cd)" />
                     <span style={{ fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
                       {new Date(selectedEvent.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedEvent.endIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>📍</span>
+                    <IconMapPin size={13} color="var(--vuamail-primary-blue, #0077cd)" />
                     <span>{selectedEvent.location}</span>
                   </div>
                 </div>
@@ -603,10 +623,11 @@ export const CalendarView: React.FC = () => {
                 {/* Quick Event Actions */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
+                    type="button"
                     onClick={() => alert(`Đang mở phòng họp: ${selectedEvent.location}`)}
                     style={{
                       flex: 1,
-                      backgroundColor: '#0077cd',
+                      backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '5px',
@@ -619,6 +640,7 @@ export const CalendarView: React.FC = () => {
                     Tham gia họp
                   </button>
                   <button
+                    type="button"
                     onClick={() => alert(`Đã gửi thông báo nhắc lịch cho sự kiện: ${selectedEvent.title}`)}
                     style={{
                       flex: 1,
@@ -656,17 +678,17 @@ export const CalendarView: React.FC = () => {
                       padding: '10px 12px',
                       borderRadius: '6px',
                       border: '1px solid var(--border, #e3e6ea)',
-                      backgroundColor: selectedEventId === ev.id ? 'var(--hover, #e8f2fc)' : 'var(--surface, #ffffff)',
-                      borderLeft: `3px solid ${selectedEventId === ev.id ? '#0077cd' : 'transparent'}`,
+                      backgroundColor: selectedEventId === ev.id ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'var(--surface, #ffffff)',
+                      borderLeft: `3px solid ${selectedEventId === ev.id ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent'}`,
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease',
+                      transition: 'all 0.12s ease',
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '12px', color: 'var(--text-primary, #232425)', marginBottom: '3px' }}>
                       {ev.title}
                     </div>
-                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted, #878e96)' }}>
-                      📅 {new Date(ev.startIso).toLocaleDateString('vi-VN')} • {new Date(ev.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted, #878e96)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <IconCalendar size={11} /> {new Date(ev.startIso).toLocaleDateString('vi-VN')} • {new Date(ev.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 ))}
@@ -678,4 +700,5 @@ export const CalendarView: React.FC = () => {
     </div>
   )
 }
+
 

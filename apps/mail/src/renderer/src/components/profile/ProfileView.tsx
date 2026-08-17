@@ -1,5 +1,17 @@
 import React, { useState } from 'react'
 import type { EmailAccount } from '../../../../shared/types'
+import {
+  IconBrain,
+  IconUsers,
+  IconSettings,
+  IconEdit,
+  IconKeyboard,
+  IconLock,
+  IconMicrosoft,
+  IconGoogle,
+  IconGlobe,
+  IconBox,
+} from '../common/MailIcons'
 
 interface ProfileViewProps {
   accounts: EmailAccount[]
@@ -204,36 +216,41 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <button
             className={`brain-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveTab('profile')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>🧠</span>
+            <IconBrain size={14} color={activeTab === 'profile' ? 'var(--vuamail-primary-blue, #0077cd)' : 'currentColor'} />
             <span>Hồ sơ & Trí tuệ AI (Brain)</span>
           </button>
           <button
             className={`brain-tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
             onClick={() => setActiveTab('accounts')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>👥</span>
+            <IconUsers size={14} color={activeTab === 'accounts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'currentColor'} />
             <span>Tài khoản & Xác thực (OAuth / IMAP)</span>
           </button>
           <button
             className={`brain-tab-btn ${activeTab === 'general' ? 'active' : ''}`}
             onClick={() => setActiveTab('general')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>⚙️</span>
+            <IconSettings size={14} color={activeTab === 'general' ? 'var(--vuamail-primary-blue, #0077cd)' : 'currentColor'} />
             <span>Cấu hình chung (General)</span>
           </button>
           <button
             className={`brain-tab-btn ${activeTab === 'signatures' ? 'active' : ''}`}
             onClick={() => setActiveTab('signatures')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>✍️</span>
+            <IconEdit size={14} color={activeTab === 'signatures' ? 'var(--vuamail-primary-blue, #0077cd)' : 'currentColor'} />
             <span>Chữ ký thư</span>
           </button>
           <button
             className={`brain-tab-btn ${activeTab === 'shortcuts' ? 'active' : ''}`}
             onClick={() => setActiveTab('shortcuts')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>⌨️</span>
+            <IconKeyboard size={14} color={activeTab === 'shortcuts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'currentColor'} />
             <span>Phím tắt</span>
           </button>
         </div>
@@ -318,8 +335,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--outlook-blue)' }}>
-                    🔐 Thêm tài khoản & Xác thực an toàn (Authentication)
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--vuamail-primary-blue, #0077cd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <IconLock size={15} color="var(--vuamail-primary-blue, #0077cd)" />
+                    <span>Thêm tài khoản & Xác thực an toàn (Authentication)</span>
                   </div>
 
                   {/* Toggle OAuth vs Manual IMAP */}
@@ -333,7 +351,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         fontWeight: 600,
                         border: 'none',
                         borderRadius: '4px',
-                        backgroundColor: authMethod === 'oauth' ? 'var(--outlook-blue)' : 'transparent',
+                        backgroundColor: authMethod === 'oauth' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                         color: authMethod === 'oauth' ? '#fff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                       }}
@@ -349,7 +367,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         fontWeight: 600,
                         border: 'none',
                         borderRadius: '4px',
-                        backgroundColor: authMethod === 'manual' ? 'var(--outlook-blue)' : 'transparent',
+                        backgroundColor: authMethod === 'manual' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                         color: authMethod === 'manual' ? '#fff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                       }}
@@ -384,7 +402,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        <span style={{ fontSize: '24px' }}>🟦</span>
+                        <IconMicrosoft size={28} />
                         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Microsoft Outlook</span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Office 365 / Exchange</span>
                       </button>
@@ -407,7 +425,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        <span style={{ fontSize: '24px' }}>🔴</span>
+                        <IconGoogle size={28} />
                         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Google Workspace</span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Gmail / Workspace</span>
                       </button>
@@ -430,7 +448,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        <span style={{ fontSize: '24px' }}>🌐</span>
+                        <IconGlobe size={28} color="var(--vuamail-primary-blue, #0077cd)" />
                         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>360 CORP SSO</span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>360.org.vn Server</span>
                       </button>
@@ -726,7 +744,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                <span>📦</span>
+                <IconBox size={16} color="var(--vuamail-primary-blue, #0077cd)" />
                 <span>Mở Trình hướng dẫn Nhập / Xuất dữ liệu (.pst & .eml)</span>
               </button>
             </div>

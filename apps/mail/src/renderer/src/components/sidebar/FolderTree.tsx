@@ -1,5 +1,15 @@
 import React, { useState } from 'react'
 import type { EmailAccount, MailFolder } from '../../../../shared/types'
+import {
+  IconInbox,
+  IconFileText,
+  IconSend,
+  IconArchive,
+  IconTrash,
+  IconFolder,
+  IconChevronDown,
+  IconChevronRight,
+} from '../common/MailIcons'
 
 interface FolderTreeProps {
   accounts: EmailAccount[]
@@ -31,47 +41,17 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   const getFolderIcon = (kind: string) => {
     switch (kind) {
       case 'inbox':
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-          </svg>
-        )
+        return <IconInbox size={15} color="var(--vuamail-primary-blue, #0077cd)" />
       case 'drafts':
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
-        )
+        return <IconFileText size={15} color="var(--text-secondary, #606366)" />
       case 'sent':
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        )
+        return <IconSend size={15} color="var(--vuamail-brand-green, #00ce2c)" />
       case 'archive':
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="21 8 21 21 3 21 3 8" />
-            <rect x="1" y="3" width="22" height="5" />
-            <line x1="10" y1="12" x2="14" y2="12" />
-          </svg>
-        )
+        return <IconArchive size={15} color="var(--text-secondary, #606366)" />
       case 'trash':
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        )
+        return <IconTrash size={15} color="var(--danger, #d13438)" />
       default:
-        return (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-        )
+        return <IconFolder size={15} color="var(--text-secondary, #606366)" />
     }
   }
 
@@ -135,10 +115,12 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               onClick={() => onSelectAccount(acc.id)}
             >
               <button
+                type="button"
                 className="expand-btn"
                 onClick={(e) => toggleExpand(acc.id, e)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                {isExpanded ? '▼' : '▶'}
+                {isExpanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
               </button>
               <div className="account-title-box">
                 <span className="account-name">{acc.name}</span>

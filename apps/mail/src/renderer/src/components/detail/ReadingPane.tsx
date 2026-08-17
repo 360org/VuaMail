@@ -1,5 +1,17 @@
 import React, { useState } from 'react'
 import type { EmailAttachment, EmailBody, EmailMessage } from '../../../../shared/types'
+import {
+  IconMail,
+  IconReply,
+  IconReplyAll,
+  IconForward,
+  IconArchive,
+  IconTrash,
+  IconSparkles,
+  IconPaperclip,
+  IconFileText,
+  IconX,
+} from '../common/MailIcons'
 
 interface ReadingPaneProps {
   email: EmailMessage | null
@@ -37,13 +49,10 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
     return (
       <div
         className="vuamail-reading"
-        style={{ alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}
+        style={{ alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted, #878e96)' }}
       >
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-          <polyline points="22,6 12,13 2,6" />
-        </svg>
-        <div style={{ marginTop: '12px', fontSize: '15px' }}>Chọn một email để đọc nội dung</div>
+        <IconMail size={48} color="var(--border-strong, #d0d4d9)" />
+        <div style={{ marginTop: '12px', fontSize: '14px' }}>Chọn một email để đọc nội dung</div>
       </div>
     )
   }
@@ -74,10 +83,10 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
       {/* Top Reading Header with Outlook Action Buttons */}
       <div className="reading-header">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
-          <div className="reading-subject">{email.subject || '(No subject)'}</div>
+          <div className="reading-subject">{email.subject || '(Không có tiêu đề)'}</div>
 
           {/* Quick Action Toolbar (Parity with GensMail & Microsoft Outlook) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             <button
               type="button"
               onClick={onReply}
@@ -96,10 +105,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
               }}
               title="Trả lời người gửi (Ctrl+R)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2.2">
-                <polyline points="9 14 4 9 9 4" />
-                <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-              </svg>
+              <IconReply size={13} color="var(--vuamail-primary-blue, #0077cd)" />
               <span>Trả lời</span>
             </button>
 
@@ -121,11 +127,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
               }}
               title="Trả lời tất cả người nhận (Ctrl+Shift+R)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2.2">
-                <polyline points="7 14 2 9 7 4" />
-                <polyline points="13 14 8 9 13 4" />
-                <path d="M22 20v-7a4 4 0 0 0-4-4H8" />
-              </svg>
+              <IconReplyAll size={13} color="var(--vuamail-primary-blue, #0077cd)" />
               <span>Tất cả</span>
             </button>
 
@@ -147,10 +149,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
               }}
               title="Chuyển tiếp thư (Ctrl+F)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2.2">
-                <polyline points="15 14 20 9 15 4" />
-                <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
-              </svg>
+              <IconForward size={13} color="var(--vuamail-primary-blue, #0077cd)" />
               <span>Chuyển tiếp</span>
             </button>
 
@@ -163,15 +162,14 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
                 border: '1px solid var(--border, #e3e6ea)',
                 borderRadius: '5px',
                 cursor: 'pointer',
-                color: 'var(--text-muted, #878e96)',
+                color: 'var(--text-secondary, #606366)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               title="Lưu trữ thư"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="21 8 21 21 3 21 3 8" />
-                <rect x="1" y="3" width="22" height="5" />
-                <line x1="10" y1="12" x2="14" y2="12" />
-              </svg>
+              <IconArchive size={13} />
             </button>
 
             <button
@@ -183,13 +181,14 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
                 border: '1px solid var(--border, #e3e6ea)',
                 borderRadius: '5px',
                 cursor: 'pointer',
-                color: '#d13438',
+                color: 'var(--danger, #d13438)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               title="Xoá thư"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
+              <IconTrash size={13} />
             </button>
           </div>
         </div>
@@ -220,10 +219,8 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
       {aiSummary && (
         <div className="ai-summary-card">
           <div className="ai-summary-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-            VuaOffice AI Summary
+            <IconSparkles size={14} color="var(--vuamail-primary-blue, #0077cd)" />
+            <span>VuaOffice AI Summary</span>
           </div>
           <div className="ai-summary-text" style={{ whiteSpace: 'pre-line' }}>{aiSummary}</div>
         </div>
@@ -231,19 +228,18 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
 
       {!aiSummary && (
         <button
+          type="button"
           className="ribbon-btn"
-          style={{ width: 'fit-content', marginBottom: '16px', border: '1px solid var(--border)' }}
+          style={{ width: 'fit-content', marginBottom: '16px', border: '1px solid var(--border, #e3e6ea)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           onClick={onTriggerAiSummary}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-          Tóm tắt email này với VuaOffice AI
+          <IconSparkles size={14} color="var(--vuamail-primary-blue, #0077cd)" />
+          <span>Tóm tắt email này với VuaOffice AI</span>
         </button>
       )}
 
       {isLoadingBody ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Đang nạp nội dung thư...</div>
+        <div style={{ color: 'var(--text-muted, #878e96)', fontSize: '13px' }}>Đang nạp nội dung thư...</div>
       ) : body?.html ? (
         <div className="reading-body" dangerouslySetInnerHTML={{ __html: body.html }} />
       ) : (
@@ -253,24 +249,20 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
       {/* Attachments Section */}
       {email.hasAttachments && email.attachments && email.attachments.length > 0 && (
         <div className="reading-attachments">
-          <div className="attachments-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-            </svg>
-            Tệp đính kèm ({email.attachments.length})
+          <div className="attachments-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <IconPaperclip size={14} color="var(--text-secondary, #606366)" />
+            <span>Tệp đính kèm ({email.attachments.length})</span>
           </div>
           <div className="attachments-list">
             {email.attachments.map((att) => (
               <div key={att.id} className="attachment-chip">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2">
-                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                  <polyline points="13 2 13 9 20 9" />
-                </svg>
+                <IconFileText size={15} color="var(--vuamail-primary-blue, #0077cd)" />
                 <div>
                   <div className="attachment-name">{att.filename}</div>
                   <div className="attachment-size">{formatFileSize(att.sizeBytes)}</div>
                 </div>
                 <button
+                  type="button"
                   className="attachment-btn"
                   onClick={() => onPreviewAttachment?.(att)}
                 >
@@ -284,15 +276,14 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
 
       {/* AI Smart Reply Quick Suggestion Section */}
       <div className="smart-reply-bar">
-        <div className="smart-reply-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0077cd" strokeWidth="2">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-          </svg>
-          Gợi ý phản hồi nhanh AI (Smart Reply)
+        <div className="smart-reply-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <IconSparkles size={14} color="var(--vuamail-primary-blue, #0077cd)" />
+          <span>Gợi ý phản hồi nhanh AI (Smart Reply)</span>
         </div>
         <div className="smart-reply-chips">
           {smartReplies.map((reply, idx) => (
             <button
+              type="button"
               key={idx}
               className="smart-reply-chip"
               onClick={() => onSmartReply?.(reply)}
@@ -322,10 +313,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 14 4 9 9 4" />
-                <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-              </svg>
+              <IconReply size={15} color="var(--text-secondary, #606366)" />
               <span>Nhấp vào đây để trả lời <b>{email.senderName}</b>...</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -354,10 +342,11 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
             <div style={{ padding: '8px 14px', backgroundColor: 'var(--surface-subtle, #f6f7f9)', borderBottom: '1px solid var(--border, #e3e6ea)', fontSize: '12px', color: 'var(--text-secondary, #606366)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Trả lời tới: <b>{email.senderEmail}</b></span>
               <button
+                type="button"
                 onClick={() => setIsQuickReplying(false)}
-                style={{ border: 'none', background: 'none', color: '#878e96', cursor: 'pointer', fontSize: '14px' }}
+                style={{ border: 'none', background: 'none', color: 'var(--text-muted, #878e96)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <IconX size={14} />
               </button>
             </div>
             <textarea
@@ -400,7 +389,7 @@ export const ReadingPane: React.FC<ReadingPaneProps> = ({
                   padding: '6px 16px',
                   borderRadius: '5px',
                   border: 'none',
-                  backgroundColor: '#0077cd',
+                  backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
                   color: '#ffffff',
                   fontSize: '12px',
                   fontWeight: 600,

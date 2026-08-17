@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { GensparkMark } from './GensparkMark'
+import { IconX } from '../common/MailIcons'
 
 interface MailRibbonProps {
   onNewMail: () => void
@@ -154,8 +155,9 @@ export const MailRibbon: React.FC<MailRibbonProps> = ({
               type="button"
               className="search-clear-btn"
               onClick={() => onSearchChange('')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              ✕
+              <IconX size={12} />
             </button>
           )}
         </div>

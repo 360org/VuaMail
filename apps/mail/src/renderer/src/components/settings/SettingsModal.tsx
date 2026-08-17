@@ -1,5 +1,16 @@
 import React, { useState } from 'react'
 import type { EmailAccount } from '../../../../shared/types'
+import {
+  IconSettings,
+  IconUsers,
+  IconEdit,
+  IconKeyboard,
+  IconX,
+  IconLock,
+  IconMicrosoft,
+  IconGoogle,
+  IconGlobe,
+} from '../common/MailIcons'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -181,15 +192,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               padding: '9px 12px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: activeTab === 'general' ? 'var(--hover, #e8f2fc)' : 'transparent',
-              color: activeTab === 'general' ? '#0078d4' : 'var(--text-primary, #232425)',
+              backgroundColor: activeTab === 'general' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+              color: activeTab === 'general' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
               fontWeight: activeTab === 'general' ? 600 : 400,
               fontSize: '13px',
               cursor: 'pointer',
               textAlign: 'left',
             }}
           >
-            <span>⚙️</span>
+            <IconSettings size={15} color={activeTab === 'general' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
             <span>Chung (General)</span>
           </button>
 
@@ -202,15 +213,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               padding: '9px 12px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: activeTab === 'accounts' ? 'var(--hover, #e8f2fc)' : 'transparent',
-              color: activeTab === 'accounts' ? '#0078d4' : 'var(--text-primary, #232425)',
+              backgroundColor: activeTab === 'accounts' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+              color: activeTab === 'accounts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
               fontWeight: activeTab === 'accounts' ? 600 : 400,
               fontSize: '13px',
               cursor: 'pointer',
               textAlign: 'left',
             }}
           >
-            <span>👥</span>
+            <IconUsers size={15} color={activeTab === 'accounts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
             <span>Tài khoản Mail</span>
           </button>
 
@@ -223,15 +234,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               padding: '9px 12px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: activeTab === 'signatures' ? 'var(--hover, #e8f2fc)' : 'transparent',
-              color: activeTab === 'signatures' ? '#0078d4' : 'var(--text-primary, #232425)',
+              backgroundColor: activeTab === 'signatures' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+              color: activeTab === 'signatures' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
               fontWeight: activeTab === 'signatures' ? 600 : 400,
               fontSize: '13px',
               cursor: 'pointer',
               textAlign: 'left',
             }}
           >
-            <span>✍️</span>
+            <IconEdit size={15} color={activeTab === 'signatures' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
             <span>Chữ ký thư</span>
           </button>
 
@@ -244,15 +255,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               padding: '9px 12px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: activeTab === 'shortcuts' ? 'var(--hover, #e8f2fc)' : 'transparent',
-              color: activeTab === 'shortcuts' ? '#0078d4' : 'var(--text-primary, #232425)',
+              backgroundColor: activeTab === 'shortcuts' ? 'var(--vuamail-primary-blue-soft, #e5f3fc)' : 'transparent',
+              color: activeTab === 'shortcuts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-primary, #232425)',
               fontWeight: activeTab === 'shortcuts' ? 600 : 400,
               fontSize: '13px',
               cursor: 'pointer',
               textAlign: 'left',
             }}
           >
-            <span>⌨️</span>
+            <IconKeyboard size={15} color={activeTab === 'shortcuts' ? 'var(--vuamail-primary-blue, #0077cd)' : 'var(--text-secondary, #606366)'} />
             <span>Phím tắt</span>
           </button>
         </div>
@@ -272,14 +283,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               style={{
                 background: 'transparent',
                 border: 'none',
-                fontSize: '18px',
                 color: 'var(--text-muted, #878e96)',
                 cursor: 'pointer',
                 padding: '4px 8px',
                 borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              ✕
+              <IconX size={16} />
             </button>
           </div>
 
@@ -330,8 +342,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#0078d4' }}>
-                        🔐 Thêm tài khoản & Xác thực (OAuth 2.0 / SSO):
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--vuamail-primary-blue, #0077cd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <IconLock size={14} color="var(--vuamail-primary-blue, #0077cd)" />
+                        <span>Thêm tài khoản & Xác thực (OAuth 2.0 / SSO):</span>
                       </div>
 
                       {/* Toggle OAuth vs Manual IMAP */}
@@ -345,7 +358,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             fontWeight: 600,
                             border: 'none',
                             borderRadius: '3px',
-                            backgroundColor: authMethod === 'oauth' ? '#0078d4' : 'transparent',
+                            backgroundColor: authMethod === 'oauth' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                             color: authMethod === 'oauth' ? '#fff' : 'var(--text-secondary)',
                             cursor: 'pointer',
                           }}
@@ -361,7 +374,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             fontWeight: 600,
                             border: 'none',
                             borderRadius: '3px',
-                            backgroundColor: authMethod === 'manual' ? '#0078d4' : 'transparent',
+                            backgroundColor: authMethod === 'manual' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
                             color: authMethod === 'manual' ? '#fff' : 'var(--text-secondary)',
                             cursor: 'pointer',
                           }}
@@ -394,7 +407,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               cursor: 'pointer',
                             }}
                           >
-                            <span style={{ fontSize: '20px' }}>🟦</span>
+                            <IconMicrosoft size={24} />
                             <span style={{ fontSize: '12px', fontWeight: 600 }}>Microsoft Outlook</span>
                             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Office 365 / Exchange</span>
                           </button>
@@ -415,7 +428,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               cursor: 'pointer',
                             }}
                           >
-                            <span style={{ fontSize: '20px' }}>🔴</span>
+                            <IconGoogle size={24} />
                             <span style={{ fontSize: '12px', fontWeight: 600 }}>Google Workspace</span>
                             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Gmail / Workspace</span>
                           </button>
@@ -436,15 +449,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               cursor: 'pointer',
                             }}
                           >
-                            <span style={{ fontSize: '20px' }}>🌐</span>
+                            <IconGlobe size={24} color="var(--vuamail-primary-blue, #0077cd)" />
                             <span style={{ fontSize: '12px', fontWeight: 600 }}>360 CORP SSO</span>
                             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>360.org.vn Server</span>
                           </button>
                         </div>
 
                         {authStatus && (
-                          <div style={{ padding: '8px 12px', borderRadius: '4px', backgroundColor: '#e8f2fc', color: '#0078d4', fontSize: '12px', fontWeight: 500 }}>
-                            ⏳ {authStatus}
+                          <div style={{ padding: '8px 12px', borderRadius: '4px', backgroundColor: 'var(--vuamail-primary-blue-soft, #e5f3fc)', color: 'var(--vuamail-primary-blue, #0077cd)', fontSize: '12px', fontWeight: 500 }}>
+                            {authStatus}
                           </div>
                         )}
 

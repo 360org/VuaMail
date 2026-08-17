@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import {
+  IconSparkles,
+  IconX,
+  IconLink,
+  IconList,
+  IconListOrdered,
+  IconSend,
+} from '../common/MailIcons'
 
 interface ComposeModalProps {
   isOpen: boolean
@@ -129,18 +137,20 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             )}
           </div>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '16px',
               color: 'var(--text-muted, #878e96)',
               padding: '4px 8px',
               borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            ✕
+            <IconX size={16} />
           </button>
         </div>
 
@@ -157,30 +167,34 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               border: '1px solid var(--border, #e3e6ea)',
             }}
           >
-            <input
-              type="text"
-              placeholder="✨ Yêu cầu VuaOffice AI viết nháp thư..."
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAiDraft()}
-              style={{
-                flex: 1,
-                border: 'none',
-                background: 'transparent',
-                outline: 'none',
-                fontSize: '13px',
-                color: 'var(--text-primary, #232425)',
-              }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+              <IconSparkles size={15} color="var(--vuamail-primary-blue, #0077cd)" />
+              <input
+                type="text"
+                placeholder="Yêu cầu VuaOffice AI viết nháp thư..."
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAiDraft()}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  outline: 'none',
+                  fontSize: '13px',
+                  color: 'var(--text-primary, #232425)',
+                }}
+              />
+            </div>
             <button
+              type="button"
               onClick={handleAiDraft}
               disabled={isGeneratingAi || !aiPrompt.trim()}
               style={{
-                backgroundColor: '#0078d4',
-                color: '#fff',
+                backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+                color: '#ffffff',
                 border: 'none',
-                borderRadius: '4px',
-                padding: '6px 12px',
+                borderRadius: '5px',
+                padding: '6px 14px',
                 fontSize: '12px',
                 cursor: 'pointer',
                 fontWeight: 600,
@@ -200,7 +214,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               style={{
                 flex: 1,
                 padding: '8px 12px',
-                borderRadius: '4px',
+                borderRadius: '5px',
                 border: '1px solid var(--border, #e3e6ea)',
                 background: 'var(--surface, #ffffff)',
                 color: 'var(--text-primary, #232425)',
@@ -220,7 +234,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               style={{
                 flex: 1,
                 padding: '8px 12px',
-                borderRadius: '4px',
+                borderRadius: '5px',
                 border: '1px solid var(--border, #e3e6ea)',
                 background: 'var(--surface, #ffffff)',
                 color: 'var(--text-primary, #232425)',
@@ -237,63 +251,73 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               gap: '6px',
               padding: '6px 10px',
               backgroundColor: 'var(--surface-subtle, #f6f7f9)',
-              borderRadius: '4px',
+              borderRadius: '5px',
               border: '1px solid var(--border, #e3e6ea)',
               alignItems: 'center',
             }}
           >
             <button
+              type="button"
               onClick={() => execCmd('bold')}
               title="Đậm (Bold)"
-              style={{ padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', color: 'var(--text-primary, #232425)' }}
             >
               B
             </button>
             <button
+              type="button"
               onClick={() => execCmd('italic')}
               title="Nghiêng (Italic)"
-              style={{ padding: '4px 10px', fontStyle: 'italic', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 10px', fontStyle: 'italic', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', color: 'var(--text-primary, #232425)' }}
             >
               I
             </button>
             <button
+              type="button"
               onClick={() => execCmd('underline')}
               title="Gạch chân (Underline)"
-              style={{ padding: '4px 10px', textDecoration: 'underline', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 10px', textDecoration: 'underline', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', color: 'var(--text-primary, #232425)' }}
             >
               U
             </button>
             <button
+              type="button"
               onClick={() => execCmd('strikeThrough')}
               title="Gạch ngang (Strikethrough)"
-              style={{ padding: '4px 10px', textDecoration: 'line-through', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 10px', textDecoration: 'line-through', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', color: 'var(--text-primary, #232425)' }}
             >
               S
             </button>
             <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--border, #e3e6ea)', margin: '0 4px' }} />
             <button
+              type="button"
               onClick={() => execCmd('insertUnorderedList')}
               title="Danh sách dấu chấm"
-              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', fontSize: '12px', color: 'var(--text-primary, #232425)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              • List
+              <IconList size={13} />
+              <span>Gạch đầu dòng</span>
             </button>
             <button
+              type="button"
               onClick={() => execCmd('insertOrderedList')}
               title="Danh sách số"
-              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', fontSize: '12px', color: 'var(--text-primary, #232425)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              1. List
+              <IconListOrdered size={13} />
+              <span>Đánh số</span>
             </button>
             <button
+              type="button"
               onClick={() => {
                 const url = prompt('Nhập đường dẫn liên kết:')
                 if (url) execCmd('createLink', url)
               }}
-              title="Thêm link"
-              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary, #232425)' }}
+              title="Thêm liên kết"
+              style={{ padding: '4px 8px', cursor: 'pointer', background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e3e6ea)', borderRadius: '4px', fontSize: '12px', color: 'var(--text-primary, #232425)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              🔗 Link
+              <IconLink size={13} />
+              <span>Liên kết</span>
             </button>
           </div>
 
@@ -309,7 +333,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             style={{
               flex: 1,
               padding: '12px',
-              borderRadius: '4px',
+              borderRadius: '5px',
               border: '1px solid var(--border, #e3e6ea)',
               background: 'var(--surface, #ffffff)',
               color: 'var(--text-primary, #232425)',
@@ -334,10 +358,11 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
           }}
         >
           <button
+            type="button"
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              borderRadius: '4px',
+              borderRadius: '5px',
               border: '1px solid var(--border, #e3e6ea)',
               background: 'var(--surface, #ffffff)',
               color: 'var(--text-primary, #232425)',
@@ -349,22 +374,29 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
             Hủy
           </button>
           <button
+            type="button"
             onClick={handleSend}
             style={{
               padding: '8px 20px',
-              borderRadius: '4px',
+              borderRadius: '5px',
               border: 'none',
-              backgroundColor: '#0078d4',
-              color: '#fff',
+              backgroundColor: 'var(--vuamail-primary-blue, #0077cd)',
+              color: '#ffffff',
               fontWeight: 600,
               cursor: 'pointer',
               fontSize: '12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 5px rgba(0,119,205,0.25)',
             }}
           >
-            Gửi thư (Send)
+            <IconSend size={14} color="#ffffff" />
+            <span>Gửi thư (Send)</span>
           </button>
         </div>
       </div>
     </div>
   )
 }
+
