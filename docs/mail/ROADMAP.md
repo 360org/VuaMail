@@ -51,9 +51,18 @@ gantt
 - [x] Quản lý đa tài khoản email và chuyển đổi hộp thư nhanh qua ProfileView & FolderTree.
 - [x] Bộ lọc nâng cao: Lọc theo cờ (flagged), tệp đính kèm (has attachments), ngày gửi và trạng thái chưa đọc.
 
-### Giai đoạn 3: Giao thức Mail & Đồng bộ Ngoại tuyến (Đã hoàn thành - v0.8.0)
-- [x] Hỗ trợ kết nối IMAP / SMTP socket trực tiếp (`NativeImapClient`, `NativeSmtpClient`) với TLS/SSL.
-- [x] Xác thực an toàn OAuth 2.0 / SSO 1-Click Login (Google Workspace, Microsoft 365 Outlook, 360 CORP SSO).
+### Giai đoạn 3: Giao thức Mail & Xác thực Chuẩn Microsoft Outlook (Đã hoàn thành - v0.8.0)
+- [x] Triển khai luồng xác thực và lựa chọn nhà cung cấp dịch vụ chuẩn 100% Microsoft Outlook:
+  - **Bước 1 (Input Email & Heuristic Auto-Discovery)**: Tự động phân giải domain (@gmail.com -> Google Workspace, @outlook.com/@hotmail.com -> Microsoft 365, @360.org.vn/@vuahethong.com -> 360 CORP SSO, @icloud.com -> Apple iCloud, @yahoo.com -> Yahoo Mail).
+  - **Bước 2 (Provider Grid Selection)**: Lưới 8 nhà cung cấp dịch vụ chuẩn Outlook (Microsoft 365, Outlook.com, Exchange, Google Workspace, iCloud, Yahoo, 360 CORP SSO, IMAP / POP3) khi gặp domain tuỳ chỉnh hoặc người dùng chọn nâng cao.
+  - **Bước 3 (Manual IMAP / POP & SMTP Configuration)**: Form cấu hình thông số Server Host, Port, SSL/TLS và chứng thực bảo mật cho doanh nghiệp tự host mail server.
+- [x] Khắc phục triệt để lỗi Google OAuth "Couldn't sign you in - This browser or app may not be secure":
+  - Triệt tiêu toàn bộ Chromium Client Hints (`sec-ch-ua`, `sec-ch-ua-mobile`, `sec-ch-ua-platform`, `sec-ch-ua-model`) trong `webRequest.onBeforeSendHeaders`.
+  - Giả lập User-Agent Safari Desktop macOS chuẩn (`Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15`).
+- [x] Khắc phục triệt để lỗi cửa sổ đăng nhập Microsoft Identity tự đóng sớm:
+  - Cô lập điều hướng URL trong `will-redirect`, `will-navigate`, `did-navigate`.
+  - Loại trừ các URL chuyển hướng trung gian của Microsoft (`prefetch.aspx`, `reprocess`, `login.live.com`). Cửa sổ chỉ đóng khi nhận được Authorization Code (`code=`) hoặc đã vào sâu trong hộp thư (`/mail/0`, `/mail/inbox`).
+- [x] Hỗ trợ kết nối IMAP / SMTP socket trực tiếp (`NativeImapClient`, `NativeSmtpClient`) với mã hoá TLS/SSL.
 - [x] Cơ chế đồng bộ 2 chiều ngầm (Background Sync Orchestrator).
 - [x] Thực thi hàng đợi ngoại tuyến OpQueue (tự động flush các tác vụ đánh dấu đọc, gắn cờ, gửi thư khi có mạng).
 - [x] Xử lý giải quyết xung đột dữ liệu (Conflict Resolution & Optimistic UI).

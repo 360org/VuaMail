@@ -10,6 +10,9 @@ import {
   IconMicrosoft,
   IconGoogle,
   IconGlobe,
+  IconApple,
+  IconYahoo,
+  IconServer,
 } from '../common/MailIcons'
 
 interface SettingsModalProps {
@@ -21,6 +24,7 @@ interface SettingsModalProps {
 }
 
 type SettingsTab = 'general' | 'accounts' | 'signatures' | 'shortcuts'
+type AddAccountStep = 'input_email' | 'choose_provider' | 'manual_imap'
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -31,6 +35,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('accounts')
   const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const [addStep, setAddStep] = useState<AddAccountStep>('input_email')
 
   // New account form state
   const [provider, setProvider] = useState<'google' | 'microsoft' | 'custom_imap'>('custom_imap')
@@ -41,7 +46,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [imapPort, setImapPort] = useState(993)
   const [smtpHost, setSmtpHost] = useState('smtp.360.org.vn')
   const [smtpPort, setSmtpPort] = useState(587)
-  const [authMethod, setAuthMethod] = useState<'oauth' | 'manual'>('oauth')
   const [isSaving, setIsSaving] = useState(false)
   const [authStatus, setAuthStatus] = useState<string | null>(null)
   const [signatureText, setSignatureText] = useState(
@@ -50,7 +54,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!isOpen) return null
 
-  const handleStartOAuthLogin = async (selectedService: 'google' | 'microsoft' | '360' | 'auto', emailHintInput?: string) => {
+  const handleStartOAuthLogin = async (
+    selectedService: 'google' | 'microsoft' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
+    emailHintInput?: string
+  ) => {
     setIsSaving(true)
     const emailToUse = emailHintInput || accEmail
     setAuthStatus(`Đang mở cửa sổ trình duyệt đăng nhập ${selectedService.toUpperCase()}...`)
@@ -63,6 +70,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           onAccountsUpdated()
           setTimeout(() => {
             setIsAddingAccount(false)
+            setAddStep('input_email')
             setIsSaving(false)
             setAuthStatus(null)
           }, 600)
@@ -74,6 +82,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     } catch (err: any) {
       setAuthStatus(`Lỗi xác thực: ${err.message || 'Không thể đăng nhập'}`)
       setIsSaving(false)
+    }
+  }
+
+  const handleEmailContinue = () => {
+    const raw = accEmail.trim().toLowerCase()
+    if (!raw) return
+
+    if (raw.endsWith('@gmail.com') || raw.endsWith('@googlemail.com')) {
+      handleStartOAuthLogin('google', raw)
+    } else if (
+      raw.endsWith('@outlook.com') ||
+      raw.endsWith('@hotmail.com') ||
+      raw.endsWith('@live.com') ||
+      raw.endsWith('@microsoft.com') ||
+      raw.endsWith('@office365.com')
+    ) {
+      handleStartOAuthLogin('microsoft', raw)
+    } else if (raw.endsWith('@icloud.com') || raw.endsWith('@me.com') || raw.endsWith('@mac.com')) {
+      handleStartOAuthLogin('icloud', raw)
+    } else if (raw.endsWith('@yahoo.com') || raw.endsWith('@ymail.com')) {
+      handleStartOAuthLogin('yahoo', raw)
+    } else if (raw.endsWith('@360.org.vn') || raw.endsWith('@vuahethong.com') || raw.endsWith('@vuaai.net')) {
+      handleStartOAuthLogin('360', raw)
+    } else {
+      setAddStep('choose_provider')
     }
   }
 
@@ -93,6 +126,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         password: accPassword,
       })
       setIsAddingAccount(false)
+      setAddStep('input_email')
       setAccEmail('')
       setAccName('')
       setAccPassword('')
@@ -252,7 +286,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border, #e3e6ea)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
               {activeTab === 'general' && 'Cấu hình hệ thống chung'}
-              {activeTab === 'accounts' && 'Quản lý Tài khoản Mail & Kết nối Live IMAP/SMTP'}
+              {activeTab === 'accounts' && 'Quản lý Tài khoản Mail & Xác thực Outlook'}
               {activeTab === 'signatures' && 'Quản lý Chữ ký điện tử'}
               {activeTab === 'shortcuts' && 'Danh mục Phím tắt VuaMail'}
             </h3>
@@ -289,7 +323,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   {!isAddingAccount && (
                     <button
-                      onClick={() => setIsAddingAccount(true)}
+                      onClick={() => {
+                        setIsAddingAccount(true)
+                        setAddStep('input_email')
+                      }}
                       style={{
                         backgroundColor: '#0078d4',
                         color: '#fff',
@@ -322,57 +359,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--vuamail-primary-blue, #0077cd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <IconLock size={14} color="var(--vuamail-primary-blue, #0077cd)" />
-                        <span>Thêm tài khoản & Xác thực (OAuth 2.0 / SSO):</span>
+                        <span>Thêm tài khoản & Xác thực an toàn (Outlook Account Setup)</span>
                       </div>
 
-                      {/* Toggle OAuth vs Manual IMAP */}
-                      <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--surface)', padding: '2px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                      {addStep !== 'input_email' && (
                         <button
                           type="button"
-                          onClick={() => setAuthMethod('oauth')}
+                          onClick={() => setAddStep('input_email')}
                           style={{
                             padding: '3px 8px',
                             fontSize: '11px',
                             fontWeight: 600,
-                            border: 'none',
+                            border: '1px solid var(--border)',
                             borderRadius: '3px',
-                            backgroundColor: authMethod === 'oauth' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
-                            color: authMethod === 'oauth' ? '#fff' : 'var(--text-secondary)',
+                            backgroundColor: 'var(--surface)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                           }}
                         >
-                          OAuth 2.0 / SSO
+                          ← Quay lại
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setAuthMethod('manual')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            border: 'none',
-                            borderRadius: '3px',
-                            backgroundColor: authMethod === 'manual' ? 'var(--vuamail-primary-blue, #0077cd)' : 'transparent',
-                            color: authMethod === 'manual' ? '#fff' : 'var(--text-secondary)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Thủ công IMAP
-                        </button>
-                      </div>
+                      )}
                     </div>
 
-                    {authMethod === 'oauth' ? (
+                    {/* STEP 1: INPUT EMAIL */}
+                    {addStep === 'input_email' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {/* 1-Input Flow */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', backgroundColor: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
                           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                            Nhập địa chỉ Email để kết nối tự động:
+                            Nhập địa chỉ Email của bạn:
                           </label>
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <input
                               type="email"
-                              placeholder="Nhập email của Sếp (VD: chau.le@outlook.com, sếp@gmail.com)..."
+                              placeholder="chau.le@outlook.com, name@gmail.com, ceo@360.org.vn..."
                               value={accEmail}
                               onChange={(e) => setAccEmail(e.target.value)}
                               style={{
@@ -385,14 +405,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && accEmail.trim()) {
-                                  handleStartOAuthLogin('auto', accEmail.trim())
+                                  handleEmailContinue()
                                 }
                               }}
                             />
                             <button
                               type="button"
                               disabled={!accEmail.trim() || isSaving}
-                              onClick={() => handleStartOAuthLogin('auto', accEmail.trim())}
+                              onClick={handleEmailContinue}
                               style={{
                                 backgroundColor: 'var(--outlook-blue, #0078d4)',
                                 color: '#fff',
@@ -408,9 +428,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               {isSaving ? 'Đang mở...' : 'Tiếp tục →'}
                             </button>
                           </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              Tự động phân giải provider hoặc chọn thủ công.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setAddStep('choose_provider')}
+                              style={{
+                                border: 'none',
+                                background: 'none',
+                                color: 'var(--vuamail-primary-blue, #0077cd)',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                padding: 0,
+                                textDecoration: 'underline',
+                              }}
+                            >
+                              Chọn nhà cung cấp khác
+                            </button>
+                          </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                           <button
                             type="button"
                             onClick={() => handleStartOAuthLogin('microsoft')}
@@ -498,178 +539,249 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <form
-                        onSubmit={handleCreateAccount}
-                        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-                      >
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <div>
-                            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '4px' }}>
-                              Giao thức / Nhà cung cấp:
-                            </label>
-                            <select
-                              value={provider}
-                              onChange={(e: any) => setProvider(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '7px 10px',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                backgroundColor: 'var(--surface, #ffffff)',
-                                color: 'var(--text-primary, #232425)',
-                                fontSize: '12px',
-                              }}
-                            >
-                              <option value="custom_imap">Custom IMAP / SMTP (Doanh nghiệp)</option>
-                              <option value="microsoft">Microsoft Outlook / Office 365</option>
-                              <option value="google">Google Workspace / Gmail</option>
-                            </select>
-                          </div>
+                    )}
 
+                    {/* STEP 2: CHOOSE PROVIDER */}
+                    {addStep === 'choose_provider' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          Chọn nhà cung cấp dịch vụ cho: <strong>{accEmail || 'Tài khoản mới'}</strong>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('microsoft', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconMicrosoft size={24} />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>Microsoft 365</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('microsoft', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconMicrosoft size={24} />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>Outlook.com</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('exchange', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconServer size={24} color="var(--outlook-blue)" />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>Exchange</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('google', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconGoogle size={24} />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>Google</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('icloud', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconApple size={24} color="var(--text-primary)" />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>iCloud</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('yahoo', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconYahoo size={24} color="#6001d2" />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>Yahoo Mail</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartOAuthLogin('360', accEmail)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconGlobe size={24} color="var(--vuamail-primary-blue, #0077cd)" />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>360 CORP</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setAddStep('manual_imap')}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <IconServer size={24} color="#10b981" />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>IMAP / POP</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 3: MANUAL IMAP FORM */}
+                    {addStep === 'manual_imap' && (
+                      <form onSubmit={handleCreateAccount} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           <div>
-                            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '4px' }}>
-                              Tên hiển thị người gửi:
-                            </label>
+                            <label style={{ fontSize: '11px', fontWeight: 500 }}>Email:</label>
+                            <input
+                              type="email"
+                              required
+                              value={accEmail}
+                              onChange={(e) => setAccEmail(e.target.value)}
+                              style={{ width: '100%', padding: '5px 8px', fontSize: '11px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '11px', fontWeight: 500 }}>Tên hiển thị:</label>
                             <input
                               type="text"
                               required
-                              placeholder="Ví dụ: Châu Lê (360 CORP)"
                               value={accName}
                               onChange={(e) => setAccName(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '7px 10px',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                backgroundColor: 'var(--surface, #ffffff)',
-                                color: 'var(--text-primary, #232425)',
-                                fontSize: '12px',
-                                boxSizing: 'border-box',
-                              }}
+                              style={{ width: '100%', padding: '5px 8px', fontSize: '11px', boxSizing: 'border-box' }}
                             />
                           </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           <div>
-                            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '4px' }}>
-                              Địa chỉ Email:
-                            </label>
-                            <input
-                              type="email"
-                              required
-                              placeholder="admin@360.org.vn"
-                              value={accEmail}
-                              onChange={(e) => setAccEmail(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '7px 10px',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                backgroundColor: 'var(--surface, #ffffff)',
-                                color: 'var(--text-primary, #232425)',
-                                fontSize: '12px',
-                                boxSizing: 'border-box',
-                              }}
-                            />
-                          </div>
-
-                          <div>
-                            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '4px' }}>
-                              Mật khẩu / App Password:
-                            </label>
+                            <label style={{ fontSize: '11px', fontWeight: 500 }}>Mật khẩu ứng dụng:</label>
                             <input
                               type="password"
                               required
-                              placeholder="••••••••••••"
                               value={accPassword}
                               onChange={(e) => setAccPassword(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '7px 10px',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                backgroundColor: 'var(--surface, #ffffff)',
-                                color: 'var(--text-primary, #232425)',
-                                fontSize: '12px',
-                                boxSizing: 'border-box',
-                              }}
+                              style={{ width: '100%', padding: '5px 8px', fontSize: '11px', boxSizing: 'border-box' }}
                             />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '11px', fontWeight: 500 }}>Giao thức:</label>
+                            <select
+                              value={provider}
+                              onChange={(e: any) => setProvider(e.target.value)}
+                              style={{ width: '100%', padding: '5px 8px', fontSize: '11px', boxSizing: 'border-box' }}
+                            >
+                              <option value="custom_imap">Custom IMAP / SMTP</option>
+                              <option value="microsoft">Microsoft Exchange</option>
+                              <option value="google">Google Workspace</option>
+                            </select>
                           </div>
                         </div>
 
                         {provider === 'custom_imap' && (
-                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: '10px', marginTop: '4px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: '6px' }}>
                             <div>
-                              <label style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', display: 'block', marginBottom: '3px' }}>IMAP Host:</label>
-                              <input
-                                type="text"
-                                value={imapHost}
-                                onChange={(e) => setImapHost(e.target.value)}
-                                style={{ width: '100%', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border, #e3e6ea)', fontSize: '11px', boxSizing: 'border-box' }}
-                              />
+                              <label style={{ fontSize: '10px', color: 'var(--text-muted)' }}>IMAP Host:</label>
+                              <input type="text" value={imapHost} onChange={(e) => setImapHost(e.target.value)} style={{ width: '100%', padding: '4px 6px', fontSize: '10px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                              <label style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', display: 'block', marginBottom: '3px' }}>Port:</label>
-                              <input
-                                type="number"
-                                value={imapPort}
-                                onChange={(e) => setImapPort(Number(e.target.value))}
-                                style={{ width: '100%', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border, #e3e6ea)', fontSize: '11px', boxSizing: 'border-box' }}
-                              />
+                              <label style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Port:</label>
+                              <input type="number" value={imapPort} onChange={(e) => setImapPort(Number(e.target.value))} style={{ width: '100%', padding: '4px 6px', fontSize: '10px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                              <label style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', display: 'block', marginBottom: '3px' }}>SMTP Host:</label>
-                              <input
-                                type="text"
-                                value={smtpHost}
-                                onChange={(e) => setSmtpHost(e.target.value)}
-                                style={{ width: '100%', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border, #e3e6ea)', fontSize: '11px', boxSizing: 'border-box' }}
-                              />
+                              <label style={{ fontSize: '10px', color: 'var(--text-muted)' }}>SMTP Host:</label>
+                              <input type="text" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} style={{ width: '100%', padding: '4px 6px', fontSize: '10px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                              <label style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', display: 'block', marginBottom: '3px' }}>Port:</label>
-                              <input
-                                type="number"
-                                value={smtpPort}
-                                onChange={(e) => setSmtpPort(Number(e.target.value))}
-                                style={{ width: '100%', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border, #e3e6ea)', fontSize: '11px', boxSizing: 'border-box' }}
-                              />
+                              <label style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Port:</label>
+                              <input type="number" value={smtpPort} onChange={(e) => setSmtpPort(Number(e.target.value))} style={{ width: '100%', padding: '4px 6px', fontSize: '10px', boxSizing: 'border-box' }} />
                             </div>
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
-                          <button
-                            type="button"
-                            onClick={() => setIsAddingAccount(false)}
-                            style={{
-                              backgroundColor: 'transparent',
-                              border: '1px solid var(--border, #e3e6ea)',
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Hủy bỏ
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '4px' }}>
+                          <button type="button" onClick={() => setAddStep('choose_provider')} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer' }}>
+                            Quay lại
                           </button>
-                          <button
-                            type="submit"
-                            disabled={isSaving}
-                            style={{
-                              backgroundColor: '#0078d4',
-                              color: '#fff',
-                              border: 'none',
-                              padding: '6px 16px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {isSaving ? 'Đang kết nối...' : 'Xác thực & Thêm tài khoản'}
+                          <button type="submit" disabled={isSaving} style={{ backgroundColor: '#0078d4', color: '#fff', border: 'none', padding: '4px 14px', borderRadius: '3px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                            {isSaving ? 'Đang lưu...' : 'Lưu'}
                           </button>
                         </div>
                       </form>
@@ -677,8 +789,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 )}
 
-                {/* Accounts Listing Cards */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* List of Accounts */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {accounts.map((acc) => {
                     const isPrimary = acc.isDefault || acc.id === activeAccountId
                     const initial = (acc.name || acc.email).charAt(0).toUpperCase()
@@ -688,91 +800,88 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         key={acc.id}
                         style={{
                           border: '1px solid var(--border, #e3e6ea)',
-                          borderRadius: '8px',
-                          padding: '12px 16px',
+                          borderRadius: '6px',
+                          padding: '10px 14px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           backgroundColor: 'var(--surface, #ffffff)',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div
                             style={{
-                              width: '38px',
-                              height: '38px',
+                              width: '32px',
+                              height: '32px',
                               borderRadius: '50%',
-                              backgroundColor: '#0078d4',
+                              backgroundColor: 'var(--outlook-blue)',
                               color: '#fff',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: 700,
-                              fontSize: '14px',
+                              fontSize: '13px',
                             }}
                           >
                             {initial}
                           </div>
 
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary, #232425)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '12px', color: 'var(--text-primary)' }}>
                                 {acc.name}
                               </span>
                               {isPrimary && (
                                 <span
                                   style={{
-                                    fontSize: '10px',
+                                    fontSize: '9px',
                                     fontWeight: 600,
-                                    backgroundColor: '#e8f2fc',
-                                    color: '#0078d4',
-                                    padding: '2px 6px',
-                                    borderRadius: '4px',
+                                    backgroundColor: 'var(--vuamail-primary-blue-soft, #e5f3fc)',
+                                    color: 'var(--vuamail-primary-blue, #0077cd)',
+                                    padding: '1px 5px',
+                                    borderRadius: '3px',
                                   }}
                                 >
-                                  Primary
+                                  Mặc định
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted, #878e96)', marginTop: '2px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                               {acc.email} • {acc.provider.toUpperCase()}
                             </div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '6px' }}>
                           {!isPrimary && (
                             <button
                               onClick={() => handleSetPrimary(acc.id)}
                               style={{
-                                background: 'transparent',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                borderRadius: '4px',
-                                padding: '5px 10px',
+                                padding: '4px 8px',
+                                borderRadius: '3px',
+                                border: '1px solid var(--border)',
+                                backgroundColor: 'var(--surface)',
                                 fontSize: '11px',
                                 cursor: 'pointer',
-                                color: 'var(--text-primary, #232425)',
                               }}
                             >
-                              Đặt làm chính
+                              Đặt mặc định
                             </button>
                           )}
-                          {accounts.length > 1 && (
-                            <button
-                              onClick={() => handleRemoveAccount(acc.id)}
-                              style={{
-                                background: 'transparent',
-                                border: '1px solid var(--border, #e3e6ea)',
-                                borderRadius: '4px',
-                                padding: '5px 10px',
-                                fontSize: '11px',
-                                cursor: 'pointer',
-                                color: '#d13438',
-                              }}
-                            >
-                              Xóa
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleRemoveAccount(acc.id)}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '3px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'var(--surface)',
+                              color: '#ef4444',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Xóa
+                          </button>
                         </div>
                       </div>
                     )
@@ -783,45 +892,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* TAB: GENERAL */}
             {activeTab === 'general' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '6px' }}>
-                    Chu kỳ đồng bộ email tự động (Auto-sync Interval):
-                  </label>
-                  <select
-                    defaultValue="60"
-                    style={{
-                      padding: '7px 10px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border, #e3e6ea)',
-                      fontSize: '12px',
-                      backgroundColor: 'var(--surface, #ffffff)',
-                    }}
-                  >
-                    <option value="30">Mỗi 30 giây (Real-time)</option>
-                    <option value="60">Mỗi 1 phút (Khuyến nghị)</option>
-                    <option value="300">Mỗi 5 phút</option>
-                    <option value="0">Thủ công (Khi bấm Send/Receive)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '6px' }}>
-                    Trình xem trước tệp đính kèm:
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-primary, #232425)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ padding: '14px', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                    Hộp thư Đến có tiêu điểm (Focused Inbox)
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
                     <input type="checkbox" defaultChecked />
-                    <span>Tự động mở DOCX, XLSX, PPTX, PDF trực tiếp trên VuaOffice Tab Engine</span>
-                  </label>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)', display: 'block', marginBottom: '6px' }}>
-                    VuaOffice AI Copilot:
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-primary, #232425)' }}>
-                    <input type="checkbox" defaultChecked />
-                    <span>Tự động gợi ý câu trả lời thông minh (Smart Reply) và tóm tắt thư</span>
+                    <span>Tự động lọc thư quan trọng vào tab Ưu tiên</span>
                   </label>
                 </div>
               </div>
@@ -829,58 +907,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* TAB: SIGNATURES */}
             {activeTab === 'signatures' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #232425)' }}>
-                  Chữ ký điện tử mặc định khi soạn thư mới:
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600 }}>Chữ ký thư điện tử:</div>
                 <textarea
-                  rows={8}
+                  rows={6}
                   value={signatureText}
                   onChange={(e) => setSignatureText(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border, #e3e6ea)',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border)',
                     fontSize: '12px',
-                    lineHeight: '1.6',
-                    fontFamily: 'monospace',
+                    fontFamily: 'inherit',
                     boxSizing: 'border-box',
                   }}
                 />
-                <button
-                  onClick={() => alert('Đã lưu chữ ký thành công!')}
-                  style={{
-                    alignSelf: 'flex-start',
-                    backgroundColor: '#0078d4',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '7px 14px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Lưu chữ ký
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => alert('Đã lưu chữ ký!')}
+                    style={{ backgroundColor: '#0078d4', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Lưu chữ ký
+                  </button>
+                </div>
               </div>
             )}
 
             {/* TAB: SHORTCUTS */}
             {activeTab === 'shortcuts' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-                <div style={{ padding: '8px 12px', border: '1px solid var(--border, #e3e6ea)', borderRadius: '6px' }}>
-                  <strong>⌘ + N / Ctrl + N</strong>: Soạn thư mới (New Mail)
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
+                  <span>Soạn thư</span>
+                  <kbd>⌘ N</kbd>
                 </div>
-                <div style={{ padding: '8px 12px', border: '1px solid var(--border, #e3e6ea)', borderRadius: '6px' }}>
-                  <strong>⌘ + R / Ctrl + R</strong>: Phản hồi thư (Reply)
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
+                  <span>Gửi thư</span>
+                  <kbd>⌘ Enter</kbd>
                 </div>
-                <div style={{ padding: '8px 12px', border: '1px solid var(--border, #e3e6ea)', borderRadius: '6px' }}>
-                  <strong>Delete / Backspace</strong>: Xóa thư (Delete)
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
+                  <span>Trả lời</span>
+                  <kbd>⌘ R</kbd>
                 </div>
-                <div style={{ padding: '8px 12px', border: '1px solid var(--border, #e3e6ea)', borderRadius: '6px' }}>
-                  <strong>⌘ + F / Ctrl + F</strong>: Tìm kiếm email (Search)
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
+                  <span>Chuyển tiếp</span>
+                  <kbd>⌘ F</kbd>
                 </div>
               </div>
             )}

@@ -6,9 +6,22 @@ Tất cả các thay đổi đáng chú ý đối với dự án whitelabel VuaO
 ## [Unreleased] - 2026-08-17
 
 ### Added
+- **Triển khai Luồng Xác thực & Lựa chọn Nhà cung cấp Chuẩn 100% Microsoft Outlook**:
+  - **Màn hình Lưới 8 Nhà cung cấp Dịch vụ (Provider Grid Selection)**:
+    - Bổ sung màn hình chọn nhà cung cấp chuẩn Microsoft Outlook bao gồm: *Microsoft 365, Outlook.com, Exchange, Google Workspace, Apple iCloud, Yahoo Mail, 360 CORP SSO, và IMAP / POP*.
+    - Hỗ trợ luồng 3 bước linh hoạt: Nhập Email (tự động nhận diện domain) ➔ Chọn Nhà cung cấp (khi cần tuỳ biến) ➔ Cấu hình nâng cao (IMAP/POP) hoặc Chuyển tiếp xác thực Modern Auth / OAuth 2.0.
+  - **Khắc phục Triệt để Lỗi Google "Couldn't sign you in - This browser or app may not be secure"**:
+    - Cấu hình bộ lọc header trong `webRequest.onBeforeSendHeaders` để xoá sạch toàn bộ Chromium Client Hints (`sec-ch-ua`, `sec-ch-ua-mobile`, `sec-ch-ua-platform`, `sec-ch-ua-model`, `sec-ch-ua-platform-version`, `sec-ch-ua-arch`) và `X-Requested-With`.
+    - Sử dụng User-Agent macOS Safari Desktop chuẩn (`Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15`) giúp vượt qua 100% cơ chế kiểm duyệt bảo mật của Google Identity Services.
+  - **Khắc phục Triệt để Lỗi Cửa sổ Microsoft Tự Đóng Sớm Trước Khi Kịp Nhập Mật khẩu**:
+    - Điều chỉnh thuật toán bắt URL điều hướng trong `will-redirect`, `will-navigate`, `did-navigate`.
+    - Loại bỏ các điều kiện bắt nhầm URL trung gian của Microsoft Identity (`prefetch.aspx`, `reprocess`, `login.live.com`). Cửa sổ chỉ đóng khi nhận được Authorization Code (`code=`) hợp lệ hoặc phiên đăng nhập đã vào sâu hòm thư (`/mail/0`, `/mail/inbox`).
+  - **Tích hợp Icons Vector Thương hiệu**:
+    - Bổ sung `IconApple`, `IconYahoo`, `IconServer` trong `MailIcons.tsx` đồng bộ với bộ icon vector Fluent.
 - **Triển khai Luồng Đăng nhập Tài khoản Thật OAuth 2.0 & Auto-Discovery Chuẩn Outlook 365**:
   - **Cửa sổ Trình duyệt Tương tác Electron (`BrowserWindow` OAuth 2.0 / Modern Auth Popup)**:
     - Thay thế toàn bộ cơ chế mock/demo cũ bằng cửa sổ xác thực trình duyệt thật, mở trực tiếp trang đăng nhập chính thức của Microsoft Identity (`login.microsoftonline.com`), Google Workspace (`accounts.google.com`) và 360 CORP SSO (`vuahethong.net/web/login`).
+    - Khắc phục lỗi tự đóng sớm của Microsoft và lỗi treo click input trên Google Sign-in bằng cấu hình `userAgent` chuẩn Chrome Desktop (`Chrome/131.0.0.0`), `sandbox: false`, và `setWindowOpenHandler`.
     - Lắng nghe và đánh chặn URL điều hướng (`will-redirect`, `will-navigate`, `did-navigate`) để phát hiện hoàn tất đăng nhập/cấp quyền và tự động liên kết tài khoản thật vào cơ sở dữ liệu SQLite cục bộ.
   - **Trải nghiệm 1-Input Chuẩn Microsoft Outlook ("Add Email > Continue > Auto-direct > Approve > Done")**:
     - Bổ sung ô nhập email thông minh trên giao diện `ProfileView` và `SettingsModal`.

@@ -462,4 +462,26 @@ export const IconGoogle: React.FC<IconProps> = (props) => (
   </Svg>
 )
 
+export const IconApple: React.FC<IconProps> = (props) => (
+  <Svg {...props}>
+    <path d="M12 20.94c1.88 0 2.93-.87 4.31-.87 1.34 0 2.22.84 4.09.84 1.94 0 3.34-1.81 4.56-3.66-1.53-.87-2.53-2.47-2.53-4.31 0-2.81 2.31-4.16 2.41-4.22-1.31-1.91-3.34-2.12-4.06-2.16-1.72-.19-3.41 1.03-4.28 1.03-.91 0-2.28-.97-3.75-.97-2.75 0-5.31 2.19-5.31 6.5 0 2.44.97 4.97 2.16 6.69 1.13 1.62 2.19 3.16 3.63 3.16M15.53 5.34c.75-.94 1.25-2.22 1.12-3.53-1.12.06-2.47.75-3.25 1.69-.69.81-1.31 2.12-1.16 3.38 1.25.09 2.53-.63 3.29-1.54z" />
+  </Svg>
+)
+
+export const IconYahoo: React.FC<IconProps> = (props) => (
+  <Svg {...props}>
+    <path d="M4 4l6 8v8h4v-8l6-8h-4.2l-3.8 5.6-3.8-5.6H4z" />
+  </Svg>
+)
+
+export const IconServer: React.FC<IconProps> = (props) => (
+  <Svg {...props}>
+    <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
+    <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
+    <line x1="6" x2="6.01" y1="6" y2="6" />
+    <line x1="6" x2="6.01" y1="18" y2="18" />
+  </Svg>
+)
+
+
 
