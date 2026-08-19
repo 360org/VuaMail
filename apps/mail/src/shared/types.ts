@@ -5,6 +5,10 @@ export interface EmailAccount {
   provider: 'google' | 'microsoft' | 'custom_imap'
   avatarUrl?: string
   isDefault?: boolean
+  imapHost?: string
+  imapPort?: number
+  smtpHost?: string
+  smtpPort?: number
 }
 
 export type FolderKind = 'inbox' | 'sent' | 'drafts' | 'archive' | 'trash' | 'junk' | 'custom'
@@ -63,8 +67,58 @@ export interface MailOp {
   createdAt: number
 }
 
+export interface ContactInfo {
+  id: string
+  name: string
+  email: string
+  jobTitle?: string
+  department?: string
+  company?: string
+  phone?: string
+  isFavorite?: boolean
+}
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  startIso: string
+  endIso: string
+  location?: string
+  description?: string
+  isAllDay?: boolean
+  category?: 'work' | 'personal' | 'important'
+}
+
+export interface TodoItem {
+  id: string
+  title: string
+  isCompleted: boolean
+  dueDateIso?: string
+  priority?: 'high' | 'normal' | 'low'
+}
+
+export interface SyncStatus {
+  isSyncing: boolean
+  lastSyncTimeIso: string | null
+  syncedCount: number
+  pendingOpsCount: number
+  error: string | null
+}
+
 export interface VuaMailApi {
   getAccounts: () => Promise<EmailAccount[]>
+  addAccount: (account: {
+    email: string
+    name: string
+    provider: 'google' | 'microsoft' | 'custom_imap'
+    imapHost?: string
+    imapPort?: number
+    smtpHost?: string
+    smtpPort?: number
+    password?: string
+  }) => Promise<EmailAccount>
+  removeAccount: (accountId: string) => Promise<boolean>
+  setPrimaryAccount: (accountId: string) => Promise<boolean>
   getFolders: (accountId: string) => Promise<MailFolder[]>
   getEmails: (folderId: string, category?: 'focused' | 'other') => Promise<EmailMessage[]>
   getEmailBody: (emailId: string) => Promise<EmailBody | null>
@@ -80,6 +134,18 @@ export interface VuaMailApi {
     bodyHtml: string
     attachments?: EmailAttachment[]
   }) => Promise<{ success: boolean; emailId?: string }>
+  openAttachment: (attachment: EmailAttachment) => Promise<boolean>
+  syncNow: () => Promise<SyncStatus>
+  getSyncStatus: () => Promise<SyncStatus>
+  startOAuthFlow: (
+    provider: 'google' | 'microsoft' | 'microsoft_personal' | '360' | 'icloud' | 'yahoo' | 'exchange' | 'auto',
+    emailHint?: string
+  ) => Promise<{
+    success: boolean
+    account?: EmailAccount
+    error?: string
+  }>
+  cancelOAuthFlow: () => Promise<boolean>
 }
 
 declare global {

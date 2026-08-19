@@ -4,6 +4,9 @@ import type { EmailAccount, EmailBody, EmailMessage, MailFolder, VuaMailApi } fr
 
 const api: VuaMailApi = {
   getAccounts: (): Promise<EmailAccount[]> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_ACCOUNTS),
+  addAccount: (account): Promise<EmailAccount> => ipcRenderer.invoke(VUA_MAIL_IPC.ADD_ACCOUNT, account),
+  removeAccount: (accountId: string): Promise<boolean> => ipcRenderer.invoke(VUA_MAIL_IPC.REMOVE_ACCOUNT, accountId),
+  setPrimaryAccount: (accountId: string): Promise<boolean> => ipcRenderer.invoke(VUA_MAIL_IPC.SET_PRIMARY_ACCOUNT, accountId),
   getFolders: (accountId: string): Promise<MailFolder[]> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_FOLDERS, accountId),
   getEmails: (folderId: string, category?: 'focused' | 'other'): Promise<EmailMessage[]> =>
     ipcRenderer.invoke(VUA_MAIL_IPC.GET_EMAILS, folderId, category),
@@ -14,6 +17,14 @@ const api: VuaMailApi = {
   archiveEmail: (emailId: string): Promise<void> => ipcRenderer.invoke(VUA_MAIL_IPC.ARCHIVE_EMAIL, emailId),
   sendEmail: (draft): Promise<{ success: boolean; emailId?: string }> =>
     ipcRenderer.invoke(VUA_MAIL_IPC.SEND_EMAIL, draft),
+  openAttachment: (attachment): Promise<boolean> =>
+    ipcRenderer.invoke(VUA_MAIL_IPC.OPEN_ATTACHMENT, attachment),
+  syncNow: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.SYNC_NOW),
+  getSyncStatus: (): Promise<any> => ipcRenderer.invoke(VUA_MAIL_IPC.GET_SYNC_STATUS),
+  startOAuthFlow: (provider, emailHint): Promise<any> =>
+    ipcRenderer.invoke(VUA_MAIL_IPC.START_OAUTH_FLOW, provider, emailHint),
+  cancelOAuthFlow: (): Promise<boolean> =>
+    ipcRenderer.invoke(VUA_MAIL_IPC.CANCEL_OAUTH_FLOW),
 }
 
 if (process.contextIsolated) {
